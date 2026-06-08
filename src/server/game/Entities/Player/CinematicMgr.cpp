@@ -32,7 +32,7 @@ void CinematicMgr::StartCinematic(uint32 const cinematicSequenceId)
 {
     _player.SendCinematicStart(cinematicSequenceId);
     if (CinematicSequencesEntry const* sequence = sCinematicSequencesStore.LookupEntry(cinematicSequenceId))
-        SetActiveCinematicCamera(sequence->cinematicCamera);
+        SetActiveCinematicCamera(sequence->CinematicCameraID);
 }
 
 void CinematicMgr::StartCinematicCamera()

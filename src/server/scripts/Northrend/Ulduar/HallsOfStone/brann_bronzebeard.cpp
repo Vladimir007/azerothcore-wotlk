@@ -336,7 +336,7 @@ public:
             ResetEvent();
 
             me->SetReactState(REACT_PASSIVE);
-            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
 
             if (pInstance)
             {
@@ -403,7 +403,7 @@ public:
                         pInstance->SetData(BRANN_BRONZEBEARD, 5);
                     SetEscortPaused(false);
                     me->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_STATE_STAND);
-                    me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                    me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                     me->SetOrientation(3.132660f);
                     me->SendMovementFlagUpdate();
                     events.ScheduleEvent(EVENT_SJONNIR_END_BRANN_YELL, 10s);
@@ -831,7 +831,7 @@ void brann_bronzebeard::brann_bronzebeardAI::WaypointReached(uint32 id)
             {
                 me->HandleEmoteCommand(EMOTE_ONESHOT_CHEER);
                 Talk(SAY_BRANN_EVENT_INTRO_1);
-                me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                 pInstance->SetData(BRANN_BRONZEBEARD, 2);
             }
             break;
@@ -849,7 +849,7 @@ void brann_bronzebeard::brann_bronzebeardAI::WaypointReached(uint32 id)
         //Tribunal end, stand in the middle of the sky room
         case 17:
             SetEscortPaused(true);
-            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
             me->SetOrientation(3.91672f);
             me->SendMovementFlagUpdate();
             break;
@@ -860,7 +860,7 @@ void brann_bronzebeard::brann_bronzebeardAI::WaypointReached(uint32 id)
             if (pInstance)
             {
                 pInstance->SetData(BRANN_BRONZEBEARD, 4);
-                me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                 me->SetOrientation(3.132660f);
                 DoCast(me, 58506, false);
                 me->SendMovementFlagUpdate();

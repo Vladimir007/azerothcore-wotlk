@@ -95,7 +95,7 @@ public:
                 channeling = false;
                 eventProgress = 0;
                 spawnerCount  = 0;
-                me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                 me->SetReactState(REACT_AGGRESSIVE);
             }
         }
@@ -124,7 +124,7 @@ public:
             {
                 eventInProgress = true;
                 Talk(SAY_QUEST_ACCEPTED);
-                me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                me->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                 me->SetFaction(FACTION_ESCORTEE_N_NEUTRAL_ACTIVE);
                 me->GetMotionMaster()->MoveWaypoint(PATH_ESCORT, false);
             }

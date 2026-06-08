@@ -60,13 +60,13 @@ enum class HighGuid
     Container      = 0x4000,                      // blizz 4000
     Player         = 0x0000,                      // blizz 0000
     GameObject     = 0xF110,                      // blizz F110
-    Transport      = 0xF120,                      // blizz F120 (for GAMEOBJECT_TYPE_TRANSPORT)
+    Transport      = 0xF120,                      // blizz F120 (for GAME_OBJECT_TYPE_TRANSPORT)
     Unit           = 0xF130,                      // blizz F130
     Pet            = 0xF140,                      // blizz F140
     Vehicle        = 0xF150,                      // blizz F550
     DynamicObject  = 0xF100,                      // blizz F100
     Corpse         = 0xF101,                      // blizz F100
-    Mo_Transport   = 0x1FC0,                      // blizz 1FC0 (for GAMEOBJECT_TYPE_MO_TRANSPORT)
+    Mo_Transport   = 0x1FC0,                      // blizz 1FC0 (for GAME_OBJECT_TYPE_MO_TRANSPORT)
     Instance       = 0x1F40,                      // blizz 1F40
     Group          = 0x1F50,
 };
@@ -122,10 +122,10 @@ class ObjectGuid
         typedef uint32 LowType;
 
         template<HighGuid type>
-        static typename std::enable_if<ObjectGuidTraits<type>::Global, ObjectGuid>::type Create(LowType counter) { return Global(type, counter); }
+        static std::enable_if_t<ObjectGuidTraits<type>::Global, ObjectGuid> Create(LowType counter) { return Global(type, counter); }
 
         template<HighGuid type>
-        static typename std::enable_if<ObjectGuidTraits<type>::MapSpecific, ObjectGuid>::type Create(uint32 entry, LowType counter) { return MapSpecific(type, entry, counter); }
+        static std::enable_if_t<ObjectGuidTraits<type>::MapSpecific, ObjectGuid> Create(uint32 entry, LowType counter) { return MapSpecific(type, entry, counter); }
 
         ObjectGuid()  = default;
         explicit ObjectGuid(uint64 guid) : _guid(guid) { }

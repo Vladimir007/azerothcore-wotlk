@@ -169,7 +169,7 @@ void BattlegroundAV::HandleQuestComplete(uint32 questid, Player* player)
 {
     if (GetStatus() != STATUS_IN_PROGRESS)
         return;//maybe we should log this, cause this must be a cheater or a big bug
-    TeamId teamId = player->GetTeamId();
+    TeamID teamId = player->GetTeamId();
     //TODO add reputation, events (including quest not available anymore, next quest availabe, go/npc de/spawning)and maybe honor
     LOG_DEBUG("bg.battleground", "BG_AV Quest {} completed", questid);
     switch (questid)
@@ -273,7 +273,7 @@ void BattlegroundAV::HandleQuestComplete(uint32 questid, Player* player)
     }
 }
 
-void BattlegroundAV::UpdateScore(TeamId teamId, int16 points)
+void BattlegroundAV::UpdateScore(TeamID teamId, int16 points)
 {
     if (BG_AV_SCORE_INITIAL_POINTS == 0)
         return; // don't update teamscores if reinforcements are disabled
@@ -347,7 +347,7 @@ Creature* BattlegroundAV::AddAVCreature(uint16 cinfoid, uint16 type)
                             || (cinfoid >= AV_NPC_H_GRAVEDEFENSE0 && cinfoid <= AV_NPC_H_GRAVEDEFENSE3)))
         {
             CreatureData& data = sObjectMgr->NewOrExistCreatureData(creature->GetSpawnId());
-            data.wander_distance = 5;
+            data.wanderDistance = 5;
         }
         //else wander_distance will be 15, so creatures move maximum=10
         //creature->SetDefaultMovementType(RANDOM_MOTION_TYPE);
@@ -506,7 +506,7 @@ void BattlegroundAV::AddPlayer(Player* player)
     PlayerScores.emplace(player->GetGUID().GetCounter(), new BattlegroundAVScore(player->GetGUID()));
 }
 
-void BattlegroundAV::EndBattleground(TeamId winnerTeamId)
+void BattlegroundAV::EndBattleground(TeamID winnerTeamId)
 {
     //calculate bonuskills for both teams:
     //first towers:
@@ -549,7 +549,7 @@ void BattlegroundAV::EndBattleground(TeamId winnerTeamId)
         rep[m_Mine_Owner[mine]] += _reputationPerOwnedMine;
     }
 
-    for (TeamId iTeamId = TEAM_ALLIANCE; iTeamId <= TEAM_HORDE; iTeamId = TeamId(iTeamId + 1))
+    for (TeamID iTeamId = TEAM_ALLIANCE; iTeamId <= TEAM_HORDE; iTeamId = TeamID(iTeamId + 1))
     {
         if (m_CaptainAlive[iTeamId])
         {
@@ -644,7 +644,7 @@ void BattlegroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
     DestroyNode(node);
     UpdateNodeWorldState(node);
 
-    TeamId ownerId = m_Nodes[node].OwnerId;
+    TeamID ownerId = m_Nodes[node].OwnerId;
     if (IsTower(node))
     {
         uint8 tmp = node - BG_AV_NODES_DUNBALDAR_SOUTH;
@@ -687,7 +687,7 @@ void BattlegroundAV::EventPlayerDestroyedPoint(BG_AV_Nodes node)
         creature->AI()->Talk(GetDefendString(node, ownerId));
 }
 
-void BattlegroundAV::ChangeMineOwner(uint8 mine, TeamId teamId, bool initial)
+void BattlegroundAV::ChangeMineOwner(uint8 mine, TeamID teamId, bool initial)
 {
     // mine=0 northmine mine=1 southmin
     // changing the owner results in setting respawntim to infinite for current creatures,
@@ -772,7 +772,7 @@ void BattlegroundAV::ChangeMineOwner(uint8 mine, TeamId teamId, bool initial)
     }
 }
 
-bool BattlegroundAV::PlayerCanDoMineQuest(int32 GOId, TeamId teamId)
+bool BattlegroundAV::PlayerCanDoMineQuest(int32 GOId, TeamID teamId)
 {
     if (GOId == BG_AV_OBJECTID_MINE_N)
         return (m_Mine_Owner[AV_NORTH_MINE] == teamId);
@@ -783,7 +783,7 @@ bool BattlegroundAV::PlayerCanDoMineQuest(int32 GOId, TeamId teamId)
 
 void BattlegroundAV::PopulateNode(BG_AV_Nodes node)
 {
-    TeamId ownerId = m_Nodes[node].OwnerId;
+    TeamID ownerId = m_Nodes[node].OwnerId;
 
     uint32 c_place = AV_CPLACE_DEFENSE_STORM_AID + (4 * node);
     uint32 creatureid;
@@ -952,8 +952,8 @@ void BattlegroundAV::EventPlayerDefendsPoint(Player* player, uint32 object)
     ASSERT(GetStatus() == STATUS_IN_PROGRESS);
     BG_AV_Nodes node = GetNodeThroughObject(object);
 
-    TeamId ownerId = m_Nodes[node].OwnerId; //maybe should name it prevowner
-    TeamId teamId = player->GetTeamId();
+    TeamID ownerId = m_Nodes[node].OwnerId; //maybe should name it prevowner
+    TeamID teamId = player->GetTeamId();
 
     if (ownerId == player->GetTeamId() || m_Nodes[node].State != POINT_ASSAULTED)
         return;
@@ -1018,8 +1018,8 @@ void BattlegroundAV::EventPlayerAssaultsPoint(Player* player, uint32 object)
     ASSERT(GetStatus() == STATUS_IN_PROGRESS);
 
     BG_AV_Nodes node = GetNodeThroughObject(object);
-    TeamId prevOwnerId = m_Nodes[node].OwnerId;
-    TeamId teamId  = player->GetTeamId();
+    TeamID prevOwnerId = m_Nodes[node].OwnerId;
+    TeamID teamId  = player->GetTeamId();
     LOG_DEBUG("bg.battleground", "bg_av: player assaults point object {} node {}", object, node);
     if (prevOwnerId == teamId || teamId == m_Nodes[node].TotalOwnerId)
         return; //surely a gm used this object
@@ -1160,7 +1160,7 @@ void BattlegroundAV::FillInitialWorldStates(WorldPackets::WorldState::InitWorldS
     SendMineWorldStates(AV_SOUTH_MINE);
 }
 
-uint8 BattlegroundAV::GetWorldStateType(uint8 state, TeamId teamId) //this is used for node worldstates and returns values which fit good into the worldstatesarray
+uint8 BattlegroundAV::GetWorldStateType(uint8 state, TeamID teamId) //this is used for node worldstates and returns values which fit good into the worldstatesarray
 {
     //neutral stuff cant get handled (currently its only snowfall)
     ASSERT(teamId != TEAM_NEUTRAL);
@@ -1529,7 +1529,7 @@ bool BattlegroundAV::SetupBattleground()
     return true;
 }
 
-uint8 BattlegroundAV::GetAttackString(BG_AV_Nodes node, TeamId teamId)
+uint8 BattlegroundAV::GetAttackString(BG_AV_Nodes node, TeamID teamId)
 {
     uint8 strId = 0;
     switch (node)
@@ -1628,7 +1628,7 @@ uint8 BattlegroundAV::GetAttackString(BG_AV_Nodes node, TeamId teamId)
     return strId;
 }
 
-uint8 BattlegroundAV::GetDefendString(BG_AV_Nodes node, TeamId teamId)
+uint8 BattlegroundAV::GetDefendString(BG_AV_Nodes node, TeamID teamId)
 {
     uint8 strId = 0;
     switch (node)
@@ -1727,7 +1727,7 @@ uint8 BattlegroundAV::GetDefendString(BG_AV_Nodes node, TeamId teamId)
     return strId;
 }
 
-uint8 BattlegroundAV::GetMineString(uint8 mineId, TeamId teamId)
+uint8 BattlegroundAV::GetMineString(uint8 mineId, TeamID teamId)
 {
     uint8 strId = 0;
     switch (mineId)
@@ -1751,7 +1751,7 @@ uint8 BattlegroundAV::GetMineString(uint8 mineId, TeamId teamId)
     return strId;
 }
 
-void BattlegroundAV::AssaultNode(BG_AV_Nodes node, TeamId teamId)
+void BattlegroundAV::AssaultNode(BG_AV_Nodes node, TeamID teamId)
 {
     if (m_Nodes[node].TotalOwnerId == teamId)
     {
@@ -1792,7 +1792,7 @@ void BattlegroundAV::DestroyNode(BG_AV_Nodes node)
     m_Nodes[node].Timer      = 0;
 }
 
-void BattlegroundAV::InitNode(BG_AV_Nodes node, TeamId teamId, bool tower)
+void BattlegroundAV::InitNode(BG_AV_Nodes node, TeamID teamId, bool tower)
 {
     m_Nodes[node].TotalOwnerId = teamId;
     m_Nodes[node].OwnerId      = teamId;
@@ -1803,7 +1803,7 @@ void BattlegroundAV::InitNode(BG_AV_Nodes node, TeamId teamId, bool tower)
     m_Nodes[node].Tower      = tower;
 }
 
-void BattlegroundAV::DefendNode(BG_AV_Nodes node, TeamId teamId)
+void BattlegroundAV::DefendNode(BG_AV_Nodes node, TeamID teamId)
 {
     ASSERT(m_Nodes[node].TotalOwnerId == teamId);
     ASSERT(m_Nodes[node].OwnerId != teamId);
@@ -1843,7 +1843,7 @@ void BattlegroundAV::ResetBGSubclass()
             DelCreature(i);
 }
 
-bool BattlegroundAV::IsBothMinesControlledByTeam(TeamId teamId) const
+bool BattlegroundAV::IsBothMinesControlledByTeam(TeamID teamId) const
 {
     for (auto& mine : m_Mine_Owner)
         if (mine != teamId)
@@ -1852,7 +1852,7 @@ bool BattlegroundAV::IsBothMinesControlledByTeam(TeamId teamId) const
     return true;
 }
 
-bool BattlegroundAV::IsAllTowersControlledAndCaptainAlive(TeamId teamId) const
+bool BattlegroundAV::IsAllTowersControlledAndCaptainAlive(TeamID teamId) const
 {
     if (teamId == TEAM_ALLIANCE)
     {
@@ -1896,7 +1896,7 @@ bool BattlegroundAV::IsAllTowersControlledAndCaptainAlive(TeamId teamId) const
     return false;
 }
 
-TeamId BattlegroundAV::GetPrematureWinner()
+TeamID BattlegroundAV::GetPrematureWinner()
 {
     if (GetTeamScore(TEAM_ALLIANCE) > GetTeamScore(TEAM_HORDE))
         return TEAM_ALLIANCE;

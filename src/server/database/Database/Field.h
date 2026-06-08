@@ -1,28 +1,13 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef FIELD_H
+#define FIELD_H
 
-#ifndef _FIELD_H
-#define _FIELD_H
-
-#include "Define.h"
-#include "Duration.h"
 #include <array>
 #include <string_view>
 #include <vector>
+#include <pqxx/pqxx>
+
+#include "Define.h"
+#include "Duration.h"
 
 namespace Acore::Types
 {
@@ -39,101 +24,55 @@ namespace Acore::Types
 
 using Binary = std::vector<uint8>;
 
-enum class DatabaseFieldTypes : uint8
+class Field
 {
-    Null,
-    Int8,
-    Int16,
-    Int32,
-    Int64,
-    Float,
-    Double,
-    Decimal,
-    Date,
-    Binary
-};
-
-struct QueryResultFieldMetadata
-{
-    std::string TableName{};
-    std::string TableAlias{};
-    std::string Name{};
-    std::string Alias{};
-    std::string TypeName{};
-    uint32 Index = 0;
-    DatabaseFieldTypes Type = DatabaseFieldTypes::Null;
-};
-
-/**
-    @class Field
-
-    @brief Class used to access individual fields of database query result
-
-    Guideline on field type matching:
-
-    |   MySQL type           |  method to use                          |
-    |------------------------|-----------------------------------------|
-    | TINYINT                | Get<bool>, Get<int8>, Get<uint8>        |
-    | SMALLINT               | Get<int16>, Get<uint16>                 |
-    | MEDIUMINT, INT         | Get<int32>, Get<uint32>                 |
-    | BIGINT                 | Get<int64>, Get<uint64>                 |
-    | FLOAT                  | Get<float>                              |
-    | DOUBLE, DECIMAL        | Get<double>                             |
-    | CHAR, VARCHAR,         | Get<std::string>, Get<std::string_view> |
-    | TINYTEXT, MEDIUMTEXT,  | Get<std::string>, Get<std::string_view> |
-    | TEXT, LONGTEXT         | Get<std::string>, Get<std::string_view> |
-    | TINYBLOB, MEDIUMBLOB,  | Get<Binary>, Get<std::string>           |
-    | BLOB, LONGBLOB         | Get<Binary>, Get<std::string>           |
-    | BINARY, VARBINARY      | Get<Binary>                             |
-
-    Return types of aggregate functions:
-
-    | Function |       Type        |
-    |----------|-------------------|
-    | MIN, MAX | Same as the field |
-    | SUM, AVG | DECIMAL           |
-    | COUNT    | BIGINT            |
-*/
-class AC_DATABASE_API Field
-{
-friend class ResultSet;
-friend class PreparedResultSet;
 
 public:
-    Field();
+    Field() {}
     ~Field() = default;
 
-    [[nodiscard]] inline bool IsNull() const
-    {
-        return data.value == nullptr;
-    }
+    void Set(pqxx::field_ref ref);
+
+    [[nodiscard]] bool IsNull() const { return _ref.is_null(); }
 
     template<typename T>
-    inline std::enable_if_t<std::is_arithmetic_v<T>, T> Get() const
+    std::enable_if_t<std::is_arithmetic_v<T> && !std::is_same_v<uint8, T> && !std::is_same_v<int8, T>, T> Get() const
     {
         return GetData<T>();
     }
 
     template<typename T>
-    inline std::enable_if_t<std::is_same_v<std::string, T>, T> Get() const
+    std::enable_if_t<std::is_same_v<uint8, T>, T> Get() const
     {
-        return GetDataString();
+        return static_cast<uint8>(GetData<int>());
     }
 
     template<typename T>
-    inline std::enable_if_t<std::is_same_v<std::string_view, T>, T> Get() const
+    std::enable_if_t<std::is_same_v<int8, T>, T> Get() const
     {
-        return GetDataStringView();
+        return static_cast<int8>(GetData<int>());
     }
 
     template<typename T>
-    inline std::enable_if_t<std::is_same_v<Binary, T>, T> Get() const
+    std::enable_if_t<std::is_same_v<std::string, T>, T> Get() const
+    {
+        return GetData<T>();
+    }
+
+    template<typename T>
+    std::enable_if_t<std::is_same_v<std::string_view, T>, T> Get() const
+    {
+        return GetData<T>();
+    }
+
+    template<typename T>
+    std::enable_if_t<std::is_same_v<Binary, T>, T> Get() const
     {
         return GetDataBinary();
     }
 
     template <typename T, std::size_t S>
-    inline std::enable_if_t<std::is_same_v<Binary, T>, std::array<uint8, S>> Get() const
+    std::enable_if_t<std::is_same_v<Binary, T>, std::array<uint8, S>> Get() const
     {
         std::array<uint8, S> buf = {};
         GetBinarySizeChecked(buf.data(), S);
@@ -141,38 +80,29 @@ public:
     }
 
     template<typename T>
-    inline Acore::Types::is_chrono_v<T> Get(bool convertToUin32 = true) const
+    Acore::Types::is_chrono_v<T> Get(bool convertToUin32 = true) const
     {
         return convertToUin32 ? T(GetData<uint32>()) : T(GetData<uint64>());
     }
 
-    DatabaseFieldTypes GetType() { return meta->Type; }
+    template<typename T>
+    std::vector<T> GetVector() const;
 
-protected:
-    struct
-    {
-        char const* value;      // Actual data in memory
-        uint32 length;          // Length
-        bool raw;               // Raw bytes? (Prepared statement or ad hoc)
-    } data;
+    template<typename T, std::size_t S>
+    std::array<T, S> GetArray() const;
 
-    void SetByteValue(char const* newValue, uint32 length);
-    void SetStructuredValue(char const* newValue, uint32 length);
-    [[nodiscard]] bool IsType(DatabaseFieldTypes type) const;
-    [[nodiscard]] bool IsNumeric() const;
+    /// Returns NxM array for T-values
+    template<typename T, std::size_t N, std::size_t M>
+    std::array<std::array<T, M>, N> GetArray() const;
 
 private:
     template<typename T>
     T GetData() const;
 
-    std::string GetDataString() const;
-    std::string_view GetDataStringView() const;
     Binary GetDataBinary() const;
-
-    QueryResultFieldMetadata const* meta;
-    void LogWrongType(std::string_view getter, std::string_view typeName) const;
-    void SetMetadata(QueryResultFieldMetadata const* fieldMeta);
     void GetBinarySizeChecked(uint8* buf, std::size_t size) const;
+
+    pqxx::field_ref _ref;
 };
 
 #endif

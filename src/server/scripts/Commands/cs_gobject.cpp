@@ -45,19 +45,19 @@ public:
     {
         static ChatCommandTable gobjectCommandTable =
         {
-            { "activate",  HandleGameObjectActivateCommand, SEC_GAMEMASTER,    Console::No },
+            { "activate",  HandleGameObjectActivateCommand, SEC_GAME_MASTER,    Console::No },
             { "delete",    HandleGameObjectDeleteCommand,   SEC_ADMINISTRATOR, Console::No },
             { "info",      HandleGameObjectInfoCommand,     SEC_MODERATOR,     Console::No },
             { "move",      HandleGameObjectMoveCommand,     SEC_ADMINISTRATOR, Console::No },
             { "near",      HandleGameObjectNearCommand,     SEC_MODERATOR,     Console::No },
             { "target",    HandleGameObjectTargetCommand,   SEC_MODERATOR,     Console::No },
             { "turn",      HandleGameObjectTurnCommand,     SEC_ADMINISTRATOR, Console::No },
-            { "add temp",  HandleGameObjectAddTempCommand,  SEC_GAMEMASTER,    Console::No },
+            { "add temp",  HandleGameObjectAddTempCommand,  SEC_GAME_MASTER,    Console::No },
             { "add",       HandleGameObjectAddCommand,      SEC_ADMINISTRATOR, Console::No },
             { "load",      HandleGameObjectLoadCommand,     SEC_ADMINISTRATOR, Console::Yes },
             { "set phase", HandleGameObjectSetPhaseCommand, SEC_ADMINISTRATOR, Console::No },
             { "set state", HandleGameObjectSetStateCommand, SEC_ADMINISTRATOR, Console::No },
-            { "respawn",   HandleGameObjectRespawn,         SEC_GAMEMASTER,    Console::No }
+            { "respawn",   HandleGameObjectRespawn,         SEC_GAME_MASTER,    Console::No }
         };
         static ChatCommandTable commandTable =
         {
@@ -99,10 +99,10 @@ public:
             return false;
         }
 
-        if (objectInfo->displayId && !sGameObjectDisplayInfoStore.LookupEntry(objectInfo->displayId))
+        if (objectInfo->DisplayID && !sGameObjectDisplayInfoStore.LookupEntry(objectInfo->DisplayID))
         {
             // report to DB errors log as in loading case
-            LOG_ERROR("sql.sql", "Gameobject (Entry {} GoType: {}) have invalid displayId ({}), not spawned.", *objectId, objectInfo->type, objectInfo->displayId);
+            LOG_ERROR("sql.sql", "Gameobject (Entry {} GoType: {}) have invalid displayId ({}), not spawned.", *objectId, objectInfo->Type, objectInfo->DisplayID);
             handler->SendErrorMessage(LANG_GAMEOBJECT_HAVE_INVALID_DATA, uint32(objectId));
             return false;
         }
@@ -114,11 +114,11 @@ public:
         float o = float(player->GetOrientation());
         Map* map = player->GetMap();
 
-        GameObject* object = sObjectMgr->IsGameObjectStaticTransport(objectInfo->entry) ? new StaticTransport() : new GameObject();
+        GameObject* object = sObjectMgr->IsGameObjectStaticTransport(objectInfo->Entry) ? new StaticTransport() : new GameObject();
         ObjectGuid::LowType guidLow = map->GenerateLowGuid<HighGuid::GameObject>();
 
         G3D::Quat rotation = G3D::Quat::fromAxisAngleRotation(G3D::Vector3::unitZ(), o);
-        if (!object->Create(guidLow, objectInfo->entry, map, player->GetPhaseMaskForSpawn(), x, y, z, o, rotation, 0, GO_STATE_READY))
+        if (!object->Create(guidLow, objectInfo->Entry, map, player->GetPhaseMaskForSpawn(), x, y, z, o, rotation, 0, GO_STATE_READY))
         {
             delete object;
             return false;
@@ -135,7 +135,7 @@ public:
         // this is required to avoid weird behavior and memory leaks
         delete object;
 
-        object = sObjectMgr->IsGameObjectStaticTransport(objectInfo->entry) ? new StaticTransport() : new GameObject();
+        object = sObjectMgr->IsGameObjectStaticTransport(objectInfo->Entry) ? new StaticTransport() : new GameObject();
         // this will generate a new guid if the object is in an instance
         if (!object->LoadGameObjectFromDB(guidLow, map, true))
         {
@@ -144,7 +144,7 @@ public:
         }
 
         /// @todo is it really necessary to add both the real and DB table guid here ?
-        sObjectMgr->AddGameobjectToGrid(guidLow, sObjectMgr->GetGameObjectData(guidLow));
+        sObjectMgr->AddGameObjectToGrid(guidLow, sObjectMgr->GetGameObjectData(guidLow));
 
         handler->PSendSysMessage(LANG_GAMEOBJECT_ADD, uint32(objectId), objectInfo->name, guidLow, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ());
         return true;
@@ -181,10 +181,10 @@ public:
             return false;
         }
 
-        Map* map = sMapMgr->FindBaseNonInstanceMap(data->mapid);
+        Map* map = sMapMgr->FindBaseNonInstanceMap(data->mapID);
         if (!map)
         {
-            handler->SendErrorMessage("Gameobject spawn {} is on a non-continent map (ID: {}). Only continent maps are supported.", uint32(spawnId), data->mapid);
+            handler->SendErrorMessage("Gameobject spawn {} is on a non-continent map (ID: {}). Only continent maps are supported.", uint32(spawnId), data->mapID);
             return false;
         }
 
@@ -195,7 +195,7 @@ public:
             return false;
         }
 
-        GameObject* object = sObjectMgr->IsGameObjectStaticTransport(objectInfo->entry) ? new StaticTransport() : new GameObject();
+        GameObject* object = sObjectMgr->IsGameObjectStaticTransport(objectInfo->Entry) ? new StaticTransport() : new GameObject();
         if (!object->LoadGameObjectFromDB(spawnId, map, true))
         {
             delete object;
@@ -203,7 +203,7 @@ public:
             return false;
         }
 
-        sObjectMgr->AddGameobjectToGrid(spawnId, data);
+        sObjectMgr->AddGameObjectToGrid(spawnId, data);
         handler->PSendSysMessage("Gameobject spawn {} loaded successfully.", uint32(spawnId));
         return true;
     }
@@ -249,7 +249,6 @@ public:
             else
             {
                 std::string name = std::string(objectId->get<std::string_view>());
-                WorldDatabase.EscapeString(name);
                 result = WorldDatabase.Query(
                         "SELECT guid, id, position_x, position_y, position_z, orientation, map, phaseMask, (POW(position_x - {}, 2) + POW(position_y - {}, 2) + POW(position_z - {}, 2)) AS order_ "
                         "FROM gameobject LEFT JOIN gameobject_template ON gameobject_template.entry = gameobject.id WHERE map = {} AND name LIKE '%{}%' ORDER BY order_ ASC LIMIT 1",
@@ -450,9 +449,9 @@ public:
         object->Relocate(pos);
 
         // update which cell has this gameobject registered for loading
-        sObjectMgr->RemoveGameobjectFromGrid(guidLow, object->GetGameObjectData());
+        sObjectMgr->RemoveGameObjectFromGrid(guidLow, object->GetGameObjectData());
         object->SaveToDB();
-        sObjectMgr->AddGameobjectToGrid(guidLow, object->GetGameObjectData());
+        sObjectMgr->AddGameObjectToGrid(guidLow, object->GetGameObjectData());
 
         // Generate a completely new spawn with new guid
         // 3.3.5a client caches recently deleted objects and brings them back to life
@@ -534,40 +533,37 @@ public:
 
         // Fallback to DB query
         WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAMEOBJECT_NEAREST);
-        stmt->SetData(0, player->GetPositionX());
-        stmt->SetData(1, player->GetPositionY());
-        stmt->SetData(2, player->GetPositionZ());
-        stmt->SetData(3, player->GetMapId());
-        stmt->SetData(4, player->GetPositionX());
-        stmt->SetData(5, player->GetPositionY());
-        stmt->SetData(6, player->GetPositionZ());
-        stmt->SetData(7, distance * distance);
-        stmt->SetData(8, player->GetPhaseMask());
-        PreparedQueryResult result = WorldDatabase.Query(stmt);
+        stmt->SetData(0, player->GetMapId());
+        stmt->SetData(1, player->GetPositionX());
+        stmt->SetData(2, player->GetPositionY());
+        stmt->SetData(3, player->GetPositionZ());
+        stmt->SetData(4, distance * distance);
+        stmt->SetData(5, player->GetPhaseMask());
 
-        if (result)
+        if (const QueryResult result = WorldDatabase.Query(stmt))
         {
             do
             {
-                Field* fields = result->Fetch();
+                const Field* fields = result->Fetch();
                 ObjectGuid::LowType guid = fields[0].Get<uint32>();
 
                 // Skip entries already emitted via grid search
-                if (gridSpawnIds.count(guid))
+                if (gridSpawnIds.contains(guid))
                     continue;
 
                 uint32 entry = fields[1].Get<uint32>();
-                float x = fields[2].Get<float>();
-                float y = fields[3].Get<float>();
-                float z = fields[4].Get<float>();
-                uint16 mapId = fields[5].Get<uint16>();
+                const auto pos = fields[2].GetArray<float, 3>();
+                float x = pos[0];
+                float y = pos[1];
+                float z = pos[2];
+                uint16 mapID = fields[3].Get<uint16>();
 
                 GameObjectTemplate const* gameObjectInfo = sObjectMgr->GetGameObjectTemplate(entry);
 
                 if (!gameObjectInfo)
                     continue;
 
-                handler->PSendSysMessage(LANG_GO_LIST_CHAT, guid, entry, guid, gameObjectInfo->name, x, y, z, mapId, "", "");
+                handler->PSendSysMessage(LANG_GO_LIST_CHAT, guid, entry, guid, gameObjectInfo->name, x, y, z, mapID, "", "");
 
                 ++count;
             } while (result->NextRow());
@@ -612,13 +608,13 @@ public:
             return false;
         }
 
-        type = gameObjectInfo->type;
-        displayId = gameObjectInfo->displayId;
+        type = gameObjectInfo->Type;
+        displayId = gameObjectInfo->DisplayID;
         name = gameObjectInfo->name;
-        if (type == GAMEOBJECT_TYPE_CHEST)
-            lootId = gameObjectInfo->chest.lootId;
-        else if (type == GAMEOBJECT_TYPE_FISHINGHOLE)
-            lootId = gameObjectInfo->fishinghole.lootId;
+        if (type == GAME_OBJECT_TYPE_CHEST)
+            lootId = gameObjectInfo->Chest.lootId;
+        else if (type == GAME_OBJECT_TYPE_FISHING_HOLE)
+            lootId = gameObjectInfo->FishingHole.lootId;
 
         handler->PSendSysMessage(LANG_GOINFO_ENTRY, entry);
         if (gameObject)
@@ -685,7 +681,7 @@ public:
         }
 
         object->Respawn();
-        handler->PSendSysMessage(LANG_CMD_GO_RESPAWN, object->GetNameForLocaleIdx(handler->GetSessionDbcLocale()), object->GetEntry(), object->GetSpawnId());
+        handler->PSendSysMessage(LANG_CMD_GO_RESPAWN, object->GetName(), object->GetEntry(), object->GetSpawnId());
         return true;
     }
 };

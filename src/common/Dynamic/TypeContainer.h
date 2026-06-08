@@ -1,37 +1,15 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef NCORE_TYPE_CONTAINER_H
+#define NCORE_TYPE_CONTAINER_H
 
-#ifndef ACORE_TYPECONTAINER_H
-#define ACORE_TYPECONTAINER_H
-
-/*
- * Here, you'll find a series of containers that allow you to hold multiple
- * types of object at the same time.
- */
-
-#include "Dynamic/TypeList.h"
-#include "GridRefMgr.h"
 #include <unordered_map>
 #include <vector>
+#include "GridRefMgr.h"
+#include "Dynamic/TypeList.h"
 
 /*
- * @class ContainerMapList is a mulit-type container for map elements
+ * @class ContainerMapList is a multi-type container for map elements
  * By itself its meaningless but collaborate along with TypeContainers,
- * it become the most powerfully container in the whole system.
+ * it becomes the most powerfully container in the whole system.
  */
 template<class OBJECT>
 struct ContainerMapList
@@ -40,7 +18,7 @@ struct ContainerMapList
 };
 
 template<>
-struct ContainerMapList<TypeNull>                /* nothing is in type null */
+struct ContainerMapList<TypeNull>  // Nothing is in type null
 {
 };
 
@@ -87,16 +65,13 @@ struct ContainerUnorderedMap<TypeList<H, T>, KEY_TYPE>
     ContainerUnorderedMap<T, KEY_TYPE> _TailElements;
 };
 
-/*
- * @class ContainerList is a simple list of different types of elements
- *
- */
+// @class ContainerList is a simple list of different types of elements
 template<class OBJECT> struct ContainerList
 {
     OBJECT _element;
 };
 
-/* TypeNull is underfined */
+// TypeNull is undefined
 template<> struct ContainerList<TypeNull> { };
 template<class H, class T> struct ContainerList<TypeList<H, T>>
 {
@@ -105,7 +80,6 @@ template<class H, class T> struct ContainerList<TypeList<H, T>>
 };
 
 #include "TypeContainerFunctions.h"
-
 /*
  * @class TypeMapContainer contains a fixed number of types and is
  * determined at compile time.  This is probably the most complicated
@@ -117,23 +91,18 @@ template<class OBJECT_TYPES>
 class TypeMapContainer
 {
 public:
-    template<class SPECIFIC_TYPE> [[nodiscard]] std::size_t Count() const { return Acore::Count(i_elements, (SPECIFIC_TYPE*)nullptr); }
+    template<class SPECIFIC_TYPE> [[nodiscard]] std::size_t Count() const
+    {
+        return Acore::Count(i_elements, static_cast<SPECIFIC_TYPE*>(nullptr));
+    }
 
-    /// inserts a specific object into the container
+    /// Inserts a specific object into the container
     template<class SPECIFIC_TYPE>
     bool insert(SPECIFIC_TYPE* obj)
     {
         SPECIFIC_TYPE* t = Acore::Insert(i_elements, obj);
-        return (t != nullptr);
+        return t != nullptr;
     }
-
-    ///  Removes the object from the container, and returns the removed object
-    //template<class SPECIFIC_TYPE>
-    // bool remove(SPECIFIC_TYPE* obj)
-    //{
-    //    SPECIFIC_TYPE* t = Acore::Remove(i_elements, obj);
-    //    return (t != nullptr);
-    //}
 
     ContainerMapList<OBJECT_TYPES>& GetElements() { return i_elements; }
     [[nodiscard]] const ContainerMapList<OBJECT_TYPES>& GetElements() const { return i_elements;}
@@ -146,7 +115,7 @@ template<class OBJECT_TYPES>
 class TypeVectorContainer
 {
 public:
-    template<class SPECIFIC_TYPE> [[nodiscard]] std::size_t Count() const { return Acore::Count(i_elements, (SPECIFIC_TYPE*)nullptr); }
+    template<class SPECIFIC_TYPE> [[nodiscard]] std::size_t Count() const { return Acore::Count(i_elements, static_cast<SPECIFIC_TYPE*>(nullptr)); }
 
     template<class SPECIFIC_TYPE>
     bool Insert(SPECIFIC_TYPE* obj)
@@ -182,20 +151,20 @@ public:
     template<class SPECIFIC_TYPE>
     bool Remove(KEY_TYPE const& handle)
     {
-        return Acore::Remove(_elements, handle, (SPECIFIC_TYPE*)nullptr);
+        return Acore::Remove(_elements, handle, static_cast<SPECIFIC_TYPE*>(nullptr));
     }
 
     template<class SPECIFIC_TYPE>
     SPECIFIC_TYPE* Find(KEY_TYPE const& handle)
     {
-        return Acore::Find(_elements, handle, (SPECIFIC_TYPE*)nullptr);
+        return Acore::Find(_elements, handle, static_cast<SPECIFIC_TYPE*>(nullptr));
     }
 
     template<class SPECIFIC_TYPE>
     [[nodiscard]] std::size_t Size() const
     {
         std::size_t size = 0;
-        Acore::Size(_elements, &size, (SPECIFIC_TYPE*)nullptr);
+        Acore::Size(_elements, &size, static_cast<SPECIFIC_TYPE*>(nullptr));
         return size;
     }
 

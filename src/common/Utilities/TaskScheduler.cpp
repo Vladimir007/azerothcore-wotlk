@@ -1,20 +1,3 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "TaskScheduler.h"
 #include "Errors.h"
 
@@ -61,9 +44,7 @@ TaskScheduler& TaskScheduler::CancelGroup(group_t const group)
 
 TaskScheduler& TaskScheduler::CancelGroupsOf(std::vector<group_t> const& groups)
 {
-    std::for_each(groups.begin(), groups.end(),
-                  std::bind(&TaskScheduler::CancelGroup, this, std::placeholders::_1));
-
+    std::ranges::for_each(groups, std::bind(&TaskScheduler::CancelGroup, this, std::placeholders::_1));
     return *this;
 }
 
@@ -77,9 +58,7 @@ void TaskScheduler::Dispatch(success_t const& callback)
 {
     // If the validation failed abort the dispatching here.
     if (!_predicate())
-    {
         return;
-    }
 
     // Process all asyncs
     while (!_asyncHolder.empty())
@@ -89,17 +68,13 @@ void TaskScheduler::Dispatch(success_t const& callback)
 
         // If the validation failed abort the dispatching here.
         if (!_predicate())
-        {
             return;
-        }
     }
 
     while (!_task_holder.IsEmpty())
     {
         if (_task_holder.First()->_end > _now)
-        {
             break;
-        }
 
         // Perfect forward the context to the handler
         // Use weak references to catch destruction before callbacks.
@@ -110,16 +85,14 @@ void TaskScheduler::Dispatch(success_t const& callback)
 
         // If the validation failed abort the dispatching here.
         if (!_predicate())
-        {
             return;
-        }
     }
 
     // On finish call the final callback
     callback();
 }
 
-bool TaskScheduler::IsGroupScheduled(group_t const group)
+bool TaskScheduler::IsGroupScheduled(group_t const group) const
 {
     return _task_holder.IsGroupQueued(group);
 }
@@ -154,43 +127,38 @@ void TaskScheduler::TaskQueue::Clear()
 void TaskScheduler::TaskQueue::RemoveIf(std::function<bool(TaskContainer const&)> const& filter)
 {
     for (auto itr = container.begin(); itr != container.end();)
+    {
         if (filter(*itr))
-        {
             itr = container.erase(itr);
-        }
         else
-        {
             ++itr;
-        }
+    }
 }
 
 void TaskScheduler::TaskQueue::ModifyIf(std::function<bool(TaskContainer const&)> const& filter)
 {
     std::vector<TaskContainer> cache;
     for (auto itr = container.begin(); itr != container.end();)
+    {
         if (filter(*itr))
         {
             cache.push_back(*itr);
             itr = container.erase(itr);
         }
         else
-        {
             ++itr;
-        }
+    }
 
     container.insert(cache.begin(), cache.end());
 }
 
-bool TaskScheduler::TaskQueue::IsGroupQueued(group_t const group)
+bool TaskScheduler::TaskQueue::IsGroupQueued(group_t const group) const
 {
     for (auto const& task : container)
     {
         if (task->IsInGroup(group))
-        {
             return true;
-        }
     }
-
     return false;
 }
 
@@ -211,10 +179,7 @@ bool TaskScheduler::TaskQueue::IsEmpty() const
 TaskContext& TaskContext::Dispatch(std::function<TaskScheduler&(TaskScheduler&)> const& apply)
 {
     if (auto const owner = _owner.lock())
-    {
         apply(*owner);
-    }
-
     return *this;
 }
 
@@ -274,10 +239,10 @@ void TaskContext::AssertOnConsumed() const
 {
     // This was adapted to TC to prevent static analysis tools from complaining.
     // If you encounter this assertion check if you repeat a TaskContext more then 1 time!
-    ASSERT(!(*_consumed) && "Bad task logic, task context was consumed already!");
+    ASSERT(!*_consumed && "Bad task logic, task context was consumed already!");
 }
 
-void TaskContext::Invoke()
+void TaskContext::Invoke() const
 {
     _task->_task(*this);
 }

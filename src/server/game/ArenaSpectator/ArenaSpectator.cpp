@@ -118,7 +118,7 @@ bool ArenaSpectator::HandleSpectatorSpectateCommand(ChatHandler* handler, std::s
         if (Aura* aura = itr->second->GetBase())
             if (!itr->second->IsPositive() && !aura->IsPermanent() && aura->GetDuration() < HOUR * IN_MILLISECONDS)
             {
-                switch (aura->GetSpellInfo()->Id)
+                switch (aura->GetSpellInfo()->ID)
                 {
                     case lfg::LFG_SPELL_DUNGEON_DESERTER:
                     case lfg::LFG_SPELL_DUNGEON_COOLDOWN:
@@ -143,8 +143,8 @@ bool ArenaSpectator::HandleSpectatorSpectateCommand(ChatHandler* handler, std::s
     }
 
     bool bgPreparation = false;
-    if ((!handler->GetSession()->GetSecurity() && bgmap->GetBG()->GetStatus() != STATUS_IN_PROGRESS) ||
-            (handler->GetSession()->GetSecurity() && bgmap->GetBG()->GetStatus() != STATUS_WAIT_JOIN && bgmap->GetBG()->GetStatus() != STATUS_IN_PROGRESS))
+    if ((!handler->GetSession()->IsGameMaster() && bgmap->GetBG()->GetStatus() != STATUS_IN_PROGRESS) ||
+            (handler->GetSession()->IsGameMaster() && bgmap->GetBG()->GetStatus() != STATUS_WAIT_JOIN && bgmap->GetBG()->GetStatus() != STATUS_IN_PROGRESS))
     {
         bgPreparation = true;
         handler->SendSysMessage("Arena is not in progress yet. You will be invited as soon as it starts.");
@@ -254,8 +254,8 @@ void ArenaSpectator::HandleResetCommand(Player* player)
         SendCommand_UInt32Value(player, itr->first, "MPW", ptype == POWER_RAGE || ptype == POWER_RUNIC_POWER ? plr->GetMaxPower(ptype) / 10 : plr->GetMaxPower(ptype));
         SendCommand_UInt32Value(player, itr->first, "CPW", ptype == POWER_RAGE || ptype == POWER_RUNIC_POWER ? plr->GetPower(ptype) / 10 : plr->GetPower(ptype));
         Pet* pet = plr->GetPet();
-        SendCommand_UInt32Value(player, itr->first, "PHP", pet && pet->GetCreatureTemplate()->family ? (uint32)pet->GetHealthPct() : 0);
-        SendCommand_UInt32Value(player, itr->first, "PET", pet ? pet->GetCreatureTemplate()->family : 0);
+        SendCommand_UInt32Value(player, itr->first, "PHP", pet && pet->GetCreatureTemplate()->Family ? (uint32)pet->GetHealthPct() : 0);
+        SendCommand_UInt32Value(player, itr->first, "PET", pet ? pet->GetCreatureTemplate()->Family : 0);
         SendCommand_GUID(player, itr->first, "TRG", plr->GetTarget());
         SendCommand_UInt32Value(player, itr->first, "RES", 1);
         SendCommand_UInt32Value(player, itr->first, "CDC", 1);
@@ -275,7 +275,7 @@ void ArenaSpectator::HandleResetCommand(Player* player)
         {
             Aura* aura = aitr->second->GetBase();
             if (ShouldSendAura(aura, aitr->second->GetEffectMask(), plr->GetGUID(), false))
-                SendCommand_Aura(player, itr->first, "AUR", aura->GetCasterGUID(), aura->GetSpellInfo()->Id, aura->GetSpellInfo()->IsPositive(), aura->GetSpellInfo()->Dispel, aura->GetDuration(), aura->GetMaxDuration(), (aura->GetCharges() > 1 ? aura->GetCharges() : aura->GetStackAmount()), false);
+                SendCommand_Aura(player, itr->first, "AUR", aura->GetCasterGUID(), aura->GetSpellInfo()->ID, aura->GetSpellInfo()->IsPositive(), aura->GetSpellInfo()->Dispel, aura->GetDuration(), aura->GetMaxDuration(), (aura->GetCharges() > 1 ? aura->GetCharges() : aura->GetStackAmount()), false);
         }
     }
 }

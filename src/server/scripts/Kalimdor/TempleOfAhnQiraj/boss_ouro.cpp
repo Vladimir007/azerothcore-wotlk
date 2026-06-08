@@ -192,7 +192,7 @@ struct boss_ouro : public BossAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_SAND_BLAST && target)
+        if (spellInfo->ID == SPELL_SAND_BLAST && target)
         {
             me->GetThreatMgr().ModifyThreatByPercent(target, -100);
         }

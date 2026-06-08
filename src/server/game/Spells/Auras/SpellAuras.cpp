@@ -229,15 +229,15 @@ void AuraApplication::ClientUpdate(bool remove)
         if (Player const* plr = GetTarget()->ToPlayer())
             if (Aura* aura = GetBase())
                 if (plr->NeedSendSpectatorData() && ArenaSpectator::ShouldSendAura(aura, GetEffectMask(), GetTarget()->GetGUID(), remove))
-                    ArenaSpectator::SendCommand_Aura(plr->FindMap(), plr->GetGUID(), "AUR", aura->GetCasterGUID(), aura->GetSpellInfo()->Id, aura->GetSpellInfo()->IsPositive(), aura->GetSpellInfo()->Dispel, aura->GetDuration(), aura->GetMaxDuration(), (aura->GetCharges() > 1 ? aura->GetCharges() : aura->GetStackAmount()), remove);
+                    ArenaSpectator::SendCommand_Aura(plr->FindMap(), plr->GetGUID(), "AUR", aura->GetCasterGUID(), aura->GetSpellInfo()->ID, aura->GetSpellInfo()->IsPositive(), aura->GetSpellInfo()->Dispel, aura->GetDuration(), aura->GetMaxDuration(), (aura->GetCharges() > 1 ? aura->GetCharges() : aura->GetStackAmount()), remove);
 
     _target->SendMessageToSet(&data, true);
 }
 
 uint8 Aura::BuildEffectMaskForOwner(SpellInfo const* spellProto, uint8 avalibleEffectMask, WorldObject* owner)
 {
-    ASSERT_NODEBUGINFO(spellProto);
-    ASSERT_NODEBUGINFO(owner);
+    ASSERT_NO_DEBUG_INFO(spellProto);
+    ASSERT_NO_DEBUG_INFO(owner);
     uint8 effMask = 0;
     switch (owner->GetTypeId())
     {
@@ -264,10 +264,10 @@ uint8 Aura::BuildEffectMaskForOwner(SpellInfo const* spellProto, uint8 avalibleE
 
 Aura* Aura::TryRefreshStackOrCreate(SpellInfo const* spellproto, uint8 tryEffMask, WorldObject* owner, Unit* caster, int32* baseAmount /*= nullptr*/, Item* castItem /*= nullptr*/, ObjectGuid casterGUID /*= ObjectGuid::Empty*/, bool* refresh /*= nullptr*/, bool periodicReset /*= false*/)
 {
-    ASSERT_NODEBUGINFO(spellproto);
-    ASSERT_NODEBUGINFO(owner);
-    ASSERT_NODEBUGINFO(caster || casterGUID);
-    ASSERT_NODEBUGINFO(tryEffMask <= MAX_EFFECT_MASK);
+    ASSERT_NO_DEBUG_INFO(spellproto);
+    ASSERT_NO_DEBUG_INFO(owner);
+    ASSERT_NO_DEBUG_INFO(caster || casterGUID);
+    ASSERT_NO_DEBUG_INFO(tryEffMask <= MAX_EFFECT_MASK);
     if (refresh)
         *refresh = false;
     uint8 effMask = Aura::BuildEffectMaskForOwner(spellproto, tryEffMask, owner);
@@ -290,10 +290,10 @@ Aura* Aura::TryRefreshStackOrCreate(SpellInfo const* spellproto, uint8 tryEffMas
 
 Aura* Aura::TryCreate(SpellInfo const* spellproto, uint8 tryEffMask, WorldObject* owner, Unit* caster, int32* baseAmount /*= nullptr*/, Item* castItem /*= nullptr*/, ObjectGuid casterGUID /*= ObjectGuid::Empty*/, ObjectGuid itemGUID /*= ObjectGuid::Empty*/)
 {
-    ASSERT_NODEBUGINFO(spellproto);
-    ASSERT_NODEBUGINFO(owner);
-    ASSERT_NODEBUGINFO(caster || casterGUID);
-    ASSERT_NODEBUGINFO(tryEffMask <= MAX_EFFECT_MASK);
+    ASSERT_NO_DEBUG_INFO(spellproto);
+    ASSERT_NO_DEBUG_INFO(owner);
+    ASSERT_NO_DEBUG_INFO(caster || casterGUID);
+    ASSERT_NO_DEBUG_INFO(tryEffMask <= MAX_EFFECT_MASK);
     uint8 effMask = Aura::BuildEffectMaskForOwner(spellproto, tryEffMask, owner);
     if (!effMask)
         return nullptr;
@@ -302,11 +302,11 @@ Aura* Aura::TryCreate(SpellInfo const* spellproto, uint8 tryEffMask, WorldObject
 
 Aura* Aura::Create(SpellInfo const* spellproto, uint8 effMask, WorldObject* owner, Unit* caster, int32* baseAmount, Item* castItem, ObjectGuid casterGUID, ObjectGuid itemGUID /*= ObjectGuid::Empty*/)
 {
-    ASSERT_NODEBUGINFO(effMask);
-    ASSERT_NODEBUGINFO(spellproto);
-    ASSERT_NODEBUGINFO(owner);
-    ASSERT_NODEBUGINFO(caster || casterGUID);
-    ASSERT_NODEBUGINFO(effMask <= MAX_EFFECT_MASK);
+    ASSERT_NO_DEBUG_INFO(effMask);
+    ASSERT_NO_DEBUG_INFO(spellproto);
+    ASSERT_NO_DEBUG_INFO(owner);
+    ASSERT_NO_DEBUG_INFO(caster || casterGUID);
+    ASSERT_NO_DEBUG_INFO(effMask <= MAX_EFFECT_MASK);
     // try to get caster of aura
     if (casterGUID)
     {
@@ -404,7 +404,7 @@ Aura::~Aura()
 
 uint32 Aura::GetId() const
 {
-    return GetSpellInfo()->Id;
+    return GetSpellInfo()->ID;
 }
 
 Unit* Aura::GetCaster() const
@@ -446,7 +446,7 @@ void Aura::_ApplyForTarget(Unit* target, Unit* caster, AuraApplication* auraApp)
         }
         else
         {
-            caster->ToCreature()->AddSpellCooldown(m_spellInfo->Id, 0, infinityCooldownDelay);
+            caster->ToCreature()->AddSpellCooldown(m_spellInfo->ID, 0, infinityCooldownDelay);
         }
     }
 }
@@ -463,7 +463,7 @@ void Aura::_UnapplyForTarget(Unit* target, Unit* caster, AuraApplication* auraAp
     if (itr == m_applications.end())
     {
         LOG_ERROR("spells.aura", "Aura::_UnapplyForTarget, target:{}, caster:{}, spell:{} was not found in owners application map!",
-                       target->GetGUID().ToString(), caster ? caster->GetGUID().ToString() : "", auraApp->GetBase()->GetSpellInfo()->Id);
+                       target->GetGUID().ToString(), caster ? caster->GetGUID().ToString() : "", auraApp->GetBase()->GetSpellInfo()->ID);
         ABORT();
     }
 
@@ -483,14 +483,14 @@ void Aura::_UnapplyForTarget(Unit* target, Unit* caster, AuraApplication* auraAp
         }
         else
         {
-            caster->ToCreature()->AddSpellCooldown(m_spellInfo->Id, 0, 0);
+            caster->ToCreature()->AddSpellCooldown(m_spellInfo->ID, 0, 0);
 
             if (Unit* owner = caster->GetCharmerOrOwner())
             {
                 if (Player* playerOwner = owner->ToPlayer())
                 {
                     WorldPacket data(SMSG_COOLDOWN_EVENT, 4 + 8);
-                    data << uint32(m_spellInfo->Id);
+                    data << uint32(m_spellInfo->ID);
                     data << caster->GetGUID();
                     playerOwner->SendDirectMessage(&data);
                 }
@@ -643,7 +643,7 @@ void Aura::UpdateTargetMap(Unit* caster, bool apply)
             if (!GetOwner()->IsSelfOrInSameMap(itr->first))
             {
                 //TODO: There is a crash caused by shadowfiend load addon
-                LOG_FATAL("spells.aura", "Aura {}: Owner {} (map {}) is not in the same map as target {} (map {}).", GetSpellInfo()->Id,
+                LOG_FATAL("spells.aura", "Aura {}: Owner {} (map {}) is not in the same map as target {} (map {}).", GetSpellInfo()->ID,
                                GetOwner()->GetName(), GetOwner()->IsInWorld() ? GetOwner()->GetMap()->GetId() : uint32(-1),
                                itr->first->GetName(), itr->first->IsInWorld() ? itr->first->GetMap()->GetId() : uint32(-1));
                 ABORT();
@@ -1368,7 +1368,7 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                         {
                             if (SpellInfo const* triggeringSpellInfo = GetTriggeredByAuraSpellInfo())
                             {
-                                uint8 fbRank = sSpellMgr->GetSpellRank(triggeringSpellInfo->Id);
+                                uint8 fbRank = sSpellMgr->GetSpellRank(triggeringSpellInfo->ID);
                                 uint8 fofRank = sSpellMgr->GetSpellRank(aurEff->GetId());
                                 uint8 chance = uint8(std::ceil(fofRank * fbRank * 16.6f));
 
@@ -1723,7 +1723,7 @@ void Aura::HandleAuraSpecificMods(AuraApplication const* aurApp, Unit* caster, b
                             if (!player->HasSpellCooldown(47788))
                                 break;
 
-                            player->AddSpellCooldown(GetSpellInfo()->Id, 0, aurEff->GetAmount()*IN_MILLISECONDS);
+                            player->AddSpellCooldown(GetSpellInfo()->ID, 0, aurEff->GetAmount()*IN_MILLISECONDS);
 
                             WorldPacket data(SMSG_MODIFY_COOLDOWN, 4 + 8 + 4);
                             data << uint32(GetId());                  // Spell ID
@@ -1945,14 +1945,14 @@ bool Aura::CanStackWith(Aura const* existingAura) const
     if (existingAura->GetType() == DYNOBJ_AURA_TYPE)
     {
         // xinef: desecration lag fix - bound this condition to periodics
-        if (sameCaster && GetSpellInfo()->Id == existingSpellInfo->Id && GetSpellInfo()->HasAura(SPELL_AURA_PERIODIC_DAMAGE))
+        if (sameCaster && GetSpellInfo()->ID == existingSpellInfo->ID && GetSpellInfo()->HasAura(SPELL_AURA_PERIODIC_DAMAGE))
             return false;
         return true;
     }
 
     // passive auras don't stack with another rank of the spell cast by same caster
     // Exception: item-sourced auras from different items can stack (e.g., weapon imbues on MH/OH)
-    if (IsPassive() && sameCaster && (m_spellInfo->IsDifferentRankOf(existingSpellInfo) || (m_spellInfo->Id == existingSpellInfo->Id && m_castItemGuid.IsEmpty())))
+    if (IsPassive() && sameCaster && (m_spellInfo->IsDifferentRankOf(existingSpellInfo) || (m_spellInfo->ID == existingSpellInfo->ID && m_castItemGuid.IsEmpty())))
     {
         // Allow stacking if both auras are from different items
         if (!(GetCastItemGUID() && existingAura->GetCastItemGUID() && GetCastItemGUID() != existingAura->GetCastItemGUID()))
@@ -2347,7 +2347,7 @@ void Aura::_DeleteRemovedApplications()
 
 void Aura::LoadScripts()
 {
-    sScriptMgr->CreateAuraScripts(m_spellInfo->Id, m_loadedScripts);
+    sScriptMgr->CreateAuraScripts(m_spellInfo->ID, m_loadedScripts);
     for (std::list<AuraScript*>::iterator itr = m_loadedScripts.begin(); itr != m_loadedScripts.end();)
     {
         if (!(*itr)->_Load(this))
@@ -2358,7 +2358,7 @@ void Aura::LoadScripts()
             m_loadedScripts.erase(bitr);
             continue;
         }
-        LOG_DEBUG("spells.aura", "Aura::LoadScripts: Script `{}` for aura `{}` is loaded now", (*itr)->_GetScriptName()->c_str(), m_spellInfo->Id);
+        LOG_DEBUG("spells.aura", "Aura::LoadScripts: Script `{}` for aura `{}` is loaded now", (*itr)->_GetScriptName()->c_str(), m_spellInfo->ID);
         (*itr)->Register();
         ++itr;
     }

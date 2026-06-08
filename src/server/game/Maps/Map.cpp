@@ -30,7 +30,6 @@
 #include "LFGMgr.h"
 #include "MapGrid.h"
 #include "MapInstanced.h"
-#include "Metric.h"
 #include "MiscPackets.h"
 #include "Object.h"
 #include "ObjectAccessor.h"
@@ -40,7 +39,7 @@
 #include "Transport.h"
 #include "VMapFactory.h"
 #include "Vehicle.h"
-#include "VMapMgr2.h"
+#include "VMapMgr.h"
 #include "Weather.h"
 #include "WeatherMgr.h"
 
@@ -507,14 +506,6 @@ void Map::Update(const uint32 t_diff, const uint32 s_diff, bool  /*thread*/)
     UpdateExpiredCorpses(t_diff);
 
     sScriptMgr->OnMapUpdate(this, t_diff);
-
-    METRIC_VALUE("map_creatures", uint64(GetObjectsStore().Size<Creature>()),
-        METRIC_TAG("map_id", std::to_string(GetId())),
-        METRIC_TAG("map_instanceid", std::to_string(GetInstanceId())));
-
-    METRIC_VALUE("map_gameobjects", uint64(GetObjectsStore().Size<GameObject>()),
-        METRIC_TAG("map_id", std::to_string(GetId())),
-        METRIC_TAG("map_instanceid", std::to_string(GetInstanceId())));
 }
 
 void Map::UpdateNonPlayerObjects(uint32 const diff)
@@ -1111,7 +1102,7 @@ float Map::GetWaterOrGroundLevel(uint32 phasemask, float x, float y, float z, fl
             return liquidData.Level;
     }
 
-    return VMAP_INVALID_HEIGHT_VALUE;
+    return INVALID_HEIGHT_VALUE;
 }
 
 Transport* Map::GetTransportForPos(uint32 phase, float x, float y, float z, WorldObject* worldobject)
@@ -1128,7 +1119,7 @@ Transport* Map::GetTransportForPos(uint32 phase, float x, float y, float z, Worl
         }
 
     if (worldobject)
-        if (GameObject* staticTrans = worldobject->FindNearestGameObjectOfType(GAMEOBJECT_TYPE_TRANSPORT, 75.0f))
+        if (GameObject* staticTrans = worldobject->FindNearestGameObjectOfType(GAME_OBJECT_TYPE_TRANSPORT, 75.0f))
             if (staticTrans->m_model)
             {
                 float dist = 10.0f;
@@ -1144,12 +1135,12 @@ Transport* Map::GetTransportForPos(uint32 phase, float x, float y, float z, Worl
 float Map::GetHeight(float x, float y, float z, bool checkVMap /*= true*/, float maxSearchDist /*= DEFAULT_HEIGHT_SEARCH*/) const
 {
     // find raw .map surface under Z coordinates
-    float mapHeight = VMAP_INVALID_HEIGHT_VALUE;
+    float mapHeight = INVALID_HEIGHT_VALUE;
     float gridHeight = GetGridHeight(x, y);
     if (G3D::fuzzyGe(z, gridHeight - GROUND_HEIGHT_TOLERANCE))
         mapHeight = gridHeight;
 
-    float vmapHeight = VMAP_INVALID_HEIGHT_VALUE;
+    float vmapHeight = INVALID_HEIGHT_VALUE;
     if (checkVMap)
         vmapHeight = _mapCollisionData.GetStaticTree().getHeight(x, y, z, maxSearchDist); // look from a bit higher pos to find the floor
 
@@ -1256,8 +1247,8 @@ uint32 Map::GetAreaId(uint32 phaseMask, float x, float y, float z) const
     if (hasVmapArea && G3D::fuzzyGe(z, vmapZ - GROUND_HEIGHT_TOLERANCE) && (G3D::fuzzyLt(z, gridMapHeight - GROUND_HEIGHT_TOLERANCE) || vmapZ > gridMapHeight))
     {
         // wmo found
-        if (WMOAreaTableEntry const* wmoEntry = GetWMOAreaTableEntryByTripple(rootId, adtId, groupId))
-            areaId = wmoEntry->areaId;
+        if (WMOAreaTableEntry const* wmoEntry = GetWMOAreaTableEntryByTriple(rootId, adtId, groupId))
+            areaId = wmoEntry->AreaID;
 
         if (!areaId)
             areaId = gridAreaId;
@@ -1266,7 +1257,7 @@ uint32 Map::GetAreaId(uint32 phaseMask, float x, float y, float z) const
         areaId = gridAreaId;
 
     if (!areaId)
-        areaId = i_mapEntry->linked_zone;
+        areaId = i_mapEntry->Area;
 
     return areaId;
 }
@@ -1275,8 +1266,8 @@ uint32 Map::GetZoneId(uint32 phaseMask, float x, float y, float z) const
 {
     uint32 areaId = GetAreaId(phaseMask, x, y, z);
     if (AreaTableEntry const* area = sAreaTableStore.LookupEntry(areaId))
-        if (area->zone)
-            return area->zone;
+        if (area->Zone)
+            return area->Zone;
 
     return areaId;
 }
@@ -1285,8 +1276,8 @@ void Map::GetZoneAndAreaId(uint32 phaseMask, uint32& zoneid, uint32& areaid, flo
 {
     areaid = zoneid = GetAreaId(phaseMask, x, y, z);
     if (AreaTableEntry const* area = sAreaTableStore.LookupEntry(areaid))
-        if (area->zone)
-            zoneid = area->zone;
+        if (area->Zone)
+            zoneid = area->Zone;
 }
 
 LiquidData const Map::GetLiquidData(uint32 phaseMask, float x, float y, float z, float collisionHeight, Optional<uint8> ReqLiquidType)
@@ -1316,9 +1307,9 @@ LiquidData const Map::GetLiquidData(uint32 phaseMask, float x, float y, float z,
                 if (AreaTableEntry const* area = sAreaTableStore.LookupEntry(GetAreaId(phaseMask, x, y, z)))
                 {
                     uint32 overrideLiquid = area->LiquidTypeOverride[liquidFlagType];
-                    if (!overrideLiquid && area->zone)
+                    if (!overrideLiquid && area->Zone)
                     {
-                        area = sAreaTableStore.LookupEntry(area->zone);
+                        area = sAreaTableStore.LookupEntry(area->Zone);
                         if (area)
                             overrideLiquid = area->LiquidTypeOverride[liquidFlagType];
                     }
@@ -1393,11 +1384,11 @@ void Map::GetFullTerrainStatusForPosition(uint32 /*phaseMask*/, float x, float y
     bool useGridLiquid = true;
 
     // floor is the height we are closer to (but only if above)
-    data.floorZ = VMAP_INVALID_HEIGHT;
+    data.floorZ = INVALID_HEIGHT;
     if (gridMapHeight > INVALID_HEIGHT && G3D::fuzzyGe(z, gridMapHeight - GROUND_HEIGHT_TOLERANCE))
         data.floorZ = gridMapHeight;
 
-    if (vmapData.floorZ > VMAP_INVALID_HEIGHT && G3D::fuzzyGe(z, vmapData.floorZ - GROUND_HEIGHT_TOLERANCE) &&
+    if (vmapData.floorZ > INVALID_HEIGHT && G3D::fuzzyGe(z, vmapData.floorZ - GROUND_HEIGHT_TOLERANCE) &&
         (G3D::fuzzyLt(z, gridMapHeight - GROUND_HEIGHT_TOLERANCE) || vmapData.floorZ > gridMapHeight))
     {
         data.floorZ = vmapData.floorZ;
@@ -1408,7 +1399,7 @@ void Map::GetFullTerrainStatusForPosition(uint32 /*phaseMask*/, float x, float y
     // but this is fine as these kind of objects are not meant to be spawned and despawned a lot
     // example: Lich King platform
     /*
-    if (dynData.floorZ > VMAP_INVALID_HEIGHT && G3D::fuzzyGe(z, dynData.floorZ - GROUND_HEIGHT_TOLERANCE) &&
+    if (dynData.floorZ > INVALID_HEIGHT && G3D::fuzzyGe(z, dynData.floorZ - GROUND_HEIGHT_TOLERANCE) &&
         (G3D::fuzzyLt(z, gridMapHeight - GROUND_HEIGHT_TOLERANCE) || dynData.floorZ > gridMapHeight) &&
         (G3D::fuzzyLt(z, vmapData.floorZ - GROUND_HEIGHT_TOLERANCE) || dynData.floorZ > vmapData.floorZ))
     {
@@ -1422,11 +1413,11 @@ void Map::GetFullTerrainStatusForPosition(uint32 /*phaseMask*/, float x, float y
         if (wmoData->areaInfo)
         {
             // wmo found
-            WMOAreaTableEntry const* wmoEntry = GetWMOAreaTableEntryByTripple(wmoData->areaInfo->rootId, wmoData->areaInfo->adtId, wmoData->areaInfo->groupId);
+            WMOAreaTableEntry const* wmoEntry = GetWMOAreaTableEntryByTriple(wmoData->areaInfo->rootId, wmoData->areaInfo->adtId, wmoData->areaInfo->groupId);
             data.outdoors = (wmoData->areaInfo->mogpFlags & 0x8) != 0;
             if (wmoEntry)
             {
-                data.areaId = wmoEntry->areaId;
+                data.areaId = wmoEntry->AreaID;
                 if (wmoEntry->Flags & 4)
                     data.outdoors = true;
                 else if (wmoEntry->Flags & 2)
@@ -1444,11 +1435,11 @@ void Map::GetFullTerrainStatusForPosition(uint32 /*phaseMask*/, float x, float y
         data.outdoors = true;
         data.areaId = gridAreaId;
         if (AreaTableEntry const* areaEntry = sAreaTableStore.LookupEntry(data.areaId))
-            data.outdoors = (areaEntry->flags & (AREA_FLAG_INSIDE | AREA_FLAG_OUTSIDE)) != AREA_FLAG_INSIDE;
+            data.outdoors = (areaEntry->Flags & (AREA_FLAG_INSIDE | AREA_FLAG_OUTSIDE)) != AREA_FLAG_INSIDE;
     }
 
     if (!data.areaId)
-        data.areaId = i_mapEntry->linked_zone;
+        data.areaId = i_mapEntry->Area;
 
     AreaTableEntry const* areaEntry = sAreaTableStore.LookupEntry(data.areaId);
 
@@ -1466,9 +1457,9 @@ void Map::GetFullTerrainStatusForPosition(uint32 /*phaseMask*/, float x, float y
         if (liquidType && liquidType < 21 && areaEntry)
         {
             uint32 overrideLiquid = areaEntry->LiquidTypeOverride[liquidFlagType];
-            if (!overrideLiquid && areaEntry->zone)
+            if (!overrideLiquid && areaEntry->Zone)
             {
-                AreaTableEntry const* zoneEntry = sAreaTableStore.LookupEntry(areaEntry->zone);
+                AreaTableEntry const* zoneEntry = sAreaTableStore.LookupEntry(areaEntry->Zone);
                 if (zoneEntry)
                     overrideLiquid = zoneEntry->LiquidTypeOverride[liquidFlagType];
             }
@@ -1524,39 +1515,25 @@ float Map::GetWaterLevel(float x, float y) const
 
 bool Map::isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2, uint32 phasemask, LineOfSightChecks checks, VMAP::ModelIgnoreFlags ignoreFlags) const
 {
-    if (!sWorld->getBoolConfig(CONFIG_VMAP_BLIZZLIKE_PVP_LOS))
-    {
+    if (!sWorld->getBoolConfig(CONFIG_VMAP_BLIZZ_LIKE_PVP_LOS))
         if (IsBattlegroundOrArena())
-        {
             ignoreFlags = VMAP::ModelIgnoreFlags::Nothing;
-        }
-    }
 
-    if (!sWorld->getBoolConfig(CONFIG_VMAP_BLIZZLIKE_LOS_OPEN_WORLD))
-    {
+    if (!sWorld->getBoolConfig(CONFIG_VMAP_BLIZZ_LIKE_LOS_OPEN_WORLD))
         if (IsWorldMap())
-        {
             ignoreFlags = VMAP::ModelIgnoreFlags::Nothing;
-        }
-    }
 
-    if ((checks & LINEOFSIGHT_CHECK_VMAP) && !_mapCollisionData.GetStaticTree().isInLineOfSight(x1, y1, z1, x2, y2, z2, ignoreFlags))
-    {
+    if (checks & LINEOFSIGHT_CHECK_VMAP && !_mapCollisionData.GetStaticTree().isInLineOfSight(x1, y1, z1, x2, y2, z2, ignoreFlags))
         return false;
-    }
 
-    if (sWorld->getBoolConfig(CONFIG_CHECK_GOBJECT_LOS) && (checks & LINEOFSIGHT_CHECK_GOBJECT_ALL))
+    if (checks & LINEOFSIGHT_CHECK_GOBJECT_ALL)
     {
         ignoreFlags = VMAP::ModelIgnoreFlags::Nothing;
         if (!(checks & LINEOFSIGHT_CHECK_GOBJECT_M2))
-        {
             ignoreFlags = VMAP::ModelIgnoreFlags::M2;
-        }
 
         if (!_mapCollisionData.GetDynamicTree().isInLineOfSight(x1, y1, z1, x2, y2, z2, phasemask, ignoreFlags))
-        {
             return false;
-        }
     }
 
     return true;
@@ -1596,9 +1573,9 @@ bool Map::HasEnoughWater(WorldObject const* searcher, float x, float y, float z)
            liquidData.Level - liquidData.DepthLevel >= minHeightInWater;
 }
 
-char const* Map::GetMapName() const
+std::string Map::GetMapName() const
 {
-    return i_mapEntry ? i_mapEntry->name[sWorld->GetDefaultDbcLocale()] : "UNNAMEDMAP\x0";
+    return i_mapEntry ? i_mapEntry->Name : "UNNAMED_MAP";
 }
 
 void Map::SendInitSelf(Player* player)
@@ -1723,8 +1700,8 @@ uint32 Map::ApplyDynamicModeRespawnScaling(WorldObject const* obj, uint32 respaw
     // No quest givers or world bosses
     if (Creature const* creature = obj->ToCreature())
         if (creature->IsQuestGiver() || creature->isWorldBoss()
-            || (creature->GetCreatureTemplate()->rank == CREATURE_ELITE_RARE)
-            || (creature->GetCreatureTemplate()->rank == CREATURE_ELITE_RAREELITE))
+            || (creature->GetCreatureTemplate()->Rank == CREATURE_ELITE_RARE)
+            || (creature->GetCreatureTemplate()->Rank == CREATURE_ELITE_RAREELITE))
             return respawnDelay;
 
     auto it = _zonePlayerCountMap.find(obj->GetZoneId());
@@ -2096,7 +2073,7 @@ void InstanceMap::CreateInstanceScript(bool load, std::string data, uint32 compl
         InstanceTemplate const* mInstance = sObjectMgr->GetInstanceTemplate(GetId());
         if (mInstance)
         {
-            i_script_id = mInstance->ScriptId;
+            i_script_id = mInstance->ScriptID;
             instance_data = sScriptMgr->CreateInstanceScript(this);
         }
     }
@@ -2236,16 +2213,16 @@ MapDifficulty const* Map::GetMapDifficulty() const
 uint32 InstanceMap::GetMaxPlayers() const
 {
     MapDifficulty const* mapDiff = GetMapDifficulty();
-    if (mapDiff && mapDiff->maxPlayers)
-        return mapDiff->maxPlayers;
+    if (mapDiff && mapDiff->MaxPlayers)
+        return mapDiff->MaxPlayers;
 
-    return GetEntry()->maxPlayers;
+    return GetEntry()->MaxPlayers;
 }
 
 uint32 InstanceMap::GetMaxResetDelay() const
 {
     MapDifficulty const* mapDiff = GetMapDifficulty();
-    return mapDiff ? mapDiff->resetTime : 0;
+    return mapDiff ? mapDiff->ResetTime : 0;
 }
 
 /* ******* Battleground Instance Maps ******* */
@@ -2441,7 +2418,7 @@ void Map::LoadRespawnTimes()
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CREATURE_RESPAWNS);
     stmt->SetData(0, GetId());
     stmt->SetData(1, GetInstanceId());
-    if (PreparedQueryResult result = CharacterDatabase.Query(stmt))
+    if (QueryResult result = CharacterDatabase.Query(stmt))
     {
         do
         {
@@ -2456,7 +2433,7 @@ void Map::LoadRespawnTimes()
     stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_GO_RESPAWNS);
     stmt->SetData(0, GetId());
     stmt->SetData(1, GetInstanceId());
-    if (PreparedQueryResult result = CharacterDatabase.Query(stmt))
+    if (QueryResult result = CharacterDatabase.Query(stmt))
     {
         do
         {
@@ -2521,7 +2498,7 @@ void Map::UpdateEncounterState(EncounterCreditType type, uint32 creditEntry, Uni
                 if (InstanceScript* instanceScript = source->GetInstanceScript())
                 {
                     uint32 prevMask = instanceScript->GetCompletedEncounterMask();
-                    instanceScript->SetCompletedEncountersMask((1 << encounter->dbcEntry->encounterIndex) | instanceScript->GetCompletedEncounterMask(), true);
+                    instanceScript->SetCompletedEncountersMask((1 << encounter->dbcEntry->EncounterIndex) | instanceScript->GetCompletedEncounterMask(), true);
                     if (prevMask != instanceScript->GetCompletedEncounterMask())
                         updated = true;
                 }
@@ -2557,7 +2534,7 @@ void Map::UpdateEncounterState(EncounterCreditType type, uint32 creditEntry, Uni
 
 void Map::LogEncounterFinished(EncounterCreditType type, uint32 creditEntry)
 {
-    if (!IsRaid() || !GetEntry() || GetEntry()->Expansion() < 2) // only for wotlk raids, because logs take up tons of mysql memory
+    if (!IsRaid() || !GetEntry() || GetEntry()->Expansion < 2) // only for wotlk raids, because logs take up tons of PostgreSQL memory
         return;
     InstanceMap* map = ToInstanceMap();
     if (!map)
@@ -2580,8 +2557,8 @@ void Map::LogEncounterFinished(EncounterCreditType type, uint32 creditEntry)
                 p->GetName().c_str(), p->GetGUID().ToString().c_str(), p->GetSession()->GetAccountId(), p->GetSession()->GetRemoteAddress().c_str(), p->GetGuildId(), p->GetPositionX(), p->GetPositionY(), p->GetPositionZ(), auraStr.c_str());
             playersInfo += buffer;
         }
-    CleanStringForMysqlQuery(playersInfo);
-    CharacterDatabase.Execute("INSERT INTO log_encounter VALUES(NOW(), {}, {}, {}, {}, '{}')", GetId(), (uint32)GetDifficulty(), type, creditEntry, playersInfo);
+    CharacterDatabase.Execute("INSERT INTO log_encounter VALUES(NOW(), $1, $2, $3, $4, $5)",
+        GetId(), static_cast<uint32>(GetDifficulty()), type, creditEntry, playersInfo);
 }
 
 bool Map::AllTransportsEmpty() const
@@ -2740,7 +2717,7 @@ void Map::ScheduleCreatureRespawn(ObjectGuid creatureGuid, Milliseconds respawnT
 }
 
 /// Send a packet to all players (or players selected team) in the zone (except self if mentioned)
-bool Map::SendZoneMessage(uint32 zone, WorldPacket const* packet, WorldSession const* self, TeamId teamId) const
+bool Map::SendZoneMessage(uint32 zone, WorldPacket const* packet, WorldSession const* self, TeamID teamId) const
 {
     bool foundPlayerToSend = false;
 
@@ -2761,7 +2738,7 @@ bool Map::SendZoneMessage(uint32 zone, WorldPacket const* packet, WorldSession c
 }
 
 /// Send a System Message to all players in the zone (except self if mentioned)
-void Map::SendZoneText(uint32 zoneId, char const* text, WorldSession const* self, TeamId teamId) const
+void Map::SendZoneText(uint32 zoneId, char const* text, WorldSession const* self, TeamID teamId) const
 {
     WorldPacket data;
     ChatHandler::BuildChatPacket(data, CHAT_MSG_SYSTEM, LANG_UNIVERSAL, nullptr, nullptr, text);
@@ -3025,7 +3002,7 @@ bool Map::CheckCollisionAndGetValidCoords(WorldObject const* source, float start
     // check static LOS
     float halfHeight = source->GetCollisionHeight() * 0.5f;
 
-    // Unit is not on the ground, check for potential collision via vmaps
+    // Unit is not on the ground, check for potential collision via vMaps
     if (notOnGround)
     {
         bool col = _mapCollisionData.GetStaticTree().GetObjectHitPos(startX, startY, startZ + halfHeight,
@@ -3055,7 +3032,7 @@ bool Map::CheckCollisionAndGetValidCoords(WorldObject const* source, float start
         collided = true;
     }
 
-    float groundZ = VMAP_INVALID_HEIGHT_VALUE;
+    float groundZ = INVALID_HEIGHT_VALUE;
     source->UpdateAllowedPositionZ(destX, destY, destZ, &groundZ);
 
     // position has no ground under it (or is too far away)
@@ -3084,7 +3061,7 @@ void Map::LoadCorpseData()
 
     //        0     1     2     3            4      5          6          7       8       9        10     11        12    13          14          15         16
     // SELECT posX, posY, posZ, orientation, mapId, displayId, itemCache, bytes1, bytes2, guildId, flags, dynFlags, time, corpseType, instanceId, phaseMask, guid FROM corpse WHERE mapId = ? AND instanceId = ?
-    PreparedQueryResult result = CharacterDatabase.Query(stmt);
+    QueryResult result = CharacterDatabase.Query(stmt);
     if (!result)
         return;
 

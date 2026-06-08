@@ -73,7 +73,7 @@ namespace
                 continue;
             }
 
-            if (scriptEntry->MapID != map->GetId())
+            if (scriptEntry->ID != map->GetId())
             {
                 continue;
             }

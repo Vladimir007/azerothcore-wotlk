@@ -87,14 +87,14 @@ struct npc_preparations_for_war_vehicle : public VehicleAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        switch (spell->Id)
+        switch (spell->ID)
         {
             case SPELL_TO_ICECROWN_AIRSHIP_AURA_DISMOUNT_RESPONSE:
                 break;
             case SPELL_TO_ICECROWN_AIRSHIP_TELEPORT_TO_AIRSHIP_A_FORCE_PLAYER_TO_CAST:
             case SPELL_TO_ICECROWN_AIRSHIP_TELEPORT_TO_AIRSHIP_H_FORCE_PLAYER_TO_CAST:
             {
-                uint32 teleportSpell = (spell->Id == SPELL_TO_ICECROWN_AIRSHIP_TELEPORT_TO_AIRSHIP_A_FORCE_PLAYER_TO_CAST)
+                uint32 teleportSpell = (spell->ID == SPELL_TO_ICECROWN_AIRSHIP_TELEPORT_TO_AIRSHIP_A_FORCE_PLAYER_TO_CAST)
                     ? SPELL_TO_ICECROWN_AIRSHIP_TELEPORT_TO_AIRSHIP_A
                     : SPELL_TO_ICECROWN_AIRSHIP_TELEPORT_TO_AIRSHIP_H;
                 DoCastSelf(teleportSpell, true); // hack: cast on self to avoid visual glitch on player when ejecting and teleporting on transport

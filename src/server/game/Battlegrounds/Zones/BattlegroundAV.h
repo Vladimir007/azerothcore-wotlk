@@ -1697,9 +1697,9 @@ struct BG_AV_NodeInfo
     BG_AV_States State;
     BG_AV_States PrevState;
     uint32       Timer;
-    TeamId       TotalOwnerId;
-    TeamId       OwnerId;
-    TeamId       PrevOwnerId;
+    TeamID       TotalOwnerId;
+    TeamID       OwnerId;
+    TeamID       PrevOwnerId;
     bool         Tower;
 };
 
@@ -1771,7 +1771,7 @@ public:
     void ResetBGSubclass() override;
 
     /*general stuff*/
-    void UpdateScore(TeamId teamId, int16 points);
+    void UpdateScore(TeamID teamId, int16 points);
     bool UpdatePlayerScore(Player* player, uint32 type, uint32 value, bool doAddHonor = true) override;
 
     /*handlestuff*/ //these are functions which get called from extern
@@ -1779,17 +1779,17 @@ public:
     void HandleKillPlayer(Player* player, Player* killer) override;
     void HandleKillUnit(Creature* unit, Player* killer) override;
     void HandleQuestComplete(uint32 questid, Player* player);
-    bool PlayerCanDoMineQuest(int32 GOId, TeamId teamId);
+    bool PlayerCanDoMineQuest(int32 GOId, TeamID teamId);
 
-    void EndBattleground(TeamId winnerTeamId) override;
+    void EndBattleground(TeamID winnerTeamId) override;
 
     GraveyardStruct const* GetClosestGraveyard(Player* player) override;
 
     /* achievement req. */
-    bool IsBothMinesControlledByTeam(TeamId teamId) const;
-    bool IsAllTowersControlledAndCaptainAlive(TeamId teamId) const;
+    bool IsBothMinesControlledByTeam(TeamID teamId) const;
+    bool IsAllTowersControlledAndCaptainAlive(TeamID teamId) const;
 
-    TeamId GetPrematureWinner() override;
+    TeamID GetPrematureWinner() override;
 
 private:
     void PostUpdateImpl(uint32 diff) override;
@@ -1799,10 +1799,10 @@ private:
     void EventPlayerDefendsPoint(Player* player, uint32 object);
     void EventPlayerDestroyedPoint(BG_AV_Nodes node);
 
-    void AssaultNode(BG_AV_Nodes node, TeamId teamId);
+    void AssaultNode(BG_AV_Nodes node, TeamID teamId);
     void DestroyNode(BG_AV_Nodes node);
-    void InitNode(BG_AV_Nodes node, TeamId teamId, bool tower);
-    void DefendNode(BG_AV_Nodes node, TeamId teamId);
+    void InitNode(BG_AV_Nodes node, TeamID teamId, bool tower);
+    void DefendNode(BG_AV_Nodes node, TeamID teamId);
 
     void PopulateNode(BG_AV_Nodes node);
     void DePopulateNode(BG_AV_Nodes node, bool ignoreSpiritGuid = false);
@@ -1811,16 +1811,16 @@ private:
     uint32 GetObjectThroughNode(BG_AV_Nodes node);
     bool IsTower(BG_AV_Nodes node) { return m_Nodes[node].Tower; }
 
-    uint8 GetAttackString(BG_AV_Nodes node, TeamId teamId);
-    uint8 GetDefendString(BG_AV_Nodes node, TeamId teamId);
-    uint8 GetMineString(uint8 mine, TeamId teamId);
+    uint8 GetAttackString(BG_AV_Nodes node, TeamID teamId);
+    uint8 GetDefendString(BG_AV_Nodes node, TeamID teamId);
+    uint8 GetMineString(uint8 mine, TeamID teamId);
 
     /*mine*/
-    void ChangeMineOwner(uint8 mine, TeamId teamId, bool initial = false);
+    void ChangeMineOwner(uint8 mine, TeamID teamId, bool initial = false);
 
     /*worldstates*/
     void FillInitialWorldStates(WorldPackets::WorldState::InitWorldStates& packet) override;
-    uint8 GetWorldStateType(uint8 state, TeamId teamId);
+    uint8 GetWorldStateType(uint8 state, TeamID teamId);
     void SendMineWorldStates(uint32 mine);
     void UpdateNodeWorldState(BG_AV_Nodes node);
 
@@ -1833,7 +1833,7 @@ private:
 
     BG_AV_NodeInfo m_Nodes[BG_AV_NODES_MAX] {};
 
-    TeamId m_Mine_Owner[2] {};
+    TeamID m_Mine_Owner[2] {};
     int32 m_Mine_Timer; //ticks for both teams
     uint32 m_Mine_Reclaim_Timer[2] {};
     uint32 m_CaptainBuffTimer[2] {};

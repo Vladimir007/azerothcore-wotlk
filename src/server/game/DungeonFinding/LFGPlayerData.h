@@ -38,7 +38,7 @@ namespace lfg
         void SetState(LfgState state);
         void RestoreState();
         void SetLockedDungeons(LfgLockMap const& lock);
-        void SetTeam(TeamId teamId);
+        void SetTeam(TeamID teamId);
         void SetGroup(ObjectGuid group);
         void SetRandomPlayersCount(uint8 count);
 
@@ -51,7 +51,7 @@ namespace lfg
         [[nodiscard]] LfgState GetState() const;
         [[nodiscard]] LfgState GetOldState() const;
         [[nodiscard]] LfgLockMap const& GetLockedDungeons() const;
-        [[nodiscard]] TeamId GetTeam() const;
+        [[nodiscard]] TeamID GetTeam() const;
         [[nodiscard]] ObjectGuid GetGroup() const;
         [[nodiscard]] uint8 GetRandomPlayersCount() const;
         void SetCanOverrideRBState(bool val) { m_canOverrideRBState = val; }
@@ -69,7 +69,7 @@ namespace lfg
         bool m_canOverrideRBState;                         ///< pussywizard
         // Player
         LfgLockMap m_LockedDungeons;                       ///< Dungeons player can't do and reason
-        TeamId m_TeamId;                                   ///< Player team - determines the queue to join
+        TeamID m_TeamId;                                   ///< Player team - determines the queue to join
         ObjectGuid m_Group;                                ///< Original group of player when joined LFG
         uint8 m_randomPlayers;                             ///< Xinef: Amount of random players you raid with
 

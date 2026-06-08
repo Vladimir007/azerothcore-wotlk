@@ -176,7 +176,7 @@ class spell_gyth_chromatic_protection : public AuraScript
     {
         if (SpellInfo const* spellInfo = eventInfo.GetSpellInfo())
         {
-            switch (spellInfo->Id)
+            switch (spellInfo->ID)
             {
                 case SPELL_CORROSIVE_ACID:
                 case SPELL_FLAMEBREATH:
@@ -195,7 +195,7 @@ class spell_gyth_chromatic_protection : public AuraScript
         PreventDefaultAction();
         if (SpellInfo const* spellInfo = eventInfo.GetSpellInfo())
         {
-            switch (spellInfo->Id)
+            switch (spellInfo->ID)
             {
                 case SPELL_CORROSIVE_ACID:
                     GetTarget()->CastSpell(GetTarget(), SPELL_CHROMATIC_PROTECTION_NATURE, true);

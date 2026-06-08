@@ -18,7 +18,7 @@
 #ifndef AZEROTHCORE_GROUP_H
 #define AZEROTHCORE_GROUP_H
 
-#include "DBCEnums.h"
+#include "DBCDefines.h"
 #include "DataMap.h"
 #include "GroupRefMgr.h"
 #include "LootMgr.h"

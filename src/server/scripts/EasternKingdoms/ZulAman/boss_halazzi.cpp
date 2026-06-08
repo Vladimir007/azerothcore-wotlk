@@ -127,7 +127,7 @@ struct boss_halazzi : public BossAI
 
     void SpellHit(Unit*, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_TRANSFORM_DUMMY)
+        if (spell->ID == SPELL_TRANSFORM_DUMMY)
             me->UpdateEntry(NPC_HALAZZI_TROLL);
     }
 

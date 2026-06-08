@@ -1,42 +1,18 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef TILE_ASSEMBLER_H
+#define TILE_ASSEMBLER_H
 
-#ifndef _TILEASSEMBLER_H_
-#define _TILEASSEMBLER_H_
-
-#include <G3D/Matrix3.h>
-#include <G3D/Vector3.h>
 #include <map>
 #include <set>
+#include <G3D/Matrix3.h>
+#include <G3D/Vector3.h>
 
 #include "ModelInstance.h"
 #include "WorldModel.h"
 
 namespace VMAP
 {
-    /**
-    This Class is used to convert raw vector data into balanced BSP-Trees.
-    To start the conversion call convertWorld().
-    */
-    //===============================================
-
     class ModelPosition
     {
-    private:
         G3D::Matrix3 iRotation;
     public:
         ModelPosition() { }
@@ -61,29 +37,27 @@ namespace VMAP
     };
 
     typedef std::map<uint32, MapSpawns*> MapData;
-    //===============================================
 
     struct GroupModel_Raw
     {
-        uint32 mogpflags{0};
-        uint32 GroupWMOID{0};
+        uint32 mogpFlags{0};
+        uint32 GroupWMOid{0};
 
         G3D::AABox bounds;
-        uint32 liquidflags{0};
+        uint32 liquidFlags{0};
         std::vector<MeshTriangle> triangles;
         std::vector<G3D::Vector3> vertexArray;
-        class WmoLiquid* liquid;
+        WmoLiquid* liquid;
 
         GroupModel_Raw() : liquid(nullptr) { }
-
         ~GroupModel_Raw();
 
-        bool Read(FILE* f);
+        bool Read(FILE* rf);
     };
 
     struct WorldModel_Raw
     {
-        uint32 RootWMOID;
+        uint32 RootWMOid;
         std::vector<GroupModel_Raw> groupsArray;
 
         bool Read(const char* path);
@@ -91,7 +65,6 @@ namespace VMAP
 
     class TileAssembler
     {
-    private:
         std::string iDestDir;
         std::string iSrcDir;
         G3D::Table<std::string, unsigned int > iUniqueNameIds;
@@ -102,13 +75,13 @@ namespace VMAP
         TileAssembler(const std::string& pSrcDirName, const std::string& pDestDirName);
         virtual ~TileAssembler();
 
-        bool convertWorld2();
+        bool convertWorld();
         bool readMapSpawns();
         bool calculateTransformedBound(ModelSpawn& spawn);
         void exportGameobjectModels();
-
         bool convertRawFile(const std::string& pModelFilename);
     };
 
-}                                                           // VMAP
-#endif                                                      /*_TILEASSEMBLER_H_*/
+}
+
+#endif

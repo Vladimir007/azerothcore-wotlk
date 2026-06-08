@@ -71,7 +71,7 @@ void BattlegroundAB::PostUpdateImpl(uint32 diff)
                 case BG_AB_EVENT_CAPTURE_GOLDMINE:
                     {
                         uint8 node = eventId - BG_AB_EVENT_CAPTURE_STABLE;
-                        TeamId teamId = _capturePointInfo[node]._state == BG_AB_NODE_STATE_ALLY_CONTESTED ? TEAM_ALLIANCE : TEAM_HORDE;
+                        TeamID teamId = _capturePointInfo[node]._state == BG_AB_NODE_STATE_ALLY_CONTESTED ? TEAM_ALLIANCE : TEAM_HORDE;
                         DeleteBanner(node);
                         _capturePointInfo[node]._ownerTeamId = teamId;
                         _capturePointInfo[node]._state = teamId == TEAM_ALLIANCE ? BG_AB_NODE_STATE_ALLY_OCCUPIED : BG_AB_NODE_STATE_HORDE_OCCUPIED;
@@ -97,7 +97,7 @@ void BattlegroundAB::PostUpdateImpl(uint32 diff)
                 case BG_AB_EVENT_ALLIANCE_TICK:
                 case BG_AB_EVENT_HORDE_TICK:
                     {
-                        auto teamId = TeamId(eventId - BG_AB_EVENT_ALLIANCE_TICK);
+                        auto teamId = TeamID(eventId - BG_AB_EVENT_ALLIANCE_TICK);
                         uint8 controlledPoints = _controlledPoints[teamId];
                         if (controlledPoints == 0)
                         {
@@ -320,7 +320,7 @@ void BattlegroundAB::EventPlayerClickedOnFlag(Player* player, GameObject* gameOb
     player->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_ENTER_PVP_COMBAT);
 
     uint32 sound = 0;
-    TeamId teamid = player->GetTeamId();
+    TeamID teamid = player->GetTeamId();
 
     DeleteBanner(node);
     CreateBanner(node, true);
@@ -407,7 +407,7 @@ void BattlegroundAB::EventPlayerClickedOnFlag(Player* player, GameObject* gameOb
     PlaySoundToAll(sound);
 }
 
-TeamId BattlegroundAB::GetPrematureWinner()
+TeamID BattlegroundAB::GetPrematureWinner()
 {
     if (_controlledPoints[TEAM_ALLIANCE] > _controlledPoints[TEAM_HORDE])
         return TEAM_ALLIANCE;
@@ -486,7 +486,7 @@ void BattlegroundAB::Init()
         : static_cast<uint32>(BG_AB_MAX_TEAM_SCORE);
 }
 
-void BattlegroundAB::EndBattleground(TeamId winnerTeamId)
+void BattlegroundAB::EndBattleground(TeamID winnerTeamId)
 {
     RewardHonorToTeam(GetBonusHonorFromKill(1), winnerTeamId);
     RewardHonorToTeam(GetBonusHonorFromKill(1), TEAM_HORDE);
@@ -540,7 +540,7 @@ bool BattlegroundAB::UpdatePlayerScore(Player* player, uint32 type, uint32 value
     return true;
 }
 
-bool BattlegroundAB::AllNodesConrolledByTeam(TeamId teamId) const
+bool BattlegroundAB::AllNodesConrolledByTeam(TeamID teamId) const
 {
     return _controlledPoints[teamId] == BG_AB_DYNAMIC_NODES_COUNT;
 }

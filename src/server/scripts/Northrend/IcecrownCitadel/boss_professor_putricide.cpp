@@ -775,13 +775,13 @@ public:
 
     void SpellHitTarget(Unit* /*target*/, SpellInfo const* spell) override
     {
-        if (!_newTargetSelectTimer && spell->Id == sSpellMgr->GetSpellIdForDifficulty(_hitTargetSpellId, me))
+        if (!_newTargetSelectTimer && spell->ID == sSpellMgr->GetSpellIdForDifficulty(_hitTargetSpellId, me))
             SelectNewTarget();
     }
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_TEAR_GAS_CREATURE)
+        if (spell->ID == SPELL_TEAR_GAS_CREATURE)
             SelectNewTarget();
     }
 
@@ -1018,7 +1018,7 @@ class spell_putricide_gaseous_bloat_aura : public AuraScript
     void HandleExtraEffect(AuraEffect const* /*aurEff*/)
     {
         Unit* target = GetTarget();
-        target->RemoveAuraFromStack(GetSpellInfo()->Id, GetCasterGUID());
+        target->RemoveAuraFromStack(GetSpellInfo()->ID, GetCasterGUID());
         /*if (!target->HasAura(GetId()))
             if (Unit* caster = GetCaster())
                 caster->CastCustomSpell(SPELL_GASEOUS_BLOAT, SPELLVALUE_AURA_STACK, 10, caster, false);*/
@@ -1401,7 +1401,7 @@ class spell_putricide_mutated_transformation : public SpellScript
         uint32 duration = uint32(GetSpellInfo()->GetDuration());
 
         Position pos = caster->GetPosition();
-        TempSummon* summon = caster->GetMap()->SummonCreature(entry, pos, properties, duration, caster, GetSpellInfo()->Id);
+        TempSummon* summon = caster->GetMap()->SummonCreature(entry, pos, properties, duration, caster, GetSpellInfo()->ID);
         if (!summon || !summon->IsVehicle())
             return;
 

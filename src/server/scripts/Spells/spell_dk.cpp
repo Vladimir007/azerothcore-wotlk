@@ -696,7 +696,7 @@ class spell_dk_dancing_rune_weapon : public AuraScript
             return true;
 
         // Death Coil exception, Check if spell is from spellbook
-        if (spellInfo->Id != SPELL_DK_DEATH_COIL_DAMAGE && !eventInfo.GetActor()->ToPlayer()->HasActiveSpell(spellInfo->Id))
+        if (spellInfo->ID != SPELL_DK_DEATH_COIL_DAMAGE && !eventInfo.GetActor()->ToPlayer()->HasActiveSpell(spellInfo->ID))
             return false;
 
         // Can't cast raise dead/ally, death grip, dark command, death pact, death and decay, anti-magic shell
@@ -741,7 +741,7 @@ class spell_dk_dancing_rune_weapon : public AuraScript
             // xinef: ugly hack
             if (!procSpell->IsAffectingArea())
                 GetUnitOwner()->SetFloatValue(UNIT_FIELD_COMBATREACH, 10.0f);
-            dancingRuneWeapon->CastSpell(target, procSpell->Id, true, nullptr, aurEff, dancingRuneWeapon->GetGUID());
+            dancingRuneWeapon->CastSpell(target, procSpell->ID, true, nullptr, aurEff, dancingRuneWeapon->GetGUID());
             GetUnitOwner()->SetFloatValue(UNIT_FIELD_COMBATREACH, 0.01f);
         }
         else if (eventInfo.GetDamageInfo())
@@ -2194,7 +2194,7 @@ class spell_dk_raise_dead : public SpellScript
         targets.SetDst(*GetHitUnit());
 
         GetCaster()->CastSpell(targets, spellInfo, nullptr, TRIGGERED_FULL_MASK, nullptr, nullptr, GetCaster()->GetGUID());
-        GetCaster()->ToPlayer()->RemoveSpellCooldown(GetSpellInfo()->Id, true);
+        GetCaster()->ToPlayer()->RemoveSpellCooldown(GetSpellInfo()->ID, true);
     }
 
     void Register() override
@@ -2242,7 +2242,7 @@ class spell_dk_scent_of_blood : public AuraScript
     {
         PreventDefaultAction();
         GetTarget()->CastSpell(GetTarget(), SPELL_DK_SCENT_OF_BLOOD, true, nullptr, aurEff);
-        GetTarget()->RemoveAuraFromStack(GetSpellInfo()->Id);
+        GetTarget()->RemoveAuraFromStack(GetSpellInfo()->ID);
     }
 
     void Register() override
@@ -2757,7 +2757,7 @@ class spell_dk_rime : public AuraScript
         SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(SPELL_DK_HOWLING_BLAST_R1);
         while (spellInfo)
         {
-            player->RemoveSpellCooldown(spellInfo->Id, true);
+            player->RemoveSpellCooldown(spellInfo->ID, true);
             spellInfo = spellInfo->GetNextRankSpell();
         }
     }
@@ -2809,10 +2809,10 @@ class spell_dk_sudden_doom : public AuraScript
 
         while (spellInfo)
         {
-            if (!caster->HasSpell(spellInfo->Id))
+            if (!caster->HasSpell(spellInfo->ID))
                 break;
 
-            spellId = spellInfo->Id;
+            spellId = spellInfo->ID;
             spellInfo = spellInfo->GetNextRankSpell();
         }
 

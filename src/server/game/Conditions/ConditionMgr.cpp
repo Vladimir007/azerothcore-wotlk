@@ -272,7 +272,7 @@ bool Condition::Meets(ConditionSourceInfo& sourceInfo)
     case CONDITION_LEVEL:
     {
         if (Unit* unit = object->ToUnit())
-            condMeets = CompareValues(static_cast<ComparisionType>(ConditionValue2), static_cast<uint32>(unit->GetLevel()), ConditionValue1);
+            condMeets = CompareValues(static_cast<ComparisonType>(ConditionValue2), static_cast<uint32>(unit->GetLevel()), ConditionValue1);
         break;
     }
     case CONDITION_DRUNKENSTATE:
@@ -389,7 +389,7 @@ bool Condition::Meets(ConditionSourceInfo& sourceInfo)
     case CONDITION_DISTANCE_TO:
     {
         if (WorldObject* toObject = sourceInfo.mConditionTargets[ConditionValue1])
-            condMeets = CompareValues(static_cast<ComparisionType>(ConditionValue3), object->GetDistance(toObject), static_cast<float>(ConditionValue2));
+            condMeets = CompareValues(static_cast<ComparisonType>(ConditionValue3), object->GetDistance(toObject), static_cast<float>(ConditionValue2));
         break;
     }
     case CONDITION_ALIVE:
@@ -401,13 +401,13 @@ bool Condition::Meets(ConditionSourceInfo& sourceInfo)
     case CONDITION_HP_VAL:
     {
         if (Unit* unit = object->ToUnit())
-            condMeets = CompareValues(static_cast<ComparisionType>(ConditionValue2), unit->GetHealth(), static_cast<uint32>(ConditionValue1));
+            condMeets = CompareValues(static_cast<ComparisonType>(ConditionValue2), unit->GetHealth(), static_cast<uint32>(ConditionValue1));
         break;
     }
     case CONDITION_HP_PCT:
     {
         if (Unit* unit = object->ToUnit())
-            condMeets = CompareValues(static_cast<ComparisionType>(ConditionValue2), unit->GetHealthPct(), static_cast<float>(ConditionValue1));
+            condMeets = CompareValues(static_cast<ComparisonType>(ConditionValue2), unit->GetHealthPct(), static_cast<float>(ConditionValue1));
         break;
     }
     case CONDITION_WORLD_STATE:
@@ -1073,16 +1073,16 @@ ConditionList ConditionMgr::GetConditionsForNpcVendorEvent(uint32 creatureId, ui
     return cond;
 }
 
-void ConditionMgr::LoadConditions(bool isReload)
+void ConditionMgr::LoadConditions(const bool isReload)
 {
-    uint32 oldMSTime = getMSTime();
+    const uint32 oldMSTime = getMSTime();
 
     Clean();
 
-    // must clear all custom handled cases (groupped types) before reload
+    // Must clear all custom handled cases (grouped types) before reload
     if (isReload)
     {
-        LOG_INFO("server.loading", "Reseting Loot Conditions...");
+        LOG_INFO("server.loading", "Resetting Loot Conditions...");
         LootTemplates_Creature.ResetConditions();
         LootTemplates_Fishing.ResetConditions();
         LootTemplates_Gameobject.ResetConditions();
@@ -1105,8 +1105,9 @@ void ConditionMgr::LoadConditions(bool isReload)
         sSpellMgr->UnloadSpellInfoImplicitTargetConditionLists();
     }
 
-    QueryResult result = WorldDatabase.Query("SELECT SourceTypeOrReferenceId, SourceGroup, SourceEntry, SourceId, ElseGroup, ConditionTypeOrReference, ConditionTarget, "
-                                             " ConditionValue1, ConditionValue2, ConditionValue3, NegativeCondition, ErrorType, ErrorTextId, ScriptName FROM conditions");
+    const QueryResult result = WorldDatabase.Query(
+        "SELECT source_type_or_ref, source_group, source_entry, source, else_group, type_or_ref, target, "
+        "value1, value2, value3, negative_condition, error_type, error_text, script_name FROM world_condition");
 
     if (!result)
     {
@@ -1118,44 +1119,44 @@ void ConditionMgr::LoadConditions(bool isReload)
 
     do
     {
-        Field* fields = result->Fetch();
+        const Field* fields = result->Fetch();
 
-        Condition* cond                     = new Condition();
-        int32      iSourceTypeOrReferenceId = fields[0].Get<int32>();
-        cond->SourceGroup                   = fields[1].Get<uint32>();
-        cond->SourceEntry                   = fields[2].Get<int32>();
-        cond->SourceId                      = fields[3].Get<int32>();
-        cond->ElseGroup                     = fields[4].Get<uint32>();
-        int32 iConditionTypeOrReference     = fields[5].Get<int32>();
-        cond->ConditionTarget               = fields[6].Get<uint8>();
-        cond->ConditionValue1               = fields[7].Get<uint32>();
-        cond->ConditionValue2               = fields[8].Get<uint32>();
-        cond->ConditionValue3               = fields[9].Get<uint32>();
-        cond->NegativeCondition             = fields[10].Get<uint8>();
-        cond->ErrorType                     = fields[11].Get<uint32>();
-        cond->ErrorTextId                   = fields[12].Get<uint32>();
-        cond->ScriptId                      = sObjectMgr->GetScriptId(fields[13].Get<std::string>());
+        auto cond                       = new Condition();
+        int32 iSourceTypeOrReferenceId  = fields[0].Get<int32>();
+        cond->SourceGroup               = fields[1].Get<uint32>();
+        cond->SourceEntry               = fields[2].Get<int32>();
+        cond->SourceId                  = fields[3].Get<int32>();
+        cond->ElseGroup                 = fields[4].Get<uint32>();
+        int32 iConditionTypeOrReference = fields[5].Get<int32>();
+        cond->ConditionTarget           = fields[6].Get<uint8>();
+        cond->ConditionValue1           = fields[7].Get<uint32>();
+        cond->ConditionValue2           = fields[8].Get<uint32>();
+        cond->ConditionValue3           = fields[9].Get<uint32>();
+        cond->NegativeCondition         = fields[10].Get<uint8>();
+        cond->ErrorType                 = fields[11].Get<uint32>();
+        cond->ErrorTextId               = fields[12].Get<uint32>();
+        cond->ScriptId                  = sObjectMgr->GetScriptID(fields[13].Get<std::string>());
 
         if (iConditionTypeOrReference >= 0)
-            cond->ConditionType = ConditionTypes(iConditionTypeOrReference);
+            cond->ConditionType = static_cast<ConditionTypes>(iConditionTypeOrReference);
 
         if (iSourceTypeOrReferenceId >= 0)
-            cond->SourceType = ConditionSourceType(iSourceTypeOrReferenceId);
+            cond->SourceType = static_cast<ConditionSourceType>(iSourceTypeOrReferenceId);
 
-        if (iConditionTypeOrReference < 0) // it has a reference
+        if (iConditionTypeOrReference < 0) // It has a reference
         {
-            if (iConditionTypeOrReference == iSourceTypeOrReferenceId) // self referencing, skip
+            if (iConditionTypeOrReference == iSourceTypeOrReferenceId) // Self referencing, skip
             {
                 LOG_ERROR("sql.sql", "Condition reference {} is referencing self, skipped", iSourceTypeOrReferenceId);
                 delete cond;
                 continue;
             }
-            cond->ReferenceId = uint32(std::abs(iConditionTypeOrReference));
+            cond->ReferenceId = static_cast<uint32>(std::abs(iConditionTypeOrReference));
 
-            const char* rowType = "reference template";
+            auto rowType = "reference template";
             if (iSourceTypeOrReferenceId >= 0)
                 rowType = "reference";
-            // check for useless data
+            // Check for useless data
             if (cond->ConditionTarget)
                 LOG_ERROR("sql.sql", "Condition {} {} has useless data in ConditionTarget ({})!", rowType, iSourceTypeOrReferenceId, cond->ConditionTarget);
             if (cond->ConditionValue1)
@@ -1171,24 +1172,24 @@ void ConditionMgr::LoadConditions(bool isReload)
             if (cond->SourceEntry && iSourceTypeOrReferenceId < 0)
                 LOG_ERROR("sql.sql", "Condition {} {} has useless data in SourceEntry ({})!", rowType, iSourceTypeOrReferenceId, cond->SourceEntry);
         }
-        else if (!isConditionTypeValid(cond)) // doesn't have reference, validate ConditionType
+        else if (!isConditionTypeValid(cond)) // Doesn't have reference, validate ConditionType
         {
             delete cond;
             continue;
         }
 
-        if (iSourceTypeOrReferenceId < 0) // it is a reference template
+        if (iSourceTypeOrReferenceId < 0) // It is a reference template
         {
             uint32 uRefId = std::abs(iSourceTypeOrReferenceId);
-            if (ConditionReferenceStore.find(uRefId) == ConditionReferenceStore.end()) // make sure we have a list for our conditions, based on reference id
+            if (!ConditionReferenceStore.contains(uRefId)) // Make sure we have a list for our conditions, based on reference id
             {
-                ConditionList mCondList;
+                const ConditionList mCondList;
                 ConditionReferenceStore[uRefId] = mCondList;
             }
-            ConditionReferenceStore[uRefId].push_back(cond); // add to reference storage
+            ConditionReferenceStore[uRefId].push_back(cond); // Add to reference storage
             count++;
             continue;
-        } // end of reference templates
+        } // End of reference templates
 
         // if not a reference and SourceType is invalid, skip
         if (iConditionTypeOrReference >= 0 && !isSourceTypeValid(cond))
@@ -1200,33 +1201,33 @@ void ConditionMgr::LoadConditions(bool isReload)
         // Grouping is only allowed for some types (loot templates, gossip menus, gossip items)
         if (cond->SourceGroup && !CanHaveSourceGroupSet(cond->SourceType))
         {
-            LOG_ERROR("sql.sql", "Condition type {} has not allowed value of SourceGroup = {}!", uint32(cond->SourceType), cond->SourceGroup);
+            LOG_ERROR("sql.sql", "Condition type {} has not allowed value of SourceGroup = {}!", static_cast<uint32>(cond->SourceType), cond->SourceGroup);
             delete cond;
             continue;
         }
         if (cond->SourceId && !CanHaveSourceIdSet(cond->SourceType))
         {
-            LOG_ERROR("sql.sql", "Condition type {} has not allowed value of SourceId = {}!", uint32(cond->SourceType), cond->SourceId);
+            LOG_ERROR("sql.sql", "Condition type {} has not allowed value of SourceId = {}!", static_cast<uint32>(cond->SourceType), cond->SourceId);
             delete cond;
             continue;
         }
 
         if (cond->ErrorType && cond->SourceType != CONDITION_SOURCE_TYPE_SPELL)
         {
-            LOG_ERROR("condition", "Condition type {} entry {} can't have ErrorType ({}), set to 0!", uint32(cond->SourceType), cond->SourceEntry, cond->ErrorType);
+            LOG_ERROR("condition", "Condition type {} entry {} can't have ErrorType ({}), set to 0!", static_cast<uint32>(cond->SourceType), cond->SourceEntry, cond->ErrorType);
             cond->ErrorType = 0;
         }
 
         if (cond->ErrorTextId && !cond->ErrorType)
         {
-            LOG_ERROR("condition", "Condition type {} entry {} has any ErrorType, ErrorTextId ({}) is set, set to 0!", uint32(cond->SourceType), cond->SourceEntry, cond->ErrorTextId);
+            LOG_ERROR("condition", "Condition type {} entry {} has any ErrorType, ErrorTextId ({}) is set, set to 0!", static_cast<uint32>(cond->SourceType), cond->SourceEntry, cond->ErrorTextId);
             cond->ErrorTextId = 0;
         }
 
         if (cond->SourceGroup || cond->SourceType == CONDITION_SOURCE_TYPE_PLAYER_LOOT_TEMPLATE)
         {
             bool valid = false;
-            // handle grouped conditions
+            // Handle grouped conditions
             switch (cond->SourceType)
             {
             case CONDITION_SOURCE_TYPE_CREATURE_LOOT_TEMPLATE:
@@ -1276,7 +1277,7 @@ void ConditionMgr::LoadConditions(bool isReload)
                 SpellClickEventConditionStore[cond->SourceGroup][cond->SourceEntry].push_back(cond);
                 valid = true;
                 ++count;
-                continue; // do not add to m_AllocatedMemory to avoid double deleting
+                continue; // Do not add to m_AllocatedMemory to avoid double deleting
             }
             case CONDITION_SOURCE_TYPE_SPELL_IMPLICIT_TARGET:
                 valid = addToSpellImplicitTargetConditions(cond);
@@ -1286,7 +1287,7 @@ void ConditionMgr::LoadConditions(bool isReload)
                 VehicleSpellConditionStore[cond->SourceGroup][cond->SourceEntry].push_back(cond);
                 valid = true;
                 ++count;
-                continue; // do not add to m_AllocatedMemory to avoid double deleting
+                continue; // Do not add to m_AllocatedMemory to avoid double deleting
             }
             case CONDITION_SOURCE_TYPE_SMART_EVENT:
             {
@@ -1326,22 +1327,22 @@ void ConditionMgr::LoadConditions(bool isReload)
             continue;
         }
 
-        // handle not grouped conditions
-        // make sure we have a storage list for our SourceType
-        if (ConditionStore.find(cond->SourceType) == ConditionStore.end())
+        // Handle not grouped conditions.
+        // Make sure we have a storage list for our SourceType.
+        if (!ConditionStore.contains(cond->SourceType))
         {
-            ConditionTypeContainer mTypeMap;
-            ConditionStore[cond->SourceType] = mTypeMap; // add new empty list for SourceType
+            const ConditionTypeContainer mTypeMap;
+            ConditionStore[cond->SourceType] = mTypeMap; // Add new empty list for SourceType
         }
 
-        // make sure we have a condition list for our SourceType's entry
-        if (ConditionStore[cond->SourceType].find(cond->SourceEntry) == ConditionStore[cond->SourceType].end())
+        // Make sure we have a condition list for our SourceType's entry
+        if (!ConditionStore[cond->SourceType].contains(cond->SourceEntry))
         {
-            ConditionList mCondList;
+            const ConditionList mCondList;
             ConditionStore[cond->SourceType][cond->SourceEntry] = mCondList;
         }
 
-        // add new Condition to storage based on Type/Entry
+        // Add new Condition to storage based on Type/Entry
         ConditionStore[cond->SourceType][cond->SourceEntry].push_back(cond);
         ++count;
     } while (result->NextRow());
@@ -1951,7 +1952,7 @@ bool ConditionMgr::isConditionTypeValid(Condition* cond)
             return false;
         }
 
-        if (areaEntry->zone != 0)
+        if (areaEntry->Zone != 0)
         {
             LOG_ERROR("sql.sql", "ZoneID condition requires to be in area ({}) which is a subzone but zone expected, skipped", cond->ConditionValue1);
             return false;
@@ -1991,8 +1992,7 @@ bool ConditionMgr::isConditionTypeValid(Condition* cond)
     }
     case CONDITION_SKILL:
     {
-        SkillLineEntry const* pSkill = sSkillLineStore.LookupEntry(cond->ConditionValue1);
-        if (!pSkill)
+        if (!sSkillLineStore.LookupEntry(cond->ConditionValue1))
         {
             LOG_ERROR("sql.sql", "Skill condition specifies non-existing skill ({}), skipped", cond->ConditionValue1);
             return false;
@@ -2069,9 +2069,9 @@ bool ConditionMgr::isConditionTypeValid(Condition* cond)
     }
     case CONDITION_CLASS:
     {
-        if (!(cond->ConditionValue1 & CLASSMASK_ALL_PLAYABLE))
+        if (!(cond->ConditionValue1 & CLASS_MASK_ALL_PLAYABLE))
         {
-            LOG_ERROR("sql.sql", "Class condition has non existing classmask ({}), skipped", cond->ConditionValue1 & ~CLASSMASK_ALL_PLAYABLE);
+            LOG_ERROR("sql.sql", "Class condition has non existing classmask ({}), skipped", cond->ConditionValue1 & ~CLASS_MASK_ALL_PLAYABLE);
             return false;
         }
 
@@ -2386,7 +2386,7 @@ bool ConditionMgr::isConditionTypeValid(Condition* cond)
     }
     case CONDITION_SPAWNMASK:
     {
-        if (cond->ConditionValue1 > SPAWNMASK_RAID_ALL)
+        if (cond->ConditionValue1 > SPAWN_MASK_RAID_ALL)
         {
             LOG_ERROR("condition", "SpawnMask condition has non existing SpawnMask in value1 ({}), skipped", cond->ConditionValue1);
             return false;

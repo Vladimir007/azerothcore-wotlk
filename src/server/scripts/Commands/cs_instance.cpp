@@ -38,10 +38,10 @@ public:
         static ChatCommandTable instanceCommandTable =
         {
             { "listbinds",    HandleInstanceListBindsCommand,    SEC_MODERATOR,     Console::No },
-            { "unbind",       HandleInstanceUnbindCommand,       SEC_GAMEMASTER,    Console::No },
+            { "unbind",       HandleInstanceUnbindCommand,       SEC_GAME_MASTER,    Console::No },
             { "stats",        HandleInstanceStatsCommand,        SEC_MODERATOR,     Console::Yes },
             { "savedata",     HandleInstanceSaveDataCommand,     SEC_ADMINISTRATOR, Console::No },
-            { "setbossstate", HandleInstanceSetBossStateCommand, SEC_GAMEMASTER,    Console::Yes },
+            { "setbossstate", HandleInstanceSetBossStateCommand, SEC_GAME_MASTER,    Console::Yes },
             { "getbossstate", HandleInstanceGetBossStateCommand, SEC_MODERATOR,     Console::Yes },
         };
 
@@ -261,8 +261,7 @@ public:
         if (encounters)
         {
             for (auto const* encounter : *encounters)
-                encounterNames[encounter->dbcEntry->encounterIndex]
-                    = encounter->dbcEntry->encounterName[0];
+                encounterNames[encounter->dbcEntry->EncounterIndex] = encounter->dbcEntry->EncounterName.c_str();
         }
 
         for (uint8 i = 0; i < map->GetInstanceScript()->GetEncounterCount(); ++i)

@@ -359,7 +359,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == 71080 && me->IsInCombat() && !me->IsInEvadeMode())
+            if (spell->ID == 71080 && me->IsInCombat() && !me->IsInEvadeMode())
                 DoAction(ACTION_CAST_INVOCATION);
         }
 
@@ -629,7 +629,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == 71081 && me->IsInCombat() && !me->IsInEvadeMode())
+            if (spell->ID == 71081 && me->IsInCombat() && !me->IsInEvadeMode())
                 DoAction(ACTION_CAST_INVOCATION);
         }
 
@@ -923,7 +923,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == 71070 && me->IsInCombat() && !me->IsInEvadeMode())
+            if (spell->ID == 71070 && me->IsInCombat() && !me->IsInEvadeMode())
                 DoAction(ACTION_CAST_INVOCATION);
         }
 
@@ -1470,7 +1470,7 @@ class spell_blood_council_shadow_prison_damage : public SpellScript
 
     void AddExtraDamage()
     {
-        if (Aura* aur = GetHitUnit()->GetAura(GetSpellInfo()->Id))
+        if (Aura* aur = GetHitUnit()->GetAura(GetSpellInfo()->ID))
         {
             if (AuraEffect const* eff = aur->GetEffect(EFFECT_1))
             {

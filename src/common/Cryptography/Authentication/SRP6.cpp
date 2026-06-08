@@ -1,42 +1,17 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "SRP6.h"
-#include "CryptoRandom.h"
-#include "Util.h"
 #include <functional>
 
-using SHA1 = Acore::Crypto::SHA1;
+#include "CryptoRandom.h"
+#include "Util.h"
+
 using SRP6 = Acore::Crypto::SRP6;
 
 /*static*/ std::array<uint8, 1> const SRP6::g = { 7 };
 /*static*/ std::array<uint8, 32> const SRP6::N = HexStrToByteArray<32>("894B645E89E1535BBDAD5B8B290650530801B18EBFBF5E8FAB3C82872A3E9BB7", true);
-/*static*/ BigNumber const SRP6::_g(SRP6::g);
+/*static*/ BigNumber const SRP6::_g(g);
 /*static*/ BigNumber const SRP6::_N(N);
 
-/*static*/ std::pair<SRP6::Salt, SRP6::Verifier> SRP6::MakeRegistrationData(std::string const& username, std::string const& password)
-{
-    std::pair<SRP6::Salt, SRP6::Verifier> res;
-    Crypto::GetRandomBytes(res.first); // random salt
-    res.second = CalculateVerifier(username, password, res.first);
-    return res;
-}
-
-/*static*/ SRP6::Verifier SRP6::CalculateVerifier(std::string const& username, std::string const& password, SRP6::Salt const& salt)
+/*static*/ SRP6::Verifier SRP6::CalculateVerifier(std::string const& username, std::string const& password, Salt const& salt)
 {
     // v = g ^ H(s || H(u || ':' || p)) mod N
     return _g.ModExp(
@@ -47,7 +22,7 @@ using SRP6 = Acore::Crypto::SRP6;
     ,_N).ToByteArray<32>();
 }
 
-/*static*/ SessionKey SRP6::SHA1Interleave(SRP6::EphemeralKey const& S)
+/*static*/ SessionKey SRP6::SHA1Interleave(EphemeralKey const& S)
 {
     // split S into two buffers
     std::array<uint8, EPHEMERAL_KEY_LENGTH / 2> buf0{}, buf1{};

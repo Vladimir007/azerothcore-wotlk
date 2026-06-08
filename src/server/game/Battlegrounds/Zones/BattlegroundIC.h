@@ -828,7 +828,7 @@ struct ICNodePoint
 {
     uint32 gameobject_type; // with this we will get the GameObject of that point
     uint32 gameobject_entry; // what gamoebject entry is active here.
-    TeamId faction; // who has this node
+    TeamID faction; // who has this node
     ICNodePointType nodeType; // here we can specify if it is graveyards, hangar etc...
     uint32 banners[4]; // the banners that have this point
     bool needChange; // this is used for the 1 minute time period after the point is captured
@@ -919,8 +919,8 @@ public:
 
     uint32 GetNodeState(uint8 nodeType) const { return (uint8)nodePoint[nodeType].nodeState; }
 
-    bool AllNodesConrolledByTeam(TeamId teamId) const override;  // overwrited
-    bool IsResourceGlutAllowed(TeamId teamId) const;
+    bool AllNodesConrolledByTeam(TeamID teamId) const override;  // overwrited
+    bool IsResourceGlutAllowed(TeamID teamId) const;
     void DoAction(uint32 action, ObjectGuid guid) override;
 private:
     uint32 closeFortressDoorsTimer;

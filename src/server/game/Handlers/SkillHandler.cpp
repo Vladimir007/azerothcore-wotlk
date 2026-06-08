@@ -52,7 +52,7 @@ void WorldSession::HandleLearnPreviewTalents(WorldPacket& recvPacket)
 
     _player->SendTalentsInfoData(false);
 
-    recvPacket.rfinish();
+    recvPacket.rFinish();
 }
 
 void WorldSession::HandleTalentWipeConfirmOpcode(WorldPacket& recvData)

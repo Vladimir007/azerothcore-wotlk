@@ -50,19 +50,19 @@ public:
                 me->Respawn();
                 me->UpdateEntry(NPC_BROKEN_KEEP_CANNON, nullptr, false);
                 me->RemoveVehicleKit();
-                me->SetNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
+                me->SetNpcFlag(UNIT_NPC_FLAG_SPELL_CLICK);
             }
         }
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_REPAIR_TURRET_DUMMY && me->GetEntry() == NPC_BROKEN_KEEP_CANNON)
+            if (spellInfo->ID == SPELL_REPAIR_TURRET_DUMMY && me->GetEntry() == NPC_BROKEN_KEEP_CANNON)
             {
                 me->UpdateEntry(NPC_KEEP_CANNON, nullptr, false);
                 if (faction)
                     me->SetFaction(faction);
                 me->CreateVehicleKit(510, NPC_KEEP_CANNON);
-                me->RemoveNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
+                me->RemoveNpcFlag(UNIT_NPC_FLAG_SPELL_CLICK);
                 events.ScheduleEvent(EVENT_RESTORE_FLAG, 4s);
             }
         }
@@ -73,7 +73,7 @@ public:
             switch (events.ExecuteEvent())
             {
                 case EVENT_RESTORE_FLAG:
-                    me->SetNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
+                    me->SetNpcFlag(UNIT_NPC_FLAG_SPELL_CLICK);
                     break;
             }
 
@@ -355,7 +355,7 @@ class spell_ioc_bomb_blast_criteria : public SpellScript
         if (!owner)
             return;
 
-        uint32 spellId = GetSpellInfo()->Id;
+        uint32 spellId = GetSpellInfo()->ID;
         if (spellId == SPELL_SEAFORIUM_BLAST || spellId == SPELL_SEAFORIUM_BLAST_H)
             creditSpell = SPELL_BOMB_INABLE_CREDIT;
         else if (spellId == SPELL_HUGE_SEAFORIUM_BLAST || spellId == SPELL_HUGE_SEAFORIUM_BLAST_H)

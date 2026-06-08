@@ -18,7 +18,7 @@
 #ifndef _INSTANCESAVEMGR_H
 #define _INSTANCESAVEMGR_H
 
-#include "DBCEnums.h"
+#include "DBCDefines.h"
 #include "DatabaseEnv.h"
 #include "Define.h"
 #include "ObjectDefines.h"

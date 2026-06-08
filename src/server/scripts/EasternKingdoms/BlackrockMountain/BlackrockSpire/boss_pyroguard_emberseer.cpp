@@ -136,11 +136,11 @@ struct boss_pyroguard_emberseer : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_ENCAGE_EMBERSEER)
+        if (spell->ID == SPELL_ENCAGE_EMBERSEER)
             if (!me->GetAuraCount(SPELL_ENCAGED_EMBERSEER))
                 me->CastSpell(me, SPELL_ENCAGED_EMBERSEER);
 
-        if (spell->Id == SPELL_EMBERSEER_GROWING_TRIGGER)
+        if (spell->ID == SPELL_EMBERSEER_GROWING_TRIGGER)
         {
             if (me->GetAuraCount(SPELL_EMBERSEER_GROWING_TRIGGER) == 10)
                 Talk(EMOTE_TEN_STACK);

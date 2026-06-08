@@ -18,6 +18,7 @@
 #include "CreatureScript.h"
 #include "ScriptedCreature.h"
 #include "SpellInfo.h"
+#include "MapDefines.h"
 #include "violet_hold.h"
 
 enum Yells
@@ -92,7 +93,7 @@ public:
         {
             if (!target || !spell)
                 return;
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_ARCANE_VACUUM:
                     target->NearTeleportTo(me->GetPositionX(), me->GetPositionY(), me->GetPositionZ() + 10.0f, target->GetOrientation());

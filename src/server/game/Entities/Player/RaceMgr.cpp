@@ -56,10 +56,10 @@ void RaceMgr::LoadRaces()
         if (!raceEntry)
             continue;
 
-        uint8 alliance = raceEntry->alliance;
-        uint8 raceId = raceEntry->RaceID;
+        const uint8 team = raceEntry->Team;
+        const uint8 raceId = raceEntry->ID;
 
-        if (raceEntry->Flags & CHRRACES_FLAGS_NOT_PLAYABLE)
+        if (raceEntry->Flags & CHR_RACES_FLAGS_NOT_PLAYABLE)
             continue;
 
         if (GetMaxRaces() <= raceId)
@@ -69,9 +69,9 @@ void RaceMgr::LoadRaces()
 
         _playableRaceMask |= raceBit;
 
-        if (alliance == ALLIANCE_HORDE)
+        if (team == ALLIANCE_HORDE)
             _hordeRaceMask |= raceBit;
-        else if (alliance == ALLIANCE_ALLIANCE)
+        else if (team == ALLIANCE_ALLIANCE)
             _allianceRaceMask |= raceBit;
     }
 }

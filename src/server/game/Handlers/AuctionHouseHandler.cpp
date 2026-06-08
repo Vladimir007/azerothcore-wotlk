@@ -67,7 +67,7 @@ void WorldSession::SendAuctionHello(ObjectGuid guid, Creature* unit)
 
     WorldPacket data(MSG_AUCTION_HELLO, 12);
     data << guid;
-    data << uint32(ahEntry->houseId);
+    data << uint32(ahEntry->ID);
     data << uint8(1);                                       // 3.3.3: 1 - AH enabled, 0 - AH disabled
     SendPacket(&data);
 }
@@ -127,7 +127,7 @@ void WorldSession::HandleAuctionSellItem(WorldPacket& recvData)
     if (itemsCount > MAX_AUCTION_ITEMS)
     {
         SendAuctionCommandResult(0, AUCTION_SELL_ITEM, ERR_AUCTION_DATABASE_ERROR);
-        recvData.rfinish();
+        recvData.rFinish();
         return;
     }
 
@@ -138,7 +138,7 @@ void WorldSession::HandleAuctionSellItem(WorldPacket& recvData)
 
         if (!itemGUIDs[i] || !count[i] || count[i] > 1000)
         {
-            recvData.rfinish();
+            recvData.rFinish();
             return;
         }
     }
@@ -286,8 +286,8 @@ void WorldSession::HandleAuctionSellItem(WorldPacket& recvData)
                 return;
             }
 
-            const AuctionHouseEntry* AHEntry = sAuctionMgr->GetAuctionHouseEntryFromFactionTemplate(auctioneerInfo->faction);
-            AH->houseId = AuctionHouseId(AHEntry->houseId);
+            const AuctionHouseEntry* AHEntry = sAuctionMgr->GetAuctionHouseEntryFromFactionTemplate(auctioneerInfo->Faction);
+            AH->houseId = AuctionHouseId(AHEntry->ID);
         }
 
         // Required stack size of auction matches to current item stack size, just move item to auctionhouse
@@ -610,7 +610,7 @@ void WorldSession::HandleAuctionListBidderItems(WorldPacket& recvData)
     if (!creature)
     {
         LOG_DEBUG("network", "WORLD: HandleAuctionListBidderItems - Unit ({}) not found or you can't interact with him.", guid.ToString());
-        recvData.rfinish();
+        recvData.rFinish();
         return;
     }
 
@@ -626,7 +626,7 @@ void WorldSession::HandleAuctionListBidderItems(WorldPacket& recvData)
     if (!ahEntry)
         return;
 
-    AuctionHouseFaction auctionHouseFaction = AuctionHouseMgr::GetAuctionHouseFactionFromHouseId(AuctionHouseId(ahEntry->houseId));
+    AuctionHouseFaction auctionHouseFaction = AuctionHouseMgr::GetAuctionHouseFactionFromHouseId(AuctionHouseId(ahEntry->ID));
 
     // Client sends this list, which I'm honestly not entirely sure why?
     std::vector<uint32> auctionIds;
@@ -663,7 +663,7 @@ void WorldSession::HandleAuctionListOwnerItems(WorldPacket& recvData)
     if (!ahEntry)
         return;
 
-    AuctionHouseFaction auctionHouseFaction = AuctionHouseMgr::GetAuctionHouseFactionFromHouseId(AuctionHouseId(ahEntry->houseId));
+    AuctionHouseFaction auctionHouseFaction = AuctionHouseMgr::GetAuctionHouseFactionFromHouseId(AuctionHouseId(ahEntry->ID));
 
     sAuctionMgr->GetAuctionHouseSearcher()->QueueSearchRequest(new AuctionSearchOwnerListRequest(auctionHouseFaction, GetPlayer()->GetGUID()));
 }
@@ -726,7 +726,7 @@ void WorldSession::HandleAuctionListItems(WorldPacket& recvData)
     if (!ahEntry)
         return;
 
-    AuctionHouseFaction auctionHouseFaction = AuctionHouseMgr::GetAuctionHouseFactionFromHouseId(AuctionHouseId(ahEntry->houseId));
+    AuctionHouseFaction auctionHouseFaction = AuctionHouseMgr::GetAuctionHouseFactionFromHouseId(AuctionHouseId(ahEntry->ID));
 
     AuctionHouseSearchInfo ahSearchInfo;
     ahSearchInfo.wsearchedname = wsearchedname;

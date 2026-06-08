@@ -76,7 +76,7 @@ public:
 private:
     uint32 m_Gathered_A;
     uint32 m_Gathered_H;
-    TeamId m_LastController;
+    TeamID m_LastController;
 };
 
 #endif

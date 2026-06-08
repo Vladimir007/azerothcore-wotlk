@@ -72,7 +72,7 @@ struct boss_gal_darah : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_TRANSFORM_TO_RHINO)
+        if (spellInfo->ID == SPELL_TRANSFORM_TO_RHINO)
         {
             ScheduleTimedEvent(8s, 11s, [&] {
                 if (Unit* target = SelectTarget(SelectTargetMethod::Random, 1, 100.0f, true))
@@ -96,7 +96,7 @@ struct boss_gal_darah : public BossAI
                 DoCastSelf(SPELL_TRANSFORM_TO_TROLL);
             }, 32s);
         }
-        else if (spellInfo->Id == SPELL_TRANSFORM_TO_TROLL)
+        else if (spellInfo->ID == SPELL_TRANSFORM_TO_TROLL)
         {
             ScheduleEvents();
         }

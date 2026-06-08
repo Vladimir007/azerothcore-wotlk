@@ -316,7 +316,7 @@ public:
 
         void SpellHit(Unit*  /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_CREATE_GLOBULE_VISUAL)
+            if (spell->ID == SPELL_CREATE_GLOBULE_VISUAL)
                 me->CastSpell(me, SPELL_WATER_GLOBULE, true);
         }
 

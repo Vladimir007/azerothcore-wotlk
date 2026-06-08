@@ -6,23 +6,63 @@
 # changes there instead.
 
 services:
-  ac-database:
-    container_name: ac-database
-    image: mysql:8.4
+  nc-database:
+    image: postgres:17.2-alpine
+    container_name: nc-database
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=50"
+      - "-c"
+      - "shared_buffers=512MB"
+      - "-c"
+      - "effective_cache_size=4GB"
+      - "-c"
+      - "work_mem=16MB"
+      - "-c"
+      - "maintenance_work_mem=512MB"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "temp_file_limit=10GB"
+      - "-c"
+      - "log_min_duration_statement=200ms"
+      - "-c"
+      - "logging_collector=on"
+      - "-c"
+      - "idle_in_transaction_session_timeout=10s"
+      - "-c"
+      - "lock_timeout=2s"
+      - "-c"
+      - "statement_timeout=60s"
+      - "-c"
+      - "shared_preload_libraries=pg_stat_statements"
+      - "-c"
+      - "pg_stat_statements.max=10000"
+      - "-c"
+      - "pg_stat_statements.track=all"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=nordcore
+      - POSTGRES_PASSWORD=${DOCKER_DB_ROOT_PASSWORD:-nordcore}
+    volumes:
+      - ${DOCKER_VOL_DB:-ac-database}:/var/lib/postgresql/data
+    ports:
+      - ${DOCKER_DB_EXTERNAL_PORT:-5432}:5432
     networks:
       - ac-network
-    ports:
-      - ${DOCKER_DB_EXTERNAL_PORT:-3306}:3306
-    environment:
-      - MYSQL_ROOT_PASSWORD=${DOCKER_DB_ROOT_PASSWORD:-password}
-    volumes:
-      - ${DOCKER_VOL_DB:-ac-database}:/var/lib/mysql
-    restart: unless-stopped
     healthcheck:
-      test: "/usr/bin/mysql --user=root --password=$$MYSQL_ROOT_PASSWORD --execute \"SHOW DATABASES;\""
+      test: [ "CMD-SHELL", "pg_isready -U nordcore -d postgres" ]
       interval: 5s
       timeout: 10s
       retries: 40
+    restart: unless-stopped
+    shm_size: 1gb
+    deploy:
+      resources:
+        limits:
+          cpus: '2'
+          memory: 4G
 
   ac-db-import:
     container_name: ac-db-import
@@ -40,9 +80,7 @@ services:
     environment:
       AC_DATA_DIR: "/azerothcore/env/dist/data"
       AC_LOGS_DIR: "/azerothcore/env/dist/logs"
-      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_auth"
-      AC_WORLD_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_world"
-      AC_CHARACTER_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_characters"
+      AC_DATABASE_INFO: "postgresql://nordcore:${DOCKER_DB_ROOT_PASSWORD:-nordcore}@nc-database:5432/postgres"
     volumes:
       - ${DOCKER_VOL_ETC:-./env/dist/etc}:/azerothcore/env/dist/etc
       # [osxfs optimization]: https://stackoverflow.com/a/63437557/1964544
@@ -72,9 +110,7 @@ services:
     environment:
       AC_DATA_DIR: "/azerothcore/env/dist/data"
       AC_LOGS_DIR: "/azerothcore/env/dist/logs"
-      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_auth"
-      AC_WORLD_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_world"
-      AC_CHARACTER_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_characters"
+      AC_DATABASE_INFO: "postgresql://nordcore:${DOCKER_DB_ROOT_PASSWORD:-nordcore}@nc-database:5432/postgres"
     ports:
       - ${DOCKER_WORLD_EXTERNAL_PORT:-8085}:8085
       - ${DOCKER_SOAP_EXTERNAL_PORT:-7878}:7878
@@ -112,7 +148,7 @@ services:
     environment:
       AC_LOGS_DIR: "/azerothcore/env/dist/logs"
       AC_TEMP_DIR: "/azerothcore/env/dist/temp"
-      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_auth"
+      AC_DATABASE_INFO: "postgresql://nordcore:${DOCKER_DB_ROOT_PASSWORD:-nordcore}@nc-database:5432/postgres"
     volumes:
       - ${DOCKER_VOL_ETC:-./env/dist/etc}:/azerothcore/env/dist/etc
       # [osxfs optimization]: https://stackoverflow.com/a/63437557/1964544
@@ -183,9 +219,7 @@ services:
     environment:
       AC_DATA_DIR: "/azerothcore/env/dist/data"
       AC_LOGS_DIR: "/azerothcore/env/dist/logs"
-      AC_LOGIN_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_auth"
-      AC_WORLD_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_world"
-      AC_CHARACTER_DATABASE_INFO: "ac-database;3306;root;${DOCKER_DB_ROOT_PASSWORD:-password};acore_characters"
+      AC_DATABASE_INFO: "postgresql://nordcore:${DOCKER_DB_ROOT_PASSWORD:-nordcore}@nc-database:5432/postgres"
     networks:
       - ac-network
     ports:

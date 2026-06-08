@@ -121,19 +121,6 @@ void Player::Update(uint32 p_time)
         m_Last_tick = now;
     }
 
-    // If mute expired, remove it from the DB
-    if (GetSession()->m_muteTime && GetSession()->m_muteTime < now)
-    {
-        GetSession()->m_muteTime = 0;
-        LoginDatabasePreparedStatement* stmt =
-            LoginDatabase.GetPreparedStatement(LOGIN_UPD_MUTE_TIME);
-        stmt->SetData(0, 0); // Set the mute time to 0
-        stmt->SetData(1, "");
-        stmt->SetData(2, "");
-        stmt->SetData(3, GetSession()->GetAccountId());
-        LoginDatabase.Execute(stmt);
-    }
-
     if (!m_timedquests.empty())
     {
         QuestSet::iterator iter = m_timedquests.begin();
@@ -469,13 +456,13 @@ void Player::UpdateLFGChannel()
         return;
 
     ChatChannelsEntry const* cce = sChatChannelsStore.LookupEntry(26); /*LookingForGroup*/
-    Channel* cLFG = cMgr->GetJoinChannel(cce->pattern[m_session->GetSessionDbcLocale()], cce->ChannelID);
+    Channel* cLFG = cMgr->GetJoinChannel(cce->Pattern, cce->ID);
     if (!cLFG)
         return;
 
     Channel* cUsed = nullptr;
     for (Channel* channel : m_channels)
-        if (channel && channel->GetChannelId() == cce->ChannelID)
+        if (channel && channel->GetChannelId() == cce->ID)
         {
             cUsed = cLFG;
             break;
@@ -515,8 +502,7 @@ void Player::UpdateLocalChannels(uint32 newZone)
     if (!cMgr)
         return;
 
-    std::string current_zone_name =
-        current_zone->area_name[GetSession()->GetSessionDbcLocale()];
+    std::string current_zone_name = current_zone->AreaName;
 
     for (uint32 i = 0; i < sChatChannelsStore.GetNumRows(); ++i)
     {
@@ -540,9 +526,9 @@ void Player::UpdateLocalChannels(uint32 newZone)
 
             if (CanJoinConstantChannelInZone(channel, current_zone))
             {
-                if (!(channel->flags & CHANNEL_DBC_FLAG_GLOBAL))
+                if (!(channel->Flags & CHANNEL_DBC_FLAG_GLOBAL))
                 {
-                    if (channel->flags & CHANNEL_DBC_FLAG_CITY_ONLY &&
+                    if (channel->Flags & CHANNEL_DBC_FLAG_CITY_ONLY &&
                         usedChannel)
                         continue; // Already on the channel, as city channel
                                   // names are not changing
@@ -550,17 +536,14 @@ void Player::UpdateLocalChannels(uint32 newZone)
                     char        new_channel_name_buf[100];
                     std::string currentNameExt;
 
-                    if (channel->flags & CHANNEL_DBC_FLAG_CITY_ONLY)
-                        currentNameExt = sObjectMgr->GetAcoreStringForDBCLocale(LANG_CHANNEL_CITY);
+                    if (channel->Flags & CHANNEL_DBC_FLAG_CITY_ONLY)
+                        currentNameExt = sObjectMgr->GetNcoreString(LANG_CHANNEL_CITY);
                     else
                         currentNameExt = current_zone_name;
 
-                    snprintf(new_channel_name_buf, 100,
-                             channel->pattern[m_session->GetSessionDbcLocale()],
-                             currentNameExt.c_str());
+                    snprintf(new_channel_name_buf, 100, channel->Pattern.c_str(), currentNameExt.c_str());
 
-                    joinChannel = cMgr->GetJoinChannel(new_channel_name_buf,
-                                                       channel->ChannelID);
+                    joinChannel = cMgr->GetJoinChannel(new_channel_name_buf, channel->ID);
                     if (usedChannel)
                     {
                         if (joinChannel != usedChannel)
@@ -574,9 +557,7 @@ void Player::UpdateLocalChannels(uint32 newZone)
                     }
                 }
                 else
-                    joinChannel = cMgr->GetJoinChannel(
-                        channel->pattern[m_session->GetSessionDbcLocale()],
-                        channel->ChannelID);
+                    joinChannel = cMgr->GetJoinChannel(channel->Pattern, channel->ID);
             }
             else
                 removeChannel = usedChannel;
@@ -1220,7 +1201,7 @@ void Player::UpdateArea(uint32 newArea)
     m_areaUpdateId = newArea;
 
     AreaTableEntry const* area = sAreaTableStore.LookupEntry(newArea);
-    pvpInfo.IsInFFAPvPArea     = area && (area->flags & AREA_FLAG_ARENA);
+    pvpInfo.IsInFFAPvPArea     = area && area->Flags & AREA_FLAG_ARENA;
     UpdateFFAPvPState(false);
 
     UpdateAreaDependentAuras(newArea);
@@ -1239,7 +1220,7 @@ void Player::UpdateArea(uint32 newArea)
     uint32 const areaRestFlag = (GetTeamId(true) == TEAM_ALLIANCE)
                                     ? AREA_FLAG_REST_ZONE_ALLIANCE
                                     : AREA_FLAG_REST_ZONE_HORDE;
-    if (area && area->flags & areaRestFlag)
+    if (area && area->Flags & areaRestFlag)
         SetRestFlag(REST_FLAG_IN_FACTION_AREA);
     else
         RemoveRestFlag(REST_FLAG_IN_FACTION_AREA);
@@ -1293,23 +1274,18 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea, bool force)
 
     // in PvP, any not controlled zone (except zone->team == 6, default case)
     // in PvE, only opposition team capital
-    switch (zone->team)
+    switch (zone->Team)
     {
-    case AREATEAM_ALLY:
-        pvpInfo.IsInHostileArea =
-            GetTeamId(true) != TEAM_ALLIANCE &&
-            (sWorld->IsPvPRealm() || zone->flags & AREA_FLAG_CAPITAL);
+    case AREA_TEAM_ALLY:
+        pvpInfo.IsInHostileArea = GetTeamId(true) != TEAM_ALLIANCE && zone->Flags & AREA_FLAG_CAPITAL;
         break;
-    case AREATEAM_HORDE:
-        pvpInfo.IsInHostileArea =
-            GetTeamId(true) != TEAM_HORDE &&
-            (sWorld->IsPvPRealm() || zone->flags & AREA_FLAG_CAPITAL);
+    case AREA_TEAM_HORDE:
+        pvpInfo.IsInHostileArea = GetTeamId(true) != TEAM_HORDE && zone->Flags & AREA_FLAG_CAPITAL;
         break;
-    case AREATEAM_NONE:
+    case AREA_TEAM_NONE:
         // overwrite for battlegrounds, maybe batter some zone flags but current
         // known not 100% fit to this
-        pvpInfo.IsInHostileArea = sWorld->IsPvPRealm() || InBattleground() ||
-                                  zone->flags & AREA_FLAG_WINTERGRASP;
+        pvpInfo.IsInHostileArea = InBattleground() || zone->Flags & AREA_FLAG_WINTERGRASP;
         break;
     default: // 6 in fact
         pvpInfo.IsInHostileArea = false;
@@ -1319,7 +1295,7 @@ void Player::UpdateZone(uint32 newZone, uint32 newArea, bool force)
     // Treat players having a quest flagging for PvP as always in hostile area
     pvpInfo.IsHostile = pvpInfo.IsInHostileArea || HasPvPForcingQuest();
 
-    if (zone->flags & AREA_FLAG_CAPITAL) // Is in a capital city
+    if (zone->Flags & AREA_FLAG_CAPITAL) // Is in a capital city
     {
         if (!pvpInfo.IsHostile || zone->IsSanctuary())
             SetRestFlag(REST_FLAG_IN_CITY);
@@ -1454,8 +1430,7 @@ void Player::UpdateFFAPvPState(bool reset /*= true*/)
     /// @todo: should we always synchronize UNIT_FIELD_BYTES_2, 1 of controller
     // and controlled? no, we shouldn't, those are checked for affecting player
     // by client
-    if (!pvpInfo.IsInNoPvPArea && !IsGameMaster() &&
-        (pvpInfo.IsInFFAPvPArea || sWorld->IsFFAPvPRealm()))
+    if (!pvpInfo.IsInNoPvPArea && !IsGameMaster() && pvpInfo.IsInFFAPvPArea)
     {
         if (!IsFFAPvP())
         {
@@ -1508,15 +1483,11 @@ void Player::UpdateFFAPvPState(bool reset /*= true*/)
         else
         {
             // Not in FFA PvP Area
-            // Not FFA PvP realm
             // Not FFA PvP timer already set
             // Being recently in PvP combat
-            if (!pvpInfo.IsInFFAPvPArea && !sWorld->IsFFAPvPRealm() &&
-                !pvpInfo.FFAPvPEndTimer)
+            if (!pvpInfo.IsInFFAPvPArea && !pvpInfo.FFAPvPEndTimer)
             {
-                pvpInfo.FFAPvPEndTimer =
-                    GameTime::GetGameTime().count() +
-                    sWorld->getIntConfig(CONFIG_FFA_PVP_TIMER);
+                pvpInfo.FFAPvPEndTimer = GameTime::GetGameTime().count() + sWorld->getIntConfig(CONFIG_FFA_PVP_TIMER);
             }
         }
     }
@@ -1803,14 +1774,14 @@ void Player::UpdateForQuestWorldObjects()
                 return;
 
             // check if this unit requires quest specific flags
-            if (obj->HasNpcFlag(UNIT_NPC_FLAG_SPELLCLICK))
+            if (obj->HasNpcFlag(UNIT_NPC_FLAG_SPELL_CLICK))
             {
                 SpellClickInfoMapBounds clickPair = sObjectMgr->GetSpellClickInfoMapBounds(obj->GetEntry());
                 for (SpellClickInfoContainer::const_iterator _itr = clickPair.first; _itr != clickPair.second; ++_itr)
                 {
                     //! This code doesn't look right, but it was logically converted to condition system to do the exact
                     //! same thing it did before. It definitely needs to be overlooked for intended functionality.
-                    ConditionList conds = sConditionMgr->GetConditionsForSpellClickEvent(obj->GetEntry(), _itr->second.spellId);
+                    ConditionList conds = sConditionMgr->GetConditionsForSpellClickEvent(obj->GetEntry(), _itr->second.spellID);
                     bool buildUpdateBlock = false;
                     for (ConditionList::const_iterator jtr = conds.begin(); jtr != conds.end() && !buildUpdateBlock; ++jtr)
                         if ((*jtr)->ConditionType == CONDITION_QUESTREWARDED || (*jtr)->ConditionType == CONDITION_QUESTTAKEN)
@@ -2305,7 +2276,7 @@ bool Player::CanExecutePendingSpellCastRequest(SpellInfo const* spellInfo)
     if (GetGlobalCooldownMgr().HasGlobalCooldown(spellInfo))
         return false;
 
-    if (GetSpellCooldownDelay(spellInfo->Id) > GetSpellQueueWindow())
+    if (GetSpellCooldownDelay(spellInfo->ID) > GetSpellQueueWindow())
         return false;
 
     for (CurrentSpellTypes spellSlot : {CURRENT_MELEE_SPELL, CURRENT_GENERIC_SPELL})
@@ -2338,7 +2309,7 @@ bool Player::CanRequestSpellCast(SpellInfo const* spellInfo)
     if (GetGlobalCooldownMgr().GetGlobalCooldown(spellInfo) > GetSpellQueueWindow())
         return false;
 
-    if (GetSpellCooldownDelay(spellInfo->Id) > GetSpellQueueWindow())
+    if (GetSpellCooldownDelay(spellInfo->ID) > GetSpellQueueWindow())
         return false;
 
     // If there is an existing cast that will last longer than the allowable

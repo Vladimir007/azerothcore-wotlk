@@ -296,7 +296,7 @@ struct boss_steelbreaker : public ScriptedAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_SUPERCHARGE)
+        if (spellInfo->ID == SPELL_SUPERCHARGE)
             UpdatePhase();
     }
 
@@ -454,7 +454,7 @@ struct boss_runemaster_molgeim : public ScriptedAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_SUPERCHARGE)
+        if (spellInfo->ID == SPELL_SUPERCHARGE)
             UpdatePhase();
     }
 
@@ -651,13 +651,13 @@ struct boss_stormcaller_brundir : public ScriptedAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_SUPERCHARGE)
+        if (spellInfo->ID == SPELL_SUPERCHARGE)
             UpdatePhase();
     }
 
     void SpellHitTarget(Unit*  /*target*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == sSpellMgr->GetSpellIdForDifficulty(SPELL_CHAIN_LIGHTNING, me)  || spellInfo->Id == sSpellMgr->GetSpellIdForDifficulty(SPELL_LIGHTNING_WHIRL_TRIGG, me))
+        if (spellInfo->ID == sSpellMgr->GetSpellIdForDifficulty(SPELL_CHAIN_LIGHTNING, me)  || spellInfo->ID == sSpellMgr->GetSpellIdForDifficulty(SPELL_LIGHTNING_WHIRL_TRIGG, me))
             _stunnedAchievement = false;
     }
 
@@ -678,20 +678,20 @@ struct boss_stormcaller_brundir : public ScriptedAI
     void OnSpellCast(SpellInfo const* spellInfo) override
     {
         // When Overload begins, prevent Brundir from dying unless he is the last boss alive
-        if (spellInfo->Id == SPELL_OVERLOAD && CountAliveBosses(pInstance) > 1)
+        if (spellInfo->ID == SPELL_OVERLOAD && CountAliveBosses(pInstance) > 1)
             SetInvincibility(true);
     }
 
     void OnChannelFinished(SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_OVERLOAD)
+        if (spellInfo->ID == SPELL_OVERLOAD)
             SetInvincibility(false);
     }
 
     void OnSpellFailed(SpellInfo const* spellInfo) override
     {
         // Also lift invincibility if the channel is somehow interrupted
-        if (spellInfo->Id == SPELL_OVERLOAD)
+        if (spellInfo->ID == SPELL_OVERLOAD)
             SetInvincibility(false);
     }
 

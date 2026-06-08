@@ -350,7 +350,7 @@ class spell_lady_vashj_summons : public SpellScript
     {
         // Filter targets by distance depending on the spell
         // Coilfang Elites/Striders spawns on top of the stairs. The others at the foot of the stairs.
-        bool top = GetSpellInfo()->Id == SPELL_SUMMON_COILFANG_ELITE || GetSpellInfo()->Id == SPELL_SUMMON_COILFANG_STRIDER;
+        bool top = GetSpellInfo()->ID == SPELL_SUMMON_COILFANG_ELITE || GetSpellInfo()->ID == SPELL_SUMMON_COILFANG_STRIDER;
         float minDist = top ? 25.f : 60.f;
         float maxDist = top ? 60.f : 100.f;
 
@@ -369,7 +369,7 @@ class spell_lady_vashj_summons : public SpellScript
     {
         if (Unit* target = GetHitUnit())
         {
-            switch (GetSpellInfo()->Id)
+            switch (GetSpellInfo()->ID)
             {
                 case SPELL_SUMMON_ENCHANTED_ELEMENTAL:
                     target->CastSpell(target, SPELL_SUMMON_WAVE_A_MOB, true);

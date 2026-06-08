@@ -182,7 +182,7 @@ public:
 
     int32 HandleOpenGo(Player* player, GameObject* go) override;
 
-    void SetBeaconState(TeamId controlling_teamId); // not good atm
+    void SetBeaconState(TeamID controlling_teamId); // not good atm
 
     bool HandleGossipOption(Player* player, Creature* creature, uint32 gossipid) override;
 
@@ -196,7 +196,7 @@ private:
     uint32 m_GraveyardState;
 
 protected:
-    TeamId m_BothControllingFactionId;
+    TeamID m_BothControllingFactionId;
     ObjectGuid m_FlagCarrierGUID;
 };
 

@@ -336,7 +336,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_AOE_TURNIN && caster->GetEntry() == NPC_URUZIN && !_complete)
+            if (spell->ID == SPELL_AOE_TURNIN && caster->GetEntry() == NPC_URUZIN && !_complete)
             {
                 _complete = true;    // Preventing from giving credit twice
                 DoCast(me, SPELL_TURNIN);

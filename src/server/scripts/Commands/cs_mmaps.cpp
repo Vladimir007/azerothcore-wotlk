@@ -23,6 +23,7 @@
 * mmap sub-commands
 */
 
+#include <filesystem>
 #include "CellImpl.h"
 #include "Chat.h"
 #include "CommandScript.h"
@@ -36,20 +37,20 @@
 
 using namespace Acore::ChatCommands;
 
-class mmaps_commandscript : public CommandScript
+class mMapsCommandScript : public CommandScript
 {
 public:
-    mmaps_commandscript() : CommandScript("mmaps_commandscript") { }
+    mMapsCommandScript() : CommandScript("mMapsCommandScript") { }
 
     ChatCommandTable GetCommands() const override
     {
         static ChatCommandTable mmapCommandTable =
         {
-            { "loadedtiles", HandleMmapLoadedTilesCommand, SEC_ADMINISTRATOR, Console::No },
+            { "tiles",       HandleMmapLoadedTilesCommand, SEC_ADMINISTRATOR, Console::No },
             { "loc",         HandleMmapLocCommand,         SEC_ADMINISTRATOR, Console::No },
             { "path",        HandleMmapPathCommand,        SEC_ADMINISTRATOR, Console::No },
             { "stats",       HandleMmapStatsCommand,       SEC_ADMINISTRATOR, Console::No },
-            { "testarea",    HandleMmapTestArea,           SEC_ADMINISTRATOR, Console::No }
+            { "test",        HandleMmapTestArea,           SEC_ADMINISTRATOR, Console::No }
         };
 
         static ChatCommandTable commandTable =
@@ -138,11 +139,12 @@ public:
 
         handler->PSendSysMessage("{}{}{}.mmtile", player->GetMapId(), gridCoord.x_coord, gridCoord.y_coord);
 
-        std::string fileName = Acore::StringFormat(MMAP::TILE_FILE_NAME_FORMAT, sConfigMgr->GetOption<std::string>("DataDir", "."), player->GetMapId(), gridCoord.x_coord, gridCoord.y_coord);
+        const auto dataDir = std::filesystem::path(sConfigMgr->GetOption<std::string>("DataDir", "."));
+        const std::filesystem::path fileName = dataDir / "mMaps" / std::format(MMAP_TILE_FILE_NAME_FORMAT, player->GetMapId(), gridCoord.x_coord, gridCoord.y_coord);
         FILE* file = fopen(fileName.c_str(), "rb");
         if (!file)
         {
-            LOG_DEBUG("maps", "MMAP:loadMap: Could not open mmtile file '{}'", fileName);
+            LOG_DEBUG("maps", "MMAP:loadMap: Could not open mmtile file '{}'", fileName.string());
             return false;
         }
 
@@ -335,7 +337,7 @@ public:
     }
 };
 
-void AddSC_mmaps_commandscript()
+void AddSC_mMapsCommandScript()
 {
-    new mmaps_commandscript();
+    new mMapsCommandScript();
 }

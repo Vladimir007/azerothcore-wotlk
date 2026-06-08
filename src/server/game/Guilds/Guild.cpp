@@ -2228,7 +2228,7 @@ bool Guild::AddMember(ObjectGuid guid, uint8 rankId)
         // Player must exist
         CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_DATA_FOR_GUILD);
         stmt->SetData(0, guid.GetCounter());
-        if (PreparedQueryResult result = CharacterDatabase.Query(stmt))
+        if (QueryResult result = CharacterDatabase.Query(stmt))
         {
             Field* fields = result->Fetch();
             name = fields[0].Get<std::string>();
@@ -2419,11 +2419,11 @@ void Guild::_CreateDefaultGuildRanks(LocaleConstant loc)
     stmt->SetData(0, m_id);
     CharacterDatabase.Execute(stmt);
 
-    _CreateRank(sObjectMgr->GetAcoreString(LANG_GUILD_MASTER,   loc), GR_RIGHT_ALL);
-    _CreateRank(sObjectMgr->GetAcoreString(LANG_GUILD_OFFICER,  loc), GR_RIGHT_ALL);
-    _CreateRank(sObjectMgr->GetAcoreString(LANG_GUILD_VETERAN,  loc), GR_RIGHT_GCHATLISTEN | GR_RIGHT_GCHATSPEAK);
-    _CreateRank(sObjectMgr->GetAcoreString(LANG_GUILD_MEMBER,   loc), GR_RIGHT_GCHATLISTEN | GR_RIGHT_GCHATSPEAK);
-    _CreateRank(sObjectMgr->GetAcoreString(LANG_GUILD_INITIATE, loc), GR_RIGHT_GCHATLISTEN | GR_RIGHT_GCHATSPEAK);
+    _CreateRank(sObjectMgr->GetNcoreString(LANG_GUILD_MASTER), GR_RIGHT_ALL);
+    _CreateRank(sObjectMgr->GetNcoreString(LANG_GUILD_OFFICER), GR_RIGHT_ALL);
+    _CreateRank(sObjectMgr->GetNcoreString(LANG_GUILD_VETERAN), GR_RIGHT_GCHATLISTEN | GR_RIGHT_GCHATSPEAK);
+    _CreateRank(sObjectMgr->GetNcoreString(LANG_GUILD_MEMBER), GR_RIGHT_GCHATLISTEN | GR_RIGHT_GCHATSPEAK);
+    _CreateRank(sObjectMgr->GetNcoreString(LANG_GUILD_INITIATE), GR_RIGHT_GCHATLISTEN | GR_RIGHT_GCHATSPEAK);
 }
 
 bool Guild::_CreateRank(std::string_view name, uint32 rights)

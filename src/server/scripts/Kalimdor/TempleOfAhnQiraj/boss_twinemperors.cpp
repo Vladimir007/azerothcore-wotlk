@@ -369,7 +369,7 @@ struct boss_veklor : public boss_twinemperorsAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_TWIN_TELEPORT_0)
+        if (spellInfo->ID == SPELL_TWIN_TELEPORT_0)
         {
             if (Creature* veknilash = GetTwin())
             {

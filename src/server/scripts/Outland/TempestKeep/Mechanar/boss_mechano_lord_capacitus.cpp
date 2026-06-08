@@ -142,10 +142,10 @@ class spell_capacitus_polarity_charge : public SpellScript
         for (auto& ihit : targetList)
             if (ihit->GetGUID() != GetCaster()->GetGUID())
                 if (Player* target = ihit->ToPlayer())
-                    if (target->HasAura(GetTriggeringSpell()->Id))
+                    if (target->HasAura(GetTriggeringSpell()->ID))
                         ++count;
 
-        uint32 spellId = GetSpellInfo()->Id == SPELL_POSITIVE_CHARGE ? SPELL_POSITIVE_CHARGE_STACK : SPELL_NEGATIVE_CHARGE_STACK;
+        uint32 spellId = GetSpellInfo()->ID == SPELL_POSITIVE_CHARGE ? SPELL_POSITIVE_CHARGE_STACK : SPELL_NEGATIVE_CHARGE_STACK;
         if (count)
         {
             GetCaster()->SetAuraStack(spellId, GetCaster(), count);
@@ -162,7 +162,7 @@ class spell_capacitus_polarity_charge : public SpellScript
             return;
 
         Unit* target = GetHitUnit();
-        if (target->HasAura(GetTriggeringSpell()->Id))
+        if (target->HasAura(GetTriggeringSpell()->ID))
             SetHitDamage(0);
     }
 

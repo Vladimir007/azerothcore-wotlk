@@ -116,7 +116,7 @@ public:
         if (IsPet())
             return false;
 
-        uint32 rank = GetCreatureTemplate()->rank;
+        uint32 rank = GetCreatureTemplate()->Rank;
         return rank != CREATURE_ELITE_NORMAL && rank != CREATURE_ELITE_RARE;
     }
 
@@ -125,7 +125,7 @@ public:
         if (IsPet())
             return false;
 
-        return GetCreatureTemplate()->type_flags & CREATURE_TYPE_FLAG_BOSS_MOB;
+        return GetCreatureTemplate()->TypeFlags & CREATURE_TYPE_FLAG_BOSS_MOB;
     }
 
     [[nodiscard]] bool IsDungeonBoss() const;
@@ -214,16 +214,13 @@ public:
     [[nodiscard]] std::string GetScriptName() const;
     [[nodiscard]] uint32 GetScriptId() const;
 
-    // override WorldObject function for proper name localization
-    [[nodiscard]] std::string const& GetNameForLocaleIdx(LocaleConstant locale_idx) const override;
-
     void setDeathState(DeathState s, bool despawn = false) override;    // override virtual Unit::setDeathState
 
     bool LoadFromDB(ObjectGuid::LowType guid, Map* map, bool allowDuplicate = false) { return LoadCreatureFromDB(guid, map, false, allowDuplicate); }
     bool LoadCreatureFromDB(ObjectGuid::LowType guid, Map* map, bool addToMap = true, bool allowDuplicate = false);
     void SaveToDB();
 
-    virtual void SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask);   // overriden in Pet
+    virtual void SaveToDB(uint32 mapID, uint8 spawnMask, uint32 phaseMask);   // overriden in Pet
     virtual void DeleteFromDB();    // overriden in Pet
 
     Loot loot;
@@ -385,7 +382,7 @@ public:
     [[nodiscard]] uint32 GetOriginalEntry() const { return m_originalEntry; }
     void SetOriginalEntry(uint32 entry) { m_originalEntry = entry; }
 
-    static float _GetDamageMod(int32 Rank);
+    static float _GetDamageMod(uint32 Rank);
 
     float m_SightDistance, m_CombatDistance;
 

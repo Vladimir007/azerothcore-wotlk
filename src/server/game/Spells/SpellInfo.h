@@ -341,7 +341,7 @@ class AC_GAME_API SpellInfo
 friend class SpellMgr;
 
 public:
-    uint32 Id;
+    uint32 ID;
     SpellCategoryEntry const* CategoryEntry;
     uint32 Dispel;
     uint32 Mechanic;
@@ -404,8 +404,8 @@ public:
     uint32 SpellIconID;
     uint32 ActiveIconID;
     uint32 SpellPriority;
-    std::array<char const*, 16> SpellName;
-    std::array<char const*, 16> Rank;
+    std::string SpellName;
+    std::string Rank;
     uint32 MaxTargetLevel;
     uint32 MaxAffectedTargets;
     uint32 SpellFamilyName;

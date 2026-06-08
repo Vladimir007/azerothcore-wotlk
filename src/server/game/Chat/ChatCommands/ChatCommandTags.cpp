@@ -68,7 +68,7 @@ ChatCommandResult Acore::ChatCommands::AccountIdentifier::TryConsume(ChatHandler
     // first try parsing as account name
     _name.assign(text);
     if (!Utf8ToUpperOnlyLatin(_name))
-        return GetAcoreString(handler, LANG_CMDPARSER_INVALID_UTF8);
+        return GetNcoreString(handler, LANG_CMDPARSER_INVALID_UTF8);
 
     _id = AccountMgr::GetId(_name);
     if (_id) // account with name exists, we are done

@@ -62,9 +62,9 @@ AuctionHouseObject* AuctionHouseMgr::GetAuctionsMap(uint32 factionTemplateId)
     FactionTemplateEntry const* u_entry = sFactionTemplateStore.LookupEntry(factionTemplateId);
     if (!u_entry)
         return &_neutralAuctions;
-    else if (u_entry->ourMask & FACTION_MASK_ALLIANCE)
+    else if (u_entry->OurMask & FACTION_MASK_ALLIANCE)
         return &_allianceAuctions;
-    else if (u_entry->ourMask & FACTION_MASK_HORDE)
+    else if (u_entry->OurMask & FACTION_MASK_HORDE)
         return &_hordeAuctions;
 
     return &_neutralAuctions;
@@ -96,7 +96,7 @@ uint32 AuctionHouseMgr::GetAuctionDeposit(AuctionHouseEntry const* entry, uint32
     if (MSV <= 0)
         return AH_MINIMUM_DEPOSIT * sWorld->getRate(RATE_AUCTION_DEPOSIT);
 
-    float multiplier = CalculatePct(float(entry->depositPercent), 3);
+    float multiplier = CalculatePct(float(entry->DepositPercent), 3);
     uint32 timeHr = (((time / 60) / 60) / 12);
     uint32 deposit = uint32(((multiplier * MSV * count / 3) * timeHr * 3) * sWorld->getRate(RATE_AUCTION_DEPOSIT));
 
@@ -320,7 +320,7 @@ void AuctionHouseMgr::LoadAuctionItems()
 
     // data needs to be at first place for Item::LoadFromDB
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_AUCTION_ITEMS);
-    PreparedQueryResult result = CharacterDatabase.Query(stmt);
+    QueryResult result = CharacterDatabase.Query(stmt);
 
     if (!result)
     {
@@ -365,7 +365,7 @@ void AuctionHouseMgr::LoadAuctions()
     uint32 oldMSTime = getMSTime();
 
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_AUCTIONS);
-    PreparedQueryResult result = CharacterDatabase.Query(stmt);
+    QueryResult result = CharacterDatabase.Query(stmt);
 
     if (!result)
     {
@@ -461,9 +461,9 @@ AuctionHouseEntry const* AuctionHouseMgr::GetAuctionHouseEntryFromFactionTemplat
 
     if (!uEntry || sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_AUCTION))
         houseid = AuctionHouseId::Neutral;
-    else if (uEntry->ourMask & FACTION_MASK_ALLIANCE)
+    else if (uEntry->OurMask & FACTION_MASK_ALLIANCE)
         houseid = AuctionHouseId::Alliance;
-    else if (uEntry->ourMask & FACTION_MASK_HORDE)
+    else if (uEntry->OurMask & FACTION_MASK_HORDE)
         houseid = AuctionHouseId::Horde;
     else
         houseid = AuctionHouseId::Neutral;
@@ -552,7 +552,7 @@ AuctionHouseFaction AuctionEntry::GetFactionId() const
 
 uint32 AuctionEntry::GetAuctionCut() const
 {
-    int32 cut = int32(CalculatePct(bid, auctionHouseEntry->cutPercent) * sWorld->getRate(RATE_AUCTION_CUT));
+    int32 cut = int32(CalculatePct(bid, auctionHouseEntry->CutPercent) * sWorld->getRate(RATE_AUCTION_CUT));
     return std::max(cut, 0);
 }
 

@@ -648,7 +648,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_DOMINATE_MIND_25)
+            if (spell->ID == SPELL_DOMINATE_MIND_25)
             {
                 const int32 val = 100;
                 target->CastCustomSpell(target, 73261, &val, nullptr, nullptr, true); // scale aura, +100% size
@@ -689,7 +689,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_DARK_TRANSFORMATION:
                     me->UpdateEntry(NPC_DEFORMED_FANATIC);
@@ -802,7 +802,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_DARK_EMPOWERMENT:
                     me->UpdateEntry(NPC_EMPOWERED_ADHERENT);
@@ -940,7 +940,7 @@ public:
 
         void SpellHitTarget(Unit* /*target*/, SpellInfo const* spell) override
         {
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_VENGEFUL_BLAST_10N:
                 case SPELL_VENGEFUL_BLAST_25N:

@@ -87,7 +87,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_ARTILLERY_ON_THE_WRAP_GATE)
+            if (spell->ID == SPELL_ARTILLERY_ON_THE_WRAP_GATE)
             {
                 count++;
 
@@ -316,7 +316,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_T_PHASE_MODULATOR && caster->IsPlayer())
+            if (spell->ID == SPELL_T_PHASE_MODULATOR && caster->IsPlayer())
             {
                 const uint32 entry_list[4] = {ENTRY_PROTO, ENTRY_ADOLE, ENTRY_MATUR, ENTRY_NIHIL};
                 int cid = rand() % (4 - 1);
@@ -707,7 +707,7 @@ public:
                     // We are checking for displayid because all simon nodes have 4 clusters with different entries
                     if (large)
                     {
-                        switch (go->GetGOInfo()->displayId)
+                        switch (go->GetGOInfo()->DisplayID)
                         {
                             case GO_BLUE_CLUSTER_DISPLAY_LARGE:
                                 clusterIds[SIMON_BLUE] = go->GetEntry();
@@ -728,7 +728,7 @@ public:
                     }
                     else
                     {
-                        switch (go->GetGOInfo()->displayId)
+                        switch (go->GetGOInfo()->DisplayID)
                         {
                             case GO_BLUE_CLUSTER_DISPLAY:
                                 clusterIds[SIMON_BLUE] = go->GetEntry();
@@ -963,7 +963,7 @@ public:
             // Cast SPELL_BAD_PRESS_DAMAGE with scaled basepoints when the visual hits the target.
             // Need Fix: When SPELL_BAD_PRESS_TRIGGER hits target it triggers spell SPELL_BAD_PRESS_DAMAGE by itself
             // so player gets damage equal to calculated damage  dbc basepoints for SPELL_BAD_PRESS_DAMAGE (~50)
-            if (spell->Id == SPELL_BAD_PRESS_TRIGGER)
+            if (spell->ID == SPELL_BAD_PRESS_TRIGGER)
             {
                 int32 bp = (int32)((float)(fails) * 0.33f * target->GetMaxHealth());
                 target->CastCustomSpell(target, SPELL_BAD_PRESS_DAMAGE, &bp, nullptr, nullptr, true);
@@ -1006,7 +1006,7 @@ public:
         if (Creature* bunny = go->FindNearestCreature(NPC_SIMON_BUNNY, 12.0f, true))
             bunny->AI()->SetData(go->GetEntry(), 0);
 
-        player->CastSpell(player, go->GetGOInfo()->goober.spellId, true);
+        player->CastSpell(player, go->GetGOInfo()->Goober.spellId, true);
         go->AddUse();
         return true;
     }
@@ -1029,7 +1029,7 @@ public:
 
     bool OnGossipHello(Player* player, GameObject* go) override
     {
-        player->PrepareGossipMenu(go, go->GetGOInfo()->questgiver.gossipID);
+        player->PrepareGossipMenu(go, go->GetGOInfo()->QuestGiver.gossipID);
         player->SendPreparedGossip(go);
         return true;
     }

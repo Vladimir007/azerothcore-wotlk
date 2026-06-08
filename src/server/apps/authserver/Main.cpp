@@ -1,57 +1,24 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-/**
-* @file main.cpp
-* @brief Authentication Server main program
-*
-* This file contains the main program for the
-* authentication server
-*/
-
-#include "AppenderDB.h"
-#include "AuthSocketMgr.h"
-#include "Banner.h"
-#include "Config.h"
-#include "DatabaseEnv.h"
-#include "DatabaseLoader.h"
-#include "GitRevision.h"
-#include "IPLocation.h"
-#include "IoContext.h"
-#include "Log.h"
-#include "MySQLThreading.h"
-#include "OpenSSLCrypto.h"
-#include "ProcessPriority.h"
-#include "RealmList.h"
-#include "SecretMgr.h"
-#include "SharedDefines.h"
-#include "SteadyTimer.h"
-#include "Util.h"
-#include <boost/asio/signal_set.hpp>
-#include <boost/program_options.hpp>
-#include <boost/version.hpp>
 #include <csignal>
 #include <filesystem>
 #include <iostream>
-#include <openssl/crypto.h>
-#include <openssl/opensslv.h>
+#include <boost/program_options.hpp>
+#include <boost/asio/signal_set.hpp>
+#include "AppenderDB.h"
+#include "AuthSocketMgr.h"
+#include "Config.h"
+#include "DatabaseEnv.h"
+#include "DatabaseLoader.h"
+#include "IoContext.h"
+#include "Log.h"
+#include "OpenSSLCrypto.h"
+#include "ProcessPriority.h"
+#include "RealmList.h"
+#include "SharedDefines.h"
+#include "SteadyTimer.h"
+#include "Util.h"
 
-#ifndef _ACORE_REALM_CONFIG
-#define _ACORE_REALM_CONFIG "authserver.conf"
+#ifndef NCORE_REALM_CONFIG
+#define NCORE_REALM_CONFIG "authserver.conf"
 #endif
 
 using boost::asio::ip::tcp;
@@ -60,83 +27,49 @@ namespace fs = std::filesystem;
 
 bool StartDB();
 void StopDB();
-void SignalHandler(std::weak_ptr<Acore::Asio::IoContext> ioContextRef, boost::system::error_code const& error, int signalNumber);
+void SignalHandler(const std::weak_ptr<Acore::Asio::IoContext>& ioContextRef, boost::system::error_code const& error, int signalNumber);
 void KeepDatabaseAliveHandler(std::weak_ptr<boost::asio::steady_timer> dbPingTimerRef, int32 dbPingInterval, boost::system::error_code const& error);
-void BanExpiryHandler(std::weak_ptr<boost::asio::steady_timer> banExpiryCheckTimerRef, int32 banExpiryCheckInterval, boost::system::error_code const& error);
-variables_map GetConsoleArguments(int argc, char** argv, fs::path& configFile);
+bool GetConsoleArguments(int argc, char** argv, fs::path& configFile);
 
 /// Launch the auth server
-int main(int argc, char** argv)
+int main(const int argc, char** argv)
 {
     Acore::Impl::CurrentServerProcessHolder::_type = SERVER_PROCESS_AUTHSERVER;
     signal(SIGABRT, &Acore::AbortHandler);
 
     // Command line parsing
-    auto configFile = fs::path(sConfigMgr->GetConfigPath() + std::string(_ACORE_REALM_CONFIG));
-    auto vm = GetConsoleArguments(argc, argv, configFile);
-
-    // exit if help or version is enabled
-    if (vm.count("help") || vm.count("version"))
+    auto configFile = fs::path(sConfigMgr->GetConfigPath()) / NCORE_REALM_CONFIG;
+    if (!GetConsoleArguments(argc, argv, configFile))
         return 0;
 
     // Add file and args in config
-    sConfigMgr->Configure(configFile.generic_string(), std::vector<std::string>(argv, argv + argc));
+    sConfigMgr->Configure(configFile.generic_string());
 
     if (!sConfigMgr->LoadAppConfigs())
         return 1;
 
     // Init logging
     sLog->RegisterAppender<AppenderDB>();
-    sLog->Initialize(nullptr);
-
-    Acore::Banner::Show("authserver",
-        [](std::string_view text)
-        {
-            LOG_INFO("server.authserver", text);
-        },
-        []()
-        {
-            LOG_INFO("server.authserver", "> Using configuration file       {}", sConfigMgr->GetFilename());
-            LOG_INFO("server.authserver", "> Using SSL version:             {} (library: {})", OPENSSL_VERSION_TEXT, OpenSSL_version(OPENSSL_VERSION));
-            LOG_INFO("server.authserver", "> Using Boost version:           {}.{}.{}", BOOST_VERSION / 100000, BOOST_VERSION / 100 % 1000, BOOST_VERSION % 100);
-        });
+    sLog->Initialize();
 
     OpenSSLCrypto::threadsSetup();
 
     std::shared_ptr<void> opensslHandle(nullptr, [](void*) { OpenSSLCrypto::threadsCleanup(); });
 
-    // authserver PID file creation
-    std::string pidFile = sConfigMgr->GetOption<std::string>("PidFile", "");
-    if (!pidFile.empty())
-    {
-        if (uint32 pid = CreatePIDFile(pidFile))
-            LOG_INFO("server.authserver", "Daemon PID: {}\n", pid); // outError for red color in console
-        else
-        {
-            LOG_ERROR("server.authserver", "Cannot create PID file {} (possible error: permission)\n", pidFile);
-            return 1;
-        }
-    }
-
     // Initialize the database connection
     if (!StartDB())
         return 1;
 
-    sSecretMgr->Initialize();
-
-    // Load IP Location Database
-    sIPLocation->Load();
-
     std::shared_ptr<void> dbHandle(nullptr, [](void*) { StopDB(); });
 
-    std::shared_ptr<Acore::Asio::IoContext> ioContext = std::make_shared<Acore::Asio::IoContext>();
+    const auto ioContext = std::make_shared<Acore::Asio::IoContext>();
 
     // Get the list of realms for the server
     sRealmList->Initialize(*ioContext, sConfigMgr->GetOption<int32>("RealmsStateUpdateDelay", 20));
 
     std::shared_ptr<void> sRealmListHandle(nullptr, [](void*) { sRealmList->Close(); });
 
-    if (sRealmList->GetRealms().empty())
+    if (!sRealmList->GetRealm())
     {
         LOG_ERROR("server.authserver", "No valid realms specified.");
         return 1;
@@ -169,13 +102,10 @@ int main(int argc, char** argv)
 
     // Set signal handlers
     boost::asio::signal_set signals(*ioContext, SIGINT, SIGTERM);
-#if AC_PLATFORM == AC_PLATFORM_WINDOWS
-    signals.add(SIGBREAK);
-#endif
-    signals.async_wait(std::bind(&SignalHandler, std::weak_ptr<Acore::Asio::IoContext>(ioContext), std::placeholders::_1, std::placeholders::_2));
+    signals.async_wait(std::bind(&SignalHandler, std::weak_ptr(ioContext), std::placeholders::_1, std::placeholders::_2));
 
     // Set process priority according to configuration settings
-    SetProcessPriority("server.authserver", sConfigMgr->GetOption<int32>(CONFIG_PROCESSOR_AFFINITY, 0), sConfigMgr->GetOption<bool>(CONFIG_HIGH_PRIORITY, false));
+    SetProcessPriority("server.authserver", sConfigMgr->GetOption<bool>(CONFIG_HIGH_PRIORITY, false));
 
     // Enabled a timed callback for handling the database keep alive ping
     int32 dbPingInterval = sConfigMgr->GetOption<int32>("MaxPingTime", 30);
@@ -184,16 +114,8 @@ int main(int argc, char** argv)
     dbPingTimer->expires_at(Acore::Asio::SteadyTimer::GetExpirationTime(dbPingInterval * MINUTE));
     dbPingTimer->async_wait(std::bind(&KeepDatabaseAliveHandler, std::weak_ptr<boost::asio::steady_timer>(dbPingTimer), dbPingInterval, std::placeholders::_1));
 
-    int32 banExpiryCheckInterval = sConfigMgr->GetOption<int32>("BanExpiryCheckInterval", 60);
-    std::shared_ptr<boost::asio::steady_timer> banExpiryCheckTimer = std::make_shared<boost::asio::steady_timer>(*ioContext);
-
-    banExpiryCheckTimer->expires_at(Acore::Asio::SteadyTimer::GetExpirationTime(banExpiryCheckInterval));
-    banExpiryCheckTimer->async_wait(std::bind(&BanExpiryHandler, std::weak_ptr<boost::asio::steady_timer>(banExpiryCheckTimer), banExpiryCheckInterval, std::placeholders::_1));
-
     // Start the io service worker loop
     ioContext->run();
-
-    banExpiryCheckTimer->cancel();
     dbPingTimer->cancel();
 
     LOG_INFO("server.authserver", "Halting process...");
@@ -206,20 +128,16 @@ int main(int argc, char** argv)
 /// Initialize connection to the database
 bool StartDB()
 {
-    MySQL::Library_Init();
-
     // Load databases
-    // NOTE: While authserver is singlethreaded you should keep synch_threads == 1.
+    // NOTE: While authserver is single-threaded you should keep synch_threads == 1.
     // Increasing it is just silly since only 1 will be used ever.
     DatabaseLoader loader("server.authserver");
-    loader
-        .AddDatabase(LoginDatabase, "Login");
+    loader.AddDatabase(LoginDatabase, "Login");
 
     if (!loader.Load())
         return false;
 
     LOG_INFO("server.authserver", "Started auth database connection pool.");
-    sLog->SetRealmId(0); // Enables DB appenders when realm is set.
     return true;
 }
 
@@ -227,18 +145,13 @@ bool StartDB()
 void StopDB()
 {
     LoginDatabase.Close();
-    MySQL::Library_End();
 }
 
-void SignalHandler(std::weak_ptr<Acore::Asio::IoContext> ioContextRef, boost::system::error_code const& error, int /*signalNumber*/)
+void SignalHandler(const std::weak_ptr<Acore::Asio::IoContext>& ioContextRef, boost::system::error_code const& error, int /*signalNumber*/)
 {
     if (!error)
-    {
-        if (std::shared_ptr<Acore::Asio::IoContext> ioContext = ioContextRef.lock())
-        {
+        if (const std::shared_ptr<Acore::Asio::IoContext> ioContext = ioContextRef.lock())
             ioContext->stop();
-        }
-    }
 }
 
 void KeepDatabaseAliveHandler(std::weak_ptr<boost::asio::steady_timer> dbPingTimerRef, int32 dbPingInterval, boost::system::error_code const& error)
@@ -247,7 +160,7 @@ void KeepDatabaseAliveHandler(std::weak_ptr<boost::asio::steady_timer> dbPingTim
     {
         if (std::shared_ptr<boost::asio::steady_timer> dbPingTimer = dbPingTimerRef.lock())
         {
-            LOG_DEBUG("sql.driver", "Ping MySQL to keep connection alive");
+            LOG_DEBUG("sql.driver", "Ping PostgreSQL to keep connection alive");
             LoginDatabase.KeepAlive();
 
             dbPingTimer->expires_at(Acore::Asio::SteadyTimer::GetExpirationTime(dbPingInterval));
@@ -256,30 +169,14 @@ void KeepDatabaseAliveHandler(std::weak_ptr<boost::asio::steady_timer> dbPingTim
     }
 }
 
-void BanExpiryHandler(std::weak_ptr<boost::asio::steady_timer> banExpiryCheckTimerRef, int32 banExpiryCheckInterval, boost::system::error_code const& error)
+bool GetConsoleArguments(const int argc, char** argv, fs::path& configFile)
 {
-    if (!error)
-    {
-        if (std::shared_ptr<boost::asio::steady_timer> banExpiryCheckTimer = banExpiryCheckTimerRef.lock())
-        {
-            LoginDatabase.Execute(LoginDatabase.GetPreparedStatement(LOGIN_DEL_EXPIRED_IP_BANS));
-            LoginDatabase.Execute(LoginDatabase.GetPreparedStatement(LOGIN_UPD_EXPIRED_ACCOUNT_BANS));
-
-            banExpiryCheckTimer->expires_at(Acore::Asio::SteadyTimer::GetExpirationTime(banExpiryCheckInterval));
-            banExpiryCheckTimer->async_wait(std::bind(&BanExpiryHandler, banExpiryCheckTimerRef, banExpiryCheckInterval, std::placeholders::_1));
-        }
-    }
-}
-
-variables_map GetConsoleArguments(int argc, char** argv, fs::path& configFile)
-{
+    const fs::path defaultConfigFile(configFile);
     options_description all("Allowed options");
     all.add_options()
         ("help,h", "print usage message")
-        ("version,v", "print version build info")
         ("dry-run,d", "Dry run")
-        ("config,c", value<fs::path>(&configFile)->default_value(fs::path(sConfigMgr->GetConfigPath() + std::string(_ACORE_REALM_CONFIG))), "use <arg> as configuration file")
-        ("config-policy", value<std::string>()->value_name("policy"), "override config severity policy (e.g. default=skip,critical_option=fatal)");
+        ("config,c", value<fs::path>(&configFile)->default_value(defaultConfigFile), "use <arg> as configuration file");
 
     variables_map variablesMap;
 
@@ -291,14 +188,16 @@ variables_map GetConsoleArguments(int argc, char** argv, fs::path& configFile)
     catch (std::exception const& e)
     {
         std::cerr << e.what() << "\n";
+        return false;
     }
 
-    if (variablesMap.count("help"))
+    if (variablesMap.contains("help"))
+    {
         std::cout << all << "\n";
-    else if (variablesMap.count("version"))
-        std::cout << GitRevision::GetFullVersion() << "\n";
-    else if (variablesMap.count("dry-run"))
+        return false;
+    }
+    if (variablesMap.contains("dry-run"))
         sConfigMgr->setDryRun(true);
 
-    return variablesMap;
+    return true;
 }

@@ -364,7 +364,7 @@ namespace lfg
         time_t cancelTime{0};                                  ///< Time when we will cancel this proposal
         uint32 encounters{0};                                  ///< Dungeon Encounters
         bool isNew{true};                                      ///< Determines if it's new group or not
-        Lfg5Guids queues;                                      ///< Queue Ids to remove/readd
+        Lfg5Guids queues;                                      ///< Queue Ids to remove
         LfgGuidList showorder;                                 ///< Show order in update window
         LfgProposalPlayerContainer players;                    ///< Players data
     };
@@ -392,13 +392,13 @@ namespace lfg
 
     struct LFGDungeonData
     {
-        LFGDungeonData():  name("")
-        { }
-        LFGDungeonData(LFGDungeonEntry const* dbc) : id(dbc->ID), name(dbc->Name[0]), map(dbc->MapID),
-            type(dbc->TypeID), expansion(uint8(dbc->ExpansionLevel)), group(uint8(dbc->GroupID)),
-            minlevel(uint8(dbc->MinLevel)), maxlevel(uint8(dbc->MaxLevel)), difficulty(Difficulty(dbc->Difficulty)),
-            seasonal((dbc->Flags & LFG_FLAG_SEASONAL) != 0), x(0.0f), y(0.0f), z(0.0f), o(0.0f)
-        { }
+        LFGDungeonData():  name("") { }
+
+        explicit LFGDungeonData(LFGDungeonEntry const* dbc) :
+            id(dbc->ID), name(dbc->Name), map(dbc->MapID),
+            type(dbc->TypeID), expansion(static_cast<uint8>(dbc->ExpansionLevel)), group(static_cast<uint8>(dbc->GroupID)),
+            minLevel(static_cast<uint8>(dbc->MinLevel)), maxLevel(static_cast<uint8>(dbc->MaxLevel)),
+            difficulty(static_cast<Difficulty>(dbc->Difficulty)), seasonal((dbc->Flags & LFG_FLAG_SEASONAL) != 0) { }
 
         uint32 id{0};
         std::string name;
@@ -406,8 +406,8 @@ namespace lfg
         uint8 type{0};
         uint8 expansion{0};
         uint8 group{0};
-        uint8 minlevel{0};
-        uint8 maxlevel{0};
+        uint8 minLevel{0};
+        uint8 maxLevel{0};
         Difficulty difficulty{REGULAR_DIFFICULTY};
         bool seasonal{false};
         float x{0.0f}, y{0.0f}, z{0.0f}, o{0.0f};
@@ -418,7 +418,6 @@ namespace lfg
 
     class LFGMgr
     {
-    private:
         LFGMgr();
         ~LFGMgr();
 
@@ -497,7 +496,7 @@ namespace lfg
         /// Initializes locked dungeons for given player (called at login or level change)
         void InitializeLockedDungeons(Player* player, Group const* group = nullptr);
         /// Sets player team
-        void SetTeam(ObjectGuid guid, TeamId teamId);
+        void SetTeam(ObjectGuid guid, TeamID teamID);
         /// Sets player group
         void SetGroup(ObjectGuid guid, ObjectGuid group);
         /// Gets player group
@@ -590,7 +589,7 @@ namespace lfg
         void SetDungeon(ObjectGuid guid, uint32 dungeon);
 
     private:
-        TeamId GetTeam(ObjectGuid guid);
+        TeamID GetTeam(ObjectGuid guid);
         void RestoreState(ObjectGuid guid, char const* debugMsg);
         void ClearState(ObjectGuid guid, char const* debugMsg);
         void SetSelectedDungeons(ObjectGuid guid, LfgDungeonSet const& dungeons);
@@ -649,10 +648,6 @@ namespace lfg
         void CleanupDungeonCooldowns();
         [[nodiscard]] Seconds GetDungeonCooldownDuration() const;
     };
-
-    template <typename T, FMT_ENABLE_IF(std::is_enum_v<T>)>
-    auto format_as(T f) { return fmt::underlying(f); }
-
 } // namespace lfg
 
 #define sLFGMgr lfg::LFGMgr::instance()

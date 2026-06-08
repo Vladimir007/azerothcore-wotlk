@@ -18,7 +18,7 @@
 #ifndef AZEROTHCORE_CREATUREDATA_H
 #define AZEROTHCORE_CREATUREDATA_H
 
-#include "DBCEnums.h"
+#include "DBCDefines.h"
 #include "DatabaseEnv.h"
 #include "ItemTemplate.h"
 #include "LootMgr.h"
@@ -193,39 +193,39 @@ struct CreatureTemplate
     std::string  SubName;
     std::string  IconName;
     uint32  GossipMenuId;
-    uint8   minlevel;
-    uint8   maxlevel;
-    uint32  expansion;
-    uint32  faction;
-    uint32  npcflag;
-    float   speed_walk;
-    float   speed_run;
-    float   speed_swim;
-    float   speed_flight;
-    float   detection_range;                                // Detection Range for Line of Sight aggro
-    uint32  rank;
-    uint32  dmgschool;
+    uint8   LevelMin;
+    uint8   MaxLevel;
+    uint32  Expansion;
+    uint32  Faction;
+    uint32  FlagNPC;
+    float   SpeedWalk;
+    float   SpeedRun;
+    float   SpeedSwim;
+    float   SpeedFlight;
+    float   DetectionRange;                                // Detection Range for Line of Sight aggro
+    uint32  Rank;
+    uint32  DamageSchool;
     float   DamageModifier;
     uint32  BaseAttackTime;
     uint32  RangeAttackTime;
     float   BaseVariance;
     float   RangeVariance;
-    uint32  unit_class;                                     // enum Classes. Note only 4 classes are known for creatures.
-    uint32  unit_flags;                                     // enum UnitFlags mask values
-    uint32  unit_flags2;                                    // enum UnitFlags2 mask values
-    uint32  dynamicflags;
-    uint32  family;                                         // enum CreatureFamily values (optional)
+    uint32  UnitClass;                                     // enum Classes. Note only 4 classes are known for creatures.
+    uint32  UnitFlags;                                     // enum UnitFlags mask values
+    uint32  UnitFlags2;                                    // enum UnitFlags2 mask values
+    uint32  DynamicFlags;
+    uint32  Family;                                         // enum CreatureFamily values (optional)
     uint32  type;                                           // enum CreatureType values
-    uint32  type_flags;                                     // enum CreatureTypeFlags mask values
-    uint32  lootid;
-    uint32  pickpocketLootId;
-    uint32  SkinLootId;
+    uint32  TypeFlags;                                     // enum CreatureTypeFlags mask values
+    uint32  LootID;
+    uint32  PickpocketLootID;
+    uint32  SkinLootID;
     int32   resistance[MAX_SPELL_SCHOOL];
     uint32  spells[MAX_CREATURE_SPELLS];
     uint32  PetSpellDataId;
     uint32  VehicleId;
-    uint32  mingold;
-    uint32  maxgold;
+    uint32  GoldMin;
+    uint32  GoldMax;
     std::string AIName;
     uint32  MovementType;
     CreatureMovementData  Movement;
@@ -235,10 +235,10 @@ struct CreatureTemplate
     float   ModArmor;
     float   ModExperience;
     bool    RacialLeader;
-    uint32  movementId;
+    uint32  MovementID;
     bool    RegenHealth;
-    int32   CreatureImmunitiesId;
-    uint32  flags_extra;
+    int32   CreatureImmunitiesID;
+    uint32  FlagsExtra;
     uint32  ScriptID;
     WorldPacket queryData; // pussywizard
     CreatureModel const* GetModelByIdx(uint32 idx) const;
@@ -251,11 +251,11 @@ struct CreatureTemplate
     // helpers
     [[nodiscard]] SkillType GetRequiredLootSkill() const
     {
-        if (type_flags & CREATURE_TYPE_FLAG_SKIN_WITH_HERBALISM)
+        if (TypeFlags & CREATURE_TYPE_FLAG_SKIN_WITH_HERBALISM)
             return SKILL_HERBALISM;
-        else if (type_flags & CREATURE_TYPE_FLAG_SKIN_WITH_MINING)
+        else if (TypeFlags & CREATURE_TYPE_FLAG_SKIN_WITH_MINING)
             return SKILL_MINING;
-        else if (type_flags & CREATURE_TYPE_FLAG_SKIN_WITH_ENGINEERING)
+        else if (TypeFlags & CREATURE_TYPE_FLAG_SKIN_WITH_ENGINEERING)
             return SKILL_ENGINEERING;
         else
             return SKILL_SKINNING;                          // normal case
@@ -263,19 +263,19 @@ struct CreatureTemplate
 
     [[nodiscard]] bool IsExotic() const
     {
-        return (type_flags & CREATURE_TYPE_FLAG_TAMEABLE_EXOTIC) != 0;
+        return (TypeFlags & CREATURE_TYPE_FLAG_TAMEABLE_EXOTIC) != 0;
     }
 
     [[nodiscard]] bool IsTameable(bool exotic) const
     {
-        if (type != CREATURE_TYPE_BEAST || family == 0 || (type_flags & CREATURE_TYPE_FLAG_TAMEABLE) == 0)
+        if (type != CREATURE_TYPE_BEAST || Family == 0 || (TypeFlags & CREATURE_TYPE_FLAG_TAMEABLE) == 0)
             return false;
 
         // if can tame exotic then can tame any tameable
-        return exotic || (type_flags & CREATURE_TYPE_FLAG_TAMEABLE_EXOTIC) == 0;
+        return exotic || (TypeFlags & CREATURE_TYPE_FLAG_TAMEABLE_EXOTIC) == 0;
     }
 
-    [[nodiscard]] bool HasFlagsExtra (uint32 flag) const { return (flags_extra & flag) != 0; }
+    [[nodiscard]] bool HasFlagsExtra (uint32 flag) const { return (FlagsExtra & flag) != 0; }
 
     void InitializeQueryData();
 };
@@ -312,7 +312,7 @@ struct CreatureBaseStats
 
     uint32 GenerateHealth(CreatureTemplate const* info) const
     {
-        return uint32(std::ceil(BaseHealth[info->expansion] * info->ModHealth));
+        return uint32(std::ceil(BaseHealth[info->Expansion] * info->ModHealth));
     }
 
     uint32 GenerateMana(CreatureTemplate const* info) const
@@ -331,7 +331,7 @@ struct CreatureBaseStats
 
     float GenerateBaseDamage(CreatureTemplate const* info) const
     {
-        return BaseDamage[info->expansion];
+        return BaseDamage[info->Expansion];
     }
 
     static CreatureBaseStats const* GetBaseStats(uint8 level, uint8 unitClass);
@@ -339,26 +339,9 @@ struct CreatureBaseStats
 
 typedef std::unordered_map<uint16, CreatureBaseStats> CreatureBaseStatsContainer;
 
-struct CreatureLocale
-{
-    std::vector<std::string> Name;
-    std::vector<std::string> Title;
-};
-
-struct GossipMenuItemsLocale
-{
-    std::vector<std::string> OptionText;
-    std::vector<std::string> BoxText;
-};
-
-struct PointOfInterestLocale
-{
-    std::vector<std::string> Name;
-};
-
 struct EquipmentInfo
 {
-    uint32  ItemEntry[MAX_EQUIPMENT_ITEMS];
+    uint32 ItemID[MAX_EQUIPMENT_ITEMS];
 };
 
 // Benchmarked: Faster than std::map (insert/find)
@@ -373,25 +356,25 @@ struct CreatureData : public SpawnData
     uint32 id2{0};                                             // entry in creature_template
     uint32 id3{0};                                             // entry in creature_template
     uint32 displayid{0};
-    int8 equipmentId{0};
-    uint32 spawntimesecs{0};
-    float wander_distance{0.0f};
-    uint32 currentwaypoint{0};
-    uint32 curhealth{0};
-    uint32 curmana{0};
+    int8 equipmentID{0};
+    uint32 spawnTimeSecs{0};
+    float wanderDistance{0.0f};
+    uint32 currentWaypoint{0};
+    uint32 curHealth{0};
+    uint32 curMana{0};
     uint8 movementType{0};
-    uint32 npcflag{0};
-    uint32 unit_flags{0};                                      // enum UnitFlags mask values
-    uint32 dynamicflags{0};
+    uint32 npcFlag{0};
+    uint32 unitFlags{0};                                      // enum UnitFlags mask values
+    uint32 dynamicFlags{0};
 };
 
 struct CreatureModelInfo
 {
-    float bounding_radius;
-    float combat_reach;
-    uint8 gender;
-    uint32 modelid_other_gender;
-    float is_trigger;
+    float BoundingRadius;
+    float CombatReach;
+    uint8 Gender;
+    uint32 OtherGenderModelID;
+    float IsTrigger;
 };
 
 // Benchmarked: Faster than std::map (insert/find)
@@ -429,7 +412,7 @@ enum ChatType
 // `creature_addon` table
 struct CreatureAddon
 {
-    uint32 path_id;
+    uint32 pathID;
     uint32 mount;
     uint32 bytes1;
     uint32 bytes2;
@@ -443,7 +426,7 @@ typedef std::unordered_map<uint32, CreatureAddon> CreatureAddonContainer;
 // Vendors
 struct VendorItem
 {
-    VendorItem(uint32 _item, int32 _maxcount, uint32 _incrtime, uint32 _ExtendedCost)
+    VendorItem(uint32 _item, uint32 _maxcount, uint32 _incrtime, uint32 _ExtendedCost)
         : item(_item), maxcount(_maxcount), incrtime(_incrtime), ExtendedCost(_ExtendedCost) {}
 
     uint32 item;
@@ -469,7 +452,7 @@ struct VendorItemData
     }
     [[nodiscard]] bool Empty() const { return m_items.empty(); }
     [[nodiscard]] uint8 GetItemCount() const { return m_items.size(); }
-    void AddItem(uint32 item, int32 maxcount, uint32 ptime, uint32 ExtendedCost)
+    void AddItem(uint32 item, uint32 maxcount, uint32 ptime, uint32 ExtendedCost)
     {
         m_items.push_back(new VendorItem(item, maxcount, ptime, ExtendedCost));
     }

@@ -146,7 +146,7 @@ struct boss_tenris_mirkblood : public BossAI
 
     void SpellHit(Unit* caster, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_BLOOD_MIRROR0 && caster != me)
+        if (spell->ID == SPELL_BLOOD_MIRROR0 && caster != me)
             _mirrorTarget = caster;
     }
 

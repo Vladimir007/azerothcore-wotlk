@@ -623,7 +623,7 @@ void BattlegroundSA::EventPlayerDamagedGO(Player* /*player*/, GameObject* go, ui
     if (!go || !go->GetGOInfo())
         return;
 
-    if (eventType == go->GetGOInfo()->building.damagedEvent)
+    if (eventType == go->GetGOInfo()->Building.damagedEvent)
     {
         uint32 i = GetGateIDFromEntry(go->GetEntry());
         GateStatus[i] = BG_SA_GATE_DAMAGED;
@@ -632,11 +632,11 @@ void BattlegroundSA::EventPlayerDamagedGO(Player* /*player*/, GameObject* go, ui
             UpdateWorldState(uws, GateStatus[i]);
     }
 
-    if (eventType == go->GetGOInfo()->building.destroyedEvent)
+    if (eventType == go->GetGOInfo()->Building.destroyedEvent)
     {
         GetBgMap()->DoForAllPlayers([&](Player* player)
             {
-                if (go->GetGOInfo()->building.destroyedEvent == 19837)
+                if (go->GetGOInfo()->Building.destroyedEvent == 19837)
                     ChatHandler(player->GetSession()).PSendSysMessage(LANG_BG_SA_CHAMBER_BREACHED);
                 else
                     ChatHandler(player->GetSession()).PSendSysMessage(LANG_BG_SA_WAS_DESTROYED, go->GetGOInfo()->name);
@@ -674,7 +674,7 @@ void BattlegroundSA::EventPlayerDamagedGO(Player* /*player*/, GameObject* go, ui
         }
     }
 
-    if (eventType == go->GetGOInfo()->building.damageEvent)
+    if (eventType == go->GetGOInfo()->Building.damageEvent)
         GetBgMap()->DoForAllPlayers([&](Player* player)
             {
                     ChatHandler(player->GetSession()).PSendSysMessage(LANG_BG_SA_IS_UNDER_ATTACK, go->GetGOInfo()->name);
@@ -1083,7 +1083,7 @@ void BattlegroundSA::ToggleTimer()
     UpdateWorldState(WORLD_STATE_BATTLEGROUND_SA_ENABLE_TIMER, (TimerEnabled) ? 1 : 0);
 }
 
-void BattlegroundSA::EndBattleground(TeamId winnerTeamId)
+void BattlegroundSA::EndBattleground(TeamID winnerTeamId)
 {
     //honor reward for winning
     RewardHonorToTeam(GetBonusHonorFromKill(1), winnerTeamId);

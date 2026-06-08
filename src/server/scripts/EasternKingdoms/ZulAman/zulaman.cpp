@@ -215,7 +215,7 @@ struct npc_forest_frog : public ScriptedAI
 
     void SpellHit(Unit* caster, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_REMOVE_AMANI_CURSE && caster->IsPlayer() && me->GetEntry() == NPC_FOREST_FROG)
+        if (spell->ID == SPELL_REMOVE_AMANI_CURSE && caster->IsPlayer() && me->GetEntry() == NPC_FOREST_FROG)
         {
             me->GetMotionMaster()->MoveIdle();
             PlayerGUID = caster->GetGUID();
@@ -407,7 +407,7 @@ struct npc_harrison_jones : public ScriptedAI
 
     void SpellHit(Unit*, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_COSMETIC_SPEAR_THROW)
+        if (spell->ID == SPELL_COSMETIC_SPEAR_THROW)
         {
             me->RemoveAllAuras(); // remove stealth
             me->SetEntry(NPC_HARRISON_JONES_2);

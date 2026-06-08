@@ -36,23 +36,18 @@ enum CreatureTextRange
 
 struct CreatureTextEntry
 {
-    uint32 entry;
-    uint8 group;
-    uint8 id;
-    std::string text;
-    ChatMsg type;
-    Language lang;
-    float probability;
-    Emote emote;
-    uint32 duration;
-    uint32 sound;
+    uint32 Entry;
+    uint8 Group;
+    uint8 ID;
+    std::string Text;
+    ChatMsg Type;
+    Language Lang;
+    float Probability;
+    Emote Emote;
+    uint32 Duration;
+    uint32 Sound;
     CreatureTextRange TextRange;
-    uint32 BroadcastTextId;
-};
-
-struct CreatureTextLocale
-{
-    std::vector<std::string> Text;
+    uint32 BroadcastTextID;
 };
 
 struct CreatureTextId
@@ -75,8 +70,6 @@ typedef std::vector<CreatureTextEntry> CreatureTextGroup;              // texts 
 typedef std::unordered_map<uint8, CreatureTextGroup> CreatureTextHolder;    // groups for a creature by groupid
 typedef std::unordered_map<uint32, CreatureTextHolder> CreatureTextMap;     // all creatures by entry
 
-typedef std::map<CreatureTextId, CreatureTextLocale> LocaleCreatureTextMap;
-
 class CreatureTextMgr
 {
     CreatureTextMgr() { }
@@ -86,25 +79,23 @@ public:
 
     ~CreatureTextMgr() { }
     void LoadCreatureTexts();
-    void LoadCreatureTextLocales();
     CreatureTextMap  const& GetTextMap() const { return mTextMap; }
 
-    void SendSound(Creature* source, uint32 sound, ChatMsg msgType, WorldObject const* target, CreatureTextRange range, TeamId teamId, bool gmOnly);
+    void SendSound(Creature* source, uint32 sound, ChatMsg msgType, WorldObject const* target, CreatureTextRange range, TeamID teamId, bool gmOnly);
     void SendEmote(Unit* source, uint32 emote);
 
     //if sent, returns the 'duration' of the text else 0 if error
-    uint32 SendChat(Creature* source, uint8 textGroup, WorldObject const* target = nullptr, ChatMsg msgType = CHAT_MSG_ADDON, Language language = LANG_ADDON, CreatureTextRange range = TEXT_RANGE_NORMAL, uint32 sound = 0, TeamId teamId = TEAM_NEUTRAL, bool gmOnly = false, Player* srcPlr = nullptr);
+    uint32 SendChat(Creature* source, uint8 textGroup, WorldObject const* target = nullptr, ChatMsg msgType = CHAT_MSG_ADDON, Language language = LANG_ADDON, CreatureTextRange range = TEXT_RANGE_NORMAL, uint32 sound = 0, TeamID teamId = TEAM_NEUTRAL, bool gmOnly = false, Player* srcPlr = nullptr);
     bool TextExist(uint32 sourceEntry, uint8 textGroup);
     std::string GetLocalizedChatString(uint32 entry, uint8 gender, uint8 textGroup, uint32 id, LocaleConstant locale) const;
 
-    template<class Builder> void SendChatPacket(WorldObject* source, Builder const& builder, ChatMsg msgType, WorldObject const* target = nullptr, CreatureTextRange range = TEXT_RANGE_NORMAL, TeamId teamId = TEAM_NEUTRAL, bool gmOnly = false) const;
+    template<class Builder> void SendChatPacket(WorldObject* source, Builder const& builder, ChatMsg msgType, WorldObject const* target = nullptr, CreatureTextRange range = TEXT_RANGE_NORMAL, TeamID teamId = TEAM_NEUTRAL, bool gmOnly = false) const;
 
 private:
-    void SendNonChatPacket(WorldObject* source, WorldPacket const* data, ChatMsg msgType, WorldObject const* target, CreatureTextRange range, TeamId teamId, bool gmOnly) const;
+    void SendNonChatPacket(WorldObject* source, WorldPacket const* data, ChatMsg msgType, WorldObject const* target, CreatureTextRange range, TeamID teamId, bool gmOnly) const;
     float GetRangeForChatType(ChatMsg msgType) const;
 
     CreatureTextMap mTextMap;
-    LocaleCreatureTextMap mLocaleTextMap;
 };
 
 #define sCreatureTextMgr CreatureTextMgr::instance()
@@ -168,7 +159,7 @@ private:
 };
 
 template<class Builder>
-void CreatureTextMgr::SendChatPacket(WorldObject* source, Builder const& builder, ChatMsg msgType, WorldObject const* target /*= nullptr*/, CreatureTextRange range /*= TEXT_RANGE_NORMAL*/, TeamId teamId /*= TEAM_NEUTRAL*/, bool gmOnly /*= false*/) const
+void CreatureTextMgr::SendChatPacket(WorldObject* source, Builder const& builder, ChatMsg msgType, WorldObject const* target /*= nullptr*/, CreatureTextRange range /*= TEXT_RANGE_NORMAL*/, TeamID teamId /*= TEAM_NEUTRAL*/, bool gmOnly /*= false*/) const
 {
     if (!source)
         return;

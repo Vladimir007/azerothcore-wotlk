@@ -246,7 +246,7 @@ inline void Map::_ScriptProcessDoor(Object* source, Object* target, const Script
             GameObject* pDoor = _FindGameObject(wSource, guid);
             if (!pDoor)
                 LOG_ERROR("maps.script", "{} gameobject was not found (guid: {}).", scriptInfo->GetDebugInfo(), guid);
-            else if (pDoor->GetGoType() != GAMEOBJECT_TYPE_DOOR)
+            else if (pDoor->GetGoType() != GAME_OBJECT_TYPE_DOOR)
                 LOG_ERROR("maps.script", "{} gameobject is not a door ({}).",
                                scriptInfo->GetDebugInfo(), pDoor->GetGUID().ToString());
             else if (bOpen == (pDoor->GetGoState() == GO_STATE_READY))
@@ -256,7 +256,7 @@ inline void Map::_ScriptProcessDoor(Object* source, Object* target, const Script
                 if (target && target->isType(TYPEMASK_GAMEOBJECT))
                 {
                     GameObject* goTarget = target->ToGameObject();
-                    if (goTarget && goTarget->GetGoType() == GAMEOBJECT_TYPE_BUTTON)
+                    if (goTarget && goTarget->GetGoType() == GAME_OBJECT_TYPE_BUTTON)
                         goTarget->UseDoorOrButton(nTimeToToggle);
                 }
             }
@@ -549,15 +549,15 @@ void Map::ScriptsProcess()
                 // Source or target must be Player.
                 if (Player* player = _GetScriptPlayerSourceOrTarget(source, target, step.script))
                 {
-                    if (step.script->KillCredit.Flags & SF_KILLCREDIT_REWARD_GROUP)
+                    if (step.script->KillCredit.Flags & SF_KILL_CREDIT_REWARD_GROUP)
                         player->RewardPlayerAndGroupAtEvent(step.script->KillCredit.CreatureEntry, player);
                     else
                         player->KilledMonsterCredit(step.script->KillCredit.CreatureEntry);
                 }
                 break;
 
-            case SCRIPT_COMMAND_RESPAWN_GAMEOBJECT:
-                if (!step.script->RespawnGameobject.GOGuid)
+            case SCRIPT_COMMAND_RESPAWN_GAME_OBJECT:
+                if (!step.script->RespawnGameObject.GOGuid)
                 {
                     LOG_ERROR("maps.script", "{} gameobject guid (datalong) is not specified.", step.script->GetDebugInfo());
                     break;
@@ -566,27 +566,27 @@ void Map::ScriptsProcess()
                 // Source or target must be WorldObject.
                 if (WorldObject* pSummoner = _GetScriptWorldObject(source, true, step.script))
                 {
-                    GameObject* pGO = _FindGameObject(pSummoner, step.script->RespawnGameobject.GOGuid);
+                    GameObject* pGO = _FindGameObject(pSummoner, step.script->RespawnGameObject.GOGuid);
                     if (!pGO)
                     {
-                        LOG_ERROR("maps.script", "{} gameobject was not found (guid: {}).", step.script->GetDebugInfo(), step.script->RespawnGameobject.GOGuid);
+                        LOG_ERROR("maps.script", "{} gameobject was not found (guid: {}).", step.script->GetDebugInfo(), step.script->RespawnGameObject.GOGuid);
                         break;
                     }
 
-                    if (pGO->GetGoType() == GAMEOBJECT_TYPE_FISHINGNODE ||
-                            pGO->GetGoType() == GAMEOBJECT_TYPE_DOOR        ||
-                            pGO->GetGoType() == GAMEOBJECT_TYPE_BUTTON      ||
-                            pGO->GetGoType() == GAMEOBJECT_TYPE_TRAP)
+                    if (pGO->GetGoType() == GAME_OBJECT_TYPE_FISHING_NODE ||
+                            pGO->GetGoType() == GAME_OBJECT_TYPE_DOOR        ||
+                            pGO->GetGoType() == GAME_OBJECT_TYPE_BUTTON      ||
+                            pGO->GetGoType() == GAME_OBJECT_TYPE_TRAP)
                     {
                         LOG_ERROR("maps.script", "{} can not be used with gameobject of type {} (guid: {}).",
-                                       step.script->GetDebugInfo(), uint32(pGO->GetGoType()), step.script->RespawnGameobject.GOGuid);
+                                       step.script->GetDebugInfo(), uint32(pGO->GetGoType()), step.script->RespawnGameObject.GOGuid);
                         break;
                     }
 
                     // Check that GO is not spawned
                     if (!pGO->isSpawned())
                     {
-                        int32 nTimeToDespawn = std::max(5, int32(step.script->RespawnGameobject.DespawnDelay));
+                        int32 nTimeToDespawn = std::max(5, int32(step.script->RespawnGameObject.DespawnDelay));
                         pGO->SetLootState(GO_READY);
                         pGO->SetRespawnTime(nTimeToDespawn);
 
@@ -653,7 +653,7 @@ void Map::ScriptsProcess()
             case SCRIPT_COMMAND_REMOVE_AURA:
                 {
                     // Source (datalong2 != 0) or target (datalong2 == 0) must be Unit.
-                    bool bReverse = step.script->RemoveAura.Flags & SF_REMOVEAURA_REVERSE;
+                    bool bReverse = step.script->RemoveAura.Flags & SF_REMOVE_AURA_REVERSE;
                     if (Unit* unit = _GetScriptUnit(bReverse ? source : target, bReverse, step.script))
                         unit->RemoveAurasDueToSpell(step.script->RemoveAura.SpellID);
                     break;
@@ -673,23 +673,23 @@ void Map::ScriptsProcess()
                     // source/target cast spell at target/source (script->datalong2: 0: s->t 1: s->s 2: t->t 3: t->s
                     switch (step.script->CastSpell.Flags)
                     {
-                        case SF_CASTSPELL_SOURCE_TO_TARGET: // source -> target
+                        case SF_CAST_SPELL_SOURCE_TO_TARGET: // source -> target
                             uSource = source ? source->ToUnit() : nullptr;
                             uTarget = target ? target->ToUnit() : nullptr;
                             break;
-                        case SF_CASTSPELL_SOURCE_TO_SOURCE: // source -> source
+                        case SF_CAST_SPELL_SOURCE_TO_SOURCE: // source -> source
                             uSource = source ? source->ToUnit() : nullptr;
                             uTarget = uSource;
                             break;
-                        case SF_CASTSPELL_TARGET_TO_TARGET: // target -> target
+                        case SF_CAST_SPELL_TARGET_TO_TARGET: // target -> target
                             uSource = target ? target->ToUnit() : nullptr;
                             uTarget = uSource;
                             break;
-                        case SF_CASTSPELL_TARGET_TO_SOURCE: // target -> source
+                        case SF_CAST_SPELL_TARGET_TO_SOURCE: // target -> source
                             uSource = target ? target->ToUnit() : nullptr;
                             uTarget = source ? source->ToUnit() : nullptr;
                             break;
-                        case SF_CASTSPELL_SEARCH_CREATURE: // source -> creature with entry
+                        case SF_CAST_SPELL_SEARCH_CREATURE: // source -> creature with entry
                             uSource = source ? source->ToUnit() : nullptr;
                             uTarget = uSource ? GetClosestCreatureWithEntry(uSource, std::abs(step.script->CastSpell.CreatureEntry), step.script->CastSpell.SearchRadius) : nullptr;
                             break;
@@ -708,7 +708,7 @@ void Map::ScriptsProcess()
                     }
 
                     bool triggered = (step.script->CastSpell.Flags != 4) ?
-                                     step.script->CastSpell.CreatureEntry & SF_CASTSPELL_TRIGGERED :
+                                     step.script->CastSpell.CreatureEntry & SF_CAST_SPELL_TRIGGERED :
                                      step.script->CastSpell.CreatureEntry < 0;
                     uSource->CastSpell(uTarget, step.script->CastSpell.SpellID, triggered);
                     break;
@@ -720,7 +720,7 @@ void Map::ScriptsProcess()
                 {
                     // Playsound.Flags bitmask: 0/1=anyone/target
                     Player* player = nullptr;
-                    if (step.script->Playsound.Flags & SF_PLAYSOUND_TARGET_PLAYER)
+                    if (step.script->Playsound.Flags & SF_PLAY_SOUND_TARGET_PLAYER)
                     {
                         // Target must be Player.
                         player = _GetScriptPlayer(target, false, step.script);
@@ -729,9 +729,9 @@ void Map::ScriptsProcess()
                     }
 
                     // Playsound.Flags bitmask: 0/2/4=without/with distance dependent/radius
-                    if (step.script->Playsound.Flags & SF_PLAYSOUND_DISTANCE_RADIUS)
+                    if (step.script->Playsound.Flags & SF_PLAY_SOUND_DISTANCE_RADIUS)
                         object->PlayRadiusSound(step.script->Playsound.SoundID, step.script->Playsound.Radius);
-                    else if (step.script->Playsound.Flags & SF_PLAYSOUND_DISTANCE_SOUND)
+                    else if (step.script->Playsound.Flags & SF_PLAY_SOUND_DISTANCE_SOUND)
                         object->PlayDistanceSound(step.script->Playsound.SoundID, player);
                     else
                         object->PlayDirectSound(step.script->Playsound.SoundID, player);
@@ -867,7 +867,7 @@ void Map::ScriptsProcess()
                     player->PlayerTalkClass->SendCloseGossip();
                 break;
 
-            case SCRIPT_COMMAND_PLAYMOVIE:
+            case SCRIPT_COMMAND_PLAY_MOVIE:
                 // Source must be Player.
                 if (Player* player = _GetScriptPlayer(source, true, step.script))
                     player->SendMovieStart(step.script->PlayMovie.MovieID);

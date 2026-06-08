@@ -1,44 +1,27 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef LOG_MESSAGE_H
+#define LOG_MESSAGE_H
 
-#ifndef LogMessage_h__
-#define LogMessage_h__
-
+#include <string>
 #include "Define.h"
 #include "Duration.h"
 #include "LogCommon.h"
-#include <string>
+#include "Timer.h"
 
 struct LogMessage
 {
-    LogMessage(LogLevel _level, std::string const& _type, std::string_view _text);
-    LogMessage(LogLevel _level, std::string const& _type, std::string_view _text, std::string_view _param1);
+    LogMessage(const LogLevel _level, std::string const& _type, const std::string_view _text) :
+        level(_level), type(_type), text(std::string(_text)), mtime(GetEpochTime()) { }
 
     LogMessage(LogMessage const& /*other*/) = delete;
     LogMessage& operator=(LogMessage const& /*other*/) = delete;
 
-    static std::string getTimeStr(Seconds time);
-    std::string getTimeStr() const;
+    static std::string getTimeStr(const Seconds time) { return Acore::Time::TimeToTimestampStr(time, "%Y-%m-%d %X"); }
+    std::string getTimeStr() const { return getTimeStr(mtime); }
 
     LogLevel const level;
     std::string const type;
     std::string const text;
     std::string prefix;
-    std::string param1;
     Seconds mtime;
 
     ///@ Returns size of the log message content in bytes
@@ -48,4 +31,4 @@ struct LogMessage
     }
 };
 
-#endif // LogMessage_h__
+#endif

@@ -56,13 +56,13 @@ typedef std::map<uint32 /*condition id*/, GameEventFinishCondition> GameEventCon
 struct GameEventData
 {
     GameEventData()  = default;
-    uint32 EventId;
+    uint32 EventID;
     time_t Start{1};           // occurs after this time
     time_t End{0};             // occurs before this time
     time_t NextStart{0};       // after this time the follow-up events count this phase completed
     uint32 Occurence{0};       // time between end and start
     uint32 Length{0};          // length of the event (minutes) after finishing all conditions
-    HolidayIds HolidayId{HOLIDAY_NONE};
+    HolidayIds HolidayID{HOLIDAY_NONE};
     uint8 HolidayStage;
     GameEventState State{GAMEEVENT_NORMAL};   // state of the game event, these are saved into the game_event table on change!
     GameEventConditionMap Conditions;  // conditions to finish

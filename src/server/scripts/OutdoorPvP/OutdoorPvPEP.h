@@ -157,14 +157,14 @@ public:
     void HandlePlayerLeave(Player* player) override;
 
 protected:
-    void SummonSupportUnitAtNorthpassTower(TeamId teamId);
+    void SummonSupportUnitAtNorthpassTower(TeamID teamId);
 
     void UpdateTowerState();
 
 protected:
     uint32 m_TowerState;
 
-    TeamId m_UnitsSummonedSideId;
+    TeamID m_UnitsSummonedSideId;
 };
 
 class OPvPCapturePointEP_NPT : public OPvPCapturePoint
@@ -183,14 +183,14 @@ public:
     void HandlePlayerLeave(Player* player) override;
 
 protected:
-    void SummonGO(TeamId teamId);
+    void SummonGO(TeamID teamId);
 
     void UpdateTowerState();
 
 protected:
     uint32 m_TowerState;
 
-    TeamId m_SummonedGOSideId;
+    TeamID m_SummonedGOSideId;
 };
 
 class OPvPCapturePointEP_CGT : public OPvPCapturePoint
@@ -209,14 +209,14 @@ public:
     void HandlePlayerLeave(Player* player) override;
 
 protected:
-    void LinkGraveyard(TeamId teamId);
+    void LinkGraveyard(TeamID teamId);
 
     void UpdateTowerState();
 
 protected:
     uint32 m_TowerState;
 
-    TeamId m_GraveyardSide;
+    TeamID m_GraveyardSide;
 };
 
 class OPvPCapturePointEP_PWT : public OPvPCapturePoint
@@ -235,12 +235,12 @@ public:
     void HandlePlayerLeave(Player* player) override;
 
 protected:
-    void SummonFlightMaster(TeamId teamId);
+    void SummonFlightMaster(TeamID teamId);
 
     void UpdateTowerState();
 
 protected:
-    TeamId m_FlightMasterSpawnedId;
+    TeamID m_FlightMasterSpawnedId;
 
     uint32 m_TowerState;
 };
@@ -263,11 +263,11 @@ public:
 
     void BuffTeams();
 
-    void SetControlledState(uint32 index, TeamId teamId);
+    void SetControlledState(uint32 index, TeamID teamId);
 
 private:
     // how many towers are controlled
-    TeamId EP_ControlsId[EP_TOWER_NUM];
+    TeamID EP_ControlsId[EP_TOWER_NUM];
 
     uint32 m_AllianceTowersControlled;
     uint32 m_HordeTowersControlled;

@@ -31,13 +31,13 @@ public:
     {
         static ChatCommandTable titlesSetCommandTable =
         {
-            { "mask", HandleTitlesSetMaskCommand, SEC_GAMEMASTER, Console::No },
+            { "mask", HandleTitlesSetMaskCommand, SEC_GAME_MASTER, Console::No },
         };
         static ChatCommandTable titlesCommandTable =
         {
-            { "add",     HandleTitlesAddCommand,     SEC_GAMEMASTER, Console::No },
-            { "current", HandleTitlesCurrentCommand, SEC_GAMEMASTER, Console::No },
-            { "remove",  HandleTitlesRemoveCommand,  SEC_GAMEMASTER, Console::No },
+            { "add",     HandleTitlesAddCommand,     SEC_GAME_MASTER, Console::No },
+            { "current", HandleTitlesCurrentCommand, SEC_GAME_MASTER, Console::No },
+            { "remove",  HandleTitlesRemoveCommand,  SEC_GAME_MASTER, Console::No },
             { "set",     titlesSetCommandTable },
         };
         static ChatCommandTable commandTable =
@@ -68,10 +68,11 @@ public:
         }
 
         std::string tNameLink = handler->GetNameLink(target);
-        std::string titleNameStr = Acore::StringFormat(target->getGender() == GENDER_MALE ? titleInfo->nameMale[handler->GetSessionDbcLocale()] : titleInfo->nameFemale[handler->GetSessionDbcLocale()], target->GetName());
+        const std::string name = target->getGender() == GENDER_MALE ? titleInfo->NameMale : titleInfo->NameFemale;
+        std::string titleNameStr = Acore::StringFormat(name.c_str(), target->GetName());
 
         target->SetTitle(titleInfo);
-        target->SetUInt32Value(PLAYER_CHOSEN_TITLE, titleInfo->bit_index);
+        target->SetUInt32Value(PLAYER_CHOSEN_TITLE, titleInfo->BitIndex);
 
         handler->PSendSysMessage(LANG_TITLE_CURRENT_RES, uint32(titleId), titleNameStr, tNameLink);
 
@@ -99,10 +100,11 @@ public:
         }
 
         std::string tNameLink = handler->GetNameLink(target);
-        std::string titleNameStr = Acore::StringFormat(target->getGender() == GENDER_MALE ? titleInfo->nameMale[handler->GetSessionDbcLocale()] : titleInfo->nameFemale[handler->GetSessionDbcLocale()], target->GetName());
+        const std::string name = target->getGender() == GENDER_MALE ? titleInfo->NameMale : titleInfo->NameFemale;
+        std::string titleNameStr = Acore::StringFormat(name.c_str(), target->GetName());
 
         target->SetTitle(titleInfo);
-        handler->PSendSysMessage(LANG_TITLE_ADD_RES, uint32(titleId), titleNameStr, tNameLink);
+        handler->PSendSysMessage(LANG_TITLE_ADD_RES, static_cast<uint32>(titleId), titleNameStr, tNameLink);
 
         return true;
     }
@@ -130,9 +132,10 @@ public:
         target->SetTitle(titleInfo, true);
 
         std::string tNameLink = handler->GetNameLink(target);
-        std::string titleNameStr = Acore::StringFormat(target->getGender() == GENDER_MALE ? titleInfo->nameMale[handler->GetSessionDbcLocale()] : titleInfo->nameFemale[handler->GetSessionDbcLocale()], target->GetName());
+        const std::string name = target->getGender() == GENDER_MALE ? titleInfo->NameMale : titleInfo->NameFemale;
+        std::string titleNameStr = Acore::StringFormat(name.c_str(), target->GetName());
 
-        handler->PSendSysMessage(LANG_TITLE_REMOVE_RES, uint32(titleId), titleNameStr, tNameLink);
+        handler->PSendSysMessage(LANG_TITLE_REMOVE_RES, static_cast<uint32>(titleId), titleNameStr, tNameLink);
 
         if (!target->HasTitle(target->GetInt32Value(PLAYER_CHOSEN_TITLE)))
         {
@@ -161,7 +164,7 @@ public:
 
         for (uint32 i = 1; i < sCharTitlesStore.GetNumRows(); ++i)
             if (CharTitlesEntry const* tEntry = sCharTitlesStore.LookupEntry(i))
-                titles2 &= ~(uint64(1) << tEntry->bit_index);
+                titles2 &= ~(uint64(1) << tEntry->BitIndex);
 
         mask &= ~titles2;                                     // remove non-existing titles
 

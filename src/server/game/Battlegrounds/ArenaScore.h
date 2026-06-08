@@ -27,7 +27,7 @@ struct AC_GAME_API ArenaScore : public BattlegroundScore
     friend class Arena;
 
 protected:
-    ArenaScore(ObjectGuid playerGuid, TeamId team) :
+    ArenaScore(ObjectGuid playerGuid, TeamID team) :
         BattlegroundScore(playerGuid), PvPTeamId(team == TEAM_ALLIANCE ? PVP_TEAM_ALLIANCE : PVP_TEAM_HORDE) { }
 
     void AppendToPacket(WorldPacket& data) final;

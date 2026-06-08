@@ -448,7 +448,7 @@ struct npc_overlord_drakuru_betrayal : public ScriptedAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        switch (spellInfo->Id)
+        switch (spellInfo->ID)
         {
             case SPELL_THROW_PORTAL_CRYSTAL:
                 if (Aura* aura = target->AddAura(SPELL_ARTHAS_PORTAL, target))
@@ -465,7 +465,7 @@ struct npc_overlord_drakuru_betrayal : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_TOUCH_OF_DEATH)
+        if (spellInfo->ID == SPELL_TOUCH_OF_DEATH)
         {
             DoCastAOE(SPELL_DRAKURUS_SKULL_MISSILE, true);
             DoCastSelf(SPELL_BLOATED_ABOMINATION_FEIGN_DEATH, true);

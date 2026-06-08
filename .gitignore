@@ -1,19 +1,10 @@
 #
-# AzerothCore
+# NordCore
 #
 
 /conf/*
 !/conf/dist
-/modules/*
-!/modules/*.md
-!/modules/*.sh
-!/modules/CMakeLists.txt
-!/modules/*.h
-!/modules/*.cmake
 /build*/
-/var/*
-!/var/build/.gitkeep
-!/var/ccache/.gitkeep
 /env/dist/*
 !/env/dist/.gitkeep
 /env/user/*
@@ -52,11 +43,6 @@ CMakeLists.txt.user
 *.BACKUP.*
 *.BASE.*
 *.LOCAL.*
-
-#
-# AI tools
-#
-.claude
 
 #
 # IDE & other software

@@ -461,7 +461,6 @@ void SearchableAuctionEntry::BuildAuctionInfo(WorldPacket& data) const
 void SearchableAuctionEntry::SetItemNames()
 {
     ItemTemplate const* proto = item.itemTemplate;
-    ItemLocale const* il = sObjectMgr->GetItemLocale(proto->ItemId);
 
     for (uint32 locale = 0; locale < TOTAL_LOCALES; ++locale)
     {
@@ -470,43 +469,31 @@ void SearchableAuctionEntry::SetItemNames()
 
         std::string itemName = proto->Name1;
 
-        // local name
-        LocaleConstant locdbc_idx = sWorld->GetAvailableDbcLocale(static_cast<LocaleConstant>(locale));
-        if (locdbc_idx >= LOCALE_enUS && il)
-            ObjectMgr::GetLocaleString(il->Name, locale, itemName);
-
         // DO NOT use GetItemEnchantMod(proto->RandomProperty) as it may return a result
         //  that matches the search but it may not equal item->GetItemRandomPropertyId()
         //  used in BuildAuctionInfo() which then causes wrong items to be listed
-        int32 propRefID = item.randomPropertyId;
 
-        if (propRefID)
+        if (const int32 propRefID = item.randomPropertyId)
         {
             // Append the suffix to the name (ie: of the Monkey) if one exists
             // These are found in ItemRandomSuffix.dbc and ItemRandomProperties.dbc
             // even though the DBC name seems misleading
-            std::array<char const*, 16> const* suffix = nullptr;
+            std::string suffix{};
 
             if (propRefID < 0)
             {
-                ItemRandomSuffixEntry const* itemRandEntry = sItemRandomSuffixStore.LookupEntry(-item.randomPropertyId);
-                if (itemRandEntry)
-                    suffix = &itemRandEntry->Name;
+                if (const ItemRandomSuffixEntry* itemRandEntry = sItemRandomSuffixStore.LookupEntry(-item.randomPropertyId))
+                    suffix = itemRandEntry->Name;
             }
-            else
-            {
-                ItemRandomPropertiesEntry const* itemRandEntry = sItemRandomPropertiesStore.LookupEntry(item.randomPropertyId);
-                if (itemRandEntry)
-                    suffix = &itemRandEntry->Name;
-            }
+            else if (const ItemRandomPropertiesEntry* itemRandEntry = sItemRandomPropertiesStore.LookupEntry(item.randomPropertyId))
+                suffix = itemRandEntry->Name;
 
             // dbc local name
-            if (suffix)
+            if (!suffix.empty())
             {
-                // Append the suffix (ie: of the Monkey) to the name using localization
-                // or default enUS if localization is invalid
+                // Append the suffix (ie: of the Monkey) to the name
                 itemName += ' ';
-                itemName += (*suffix)[locdbc_idx >= 0 ? locdbc_idx : LOCALE_enUS];
+                itemName += suffix;
             }
         }
 

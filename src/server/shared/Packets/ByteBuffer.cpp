@@ -1,51 +1,54 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "ByteBuffer.h"
-#include "Errors.h"
-#include "Log.h"
-#include "MessageBuffer.h"
-#include "Timer.h"
+
 #include <ctime>
 #include <sstream>
 #include <utf8.h>
 
-ByteBuffer::ByteBuffer(MessageBuffer&& buffer) :
-    _rpos(0), _wpos(0), _storage(buffer.Move()) { }
+#include "Errors.h"
+#include "Log.h"
+#include "MessageBuffer.h"
+#include "Timer.h"
 
-ByteBufferPositionException::ByteBufferPositionException(bool add, std::size_t pos, std::size_t size, std::size_t valueSize)
+ByteBuffer::ByteBuffer(MessageBuffer&& buffer): _storage(buffer.Move()) { }
+
+template<>
+inline std::string ByteBuffer::read<std::string>()
+{
+    std::string tmp;
+    *this >> tmp;
+    return tmp;
+}
+
+template<>
+inline void ByteBuffer::read_skip<char*>()
+{
+    std::string temp;
+    *this >> temp;
+}
+
+template<>
+inline void ByteBuffer::read_skip<char const*>()
+{
+    read_skip<char*>();
+}
+
+template<>
+inline void ByteBuffer::read_skip<std::string>()
+{
+    read_skip<char*>();
+}
+
+ByteBufferPositionException::ByteBufferPositionException(const bool add, const std::size_t pos, const std::size_t size, const std::size_t valueSize)
 {
     std::ostringstream ss;
-
-    ss << "Attempted to " << (add ? "put" : "get") << " value with size: "
-       << valueSize << " in ByteBuffer (pos: " << pos << " size: " << size
-       << ")";
-
+    ss << "Attempted to " << (add ? "put" : "get") << " value with size: " << valueSize << " in ByteBuffer (pos: " << pos << " size: " << size << ")";
     message().assign(ss.str());
 }
 
-ByteBufferSourceException::ByteBufferSourceException(std::size_t pos, std::size_t size, std::size_t valueSize)
+ByteBufferSourceException::ByteBufferSourceException(const std::size_t pos, const std::size_t size, const std::size_t valueSize)
 {
     std::ostringstream ss;
-
-    ss << "Attempted to put a "
-       << (valueSize > 0 ? "NULL-pointer" : "zero-sized value")
-       << " in ByteBuffer (pos: " << pos << " size: " << size << ")";
-
+    ss << "Attempted to put a " << (valueSize > 0 ? "NULL-pointer" : "zero-sized value") << " in ByteBuffer (pos: " << pos << " size: " << size << ")";
     message().assign(ss.str());
 }
 
@@ -74,13 +77,13 @@ ByteBuffer& ByteBuffer::operator>>(double& value)
     return *this;
 }
 
-std::string ByteBuffer::ReadCString(bool requireValidUtf8 /*= true*/)
+std::string ByteBuffer::ReadCString(const bool requireValidUtf8 /*= true*/)
 {
     std::string value;
 
     while (rpos() < size()) // prevent crash the wrong string format in a packet
     {
-        char c = read<char>();
+        const char c = read<char>();
         if (c == 0)
             break;
         value += c;
@@ -94,8 +97,8 @@ std::string ByteBuffer::ReadCString(bool requireValidUtf8 /*= true*/)
 
 uint32 ByteBuffer::ReadPackedTime()
 {
-    auto packedDate = read<uint32>();
-    tm lt = tm();
+    const auto packedDate = read<uint32>();
+    auto lt = tm();
 
     lt.tm_min = packedDate & 0x3F;
     lt.tm_hour = (packedDate >> 6) & 0x1F;
@@ -104,10 +107,10 @@ uint32 ByteBuffer::ReadPackedTime()
     lt.tm_mon = (packedDate >> 20) & 0xF;
     lt.tm_year = ((packedDate >> 24) & 0x1F) + 100;
 
-    return uint32(mktime(&lt));
+    return static_cast<uint32>(mktime(&lt));
 }
 
-void ByteBuffer::append(uint8 const* src, std::size_t cnt)
+void ByteBuffer::append(const uint8* src, const std::size_t cnt)
 {
     ASSERT(src, "Attempted to put a NULL-pointer in ByteBuffer (pos: {} size: {})", _wpos, size());
     ASSERT(cnt, "Attempted to put a zero-sized value in ByteBuffer (pos: {} size: {})", _wpos, size());
@@ -134,9 +137,9 @@ void ByteBuffer::append(uint8 const* src, std::size_t cnt)
     _wpos = newSize;
 }
 
-void ByteBuffer::AppendPackedTime(time_t time)
+void ByteBuffer::AppendPackedTime(const time_t time)
 {
-    tm lt = Acore::Time::TimeBreakdown(time);
+    const tm lt = Acore::Time::TimeBreakdown(time);
     append<uint32>((lt.tm_year - 100) << 24 | lt.tm_mon << 20 | (lt.tm_mday - 1) << 14 | lt.tm_wday << 11 | lt.tm_hour << 6 | lt.tm_min);
 }
 
@@ -151,7 +154,7 @@ void ByteBuffer::put(std::size_t pos, uint8 const* src, std::size_t cnt)
 
 void ByteBuffer::print_storage() const
 {
-    if (!sLog->ShouldLog("network.opcode.buffer", LogLevel::LOG_LEVEL_TRACE)) // optimize disabled trace output
+    if (!sLog->ShouldLog("network.opcode.buffer", LOG_LEVEL_TRACE)) // Optimize disabled trace output
         return;
 
     std::ostringstream o;
@@ -165,9 +168,9 @@ void ByteBuffer::print_storage() const
     LOG_TRACE("network.opcode.buffer", "{}", o.str());
 }
 
-void ByteBuffer::textlike() const
+void ByteBuffer::textLike() const
 {
-    if (!sLog->ShouldLog("network.opcode.buffer", LogLevel::LOG_LEVEL_TRACE)) // optimize disabled trace output
+    if (!sLog->ShouldLog("network.opcode.buffer", LOG_LEVEL_TRACE)) // Optimize disabled trace output
         return;
 
     std::ostringstream o;
@@ -185,9 +188,9 @@ void ByteBuffer::textlike() const
     LOG_TRACE("network.opcode.buffer", "{}", o.str());
 }
 
-void ByteBuffer::hexlike() const
+void ByteBuffer::hexLike() const
 {
-    if (!sLog->ShouldLog("network.opcode.buffer", LogLevel::LOG_LEVEL_TRACE)) // optimize disabled trace output
+    if (!sLog->ShouldLog("network.opcode.buffer", LOG_LEVEL_TRACE)) // Optimize disabled trace output
         return;
 
     uint32 j = 1, k = 1;

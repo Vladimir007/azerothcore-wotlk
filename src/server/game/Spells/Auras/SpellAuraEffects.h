@@ -367,21 +367,21 @@ namespace Acore
                     return false;
 
             // Sacred Shield
-            if (spellProtoA->Id == 58597)
+            if (spellProtoA->ID == 58597)
                 return true;
-            if (spellProtoB->Id == 58597)
+            if (spellProtoB->ID == 58597)
                 return false;
 
             // Fel Blossom
-            if (spellProtoA->Id == 28527)
+            if (spellProtoA->ID == 28527)
                 return true;
-            if (spellProtoB->Id == 28527)
+            if (spellProtoB->ID == 28527)
                 return false;
 
             // Divine Aegis
-            if (spellProtoA->Id == 47753)
+            if (spellProtoA->ID == 47753)
                 return true;
-            if (spellProtoB->Id == 47753)
+            if (spellProtoB->ID == 47753)
                 return false;
 
             // Ice Barrier

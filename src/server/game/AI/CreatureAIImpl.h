@@ -24,7 +24,7 @@
 template<typename First, typename Second, typename... Rest>
 static inline First const& RAND(First const& first, Second const& second, Rest const& ... rest)
 {
-    std::reference_wrapper<typename std::add_const<First>::type> const pack[] = { first, second, rest... };
+    std::reference_wrapper<std::add_const_t<First>> const pack[] = { first, second, rest... };
     return pack[urand(0, sizeof...(rest) + 1)].get();
 }
 

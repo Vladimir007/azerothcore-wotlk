@@ -67,7 +67,7 @@ namespace lfg
         m_LockedDungeons = lockStatus;
     }
 
-    void LfgPlayerData::SetTeam(TeamId teamId)
+    void LfgPlayerData::SetTeam(TeamID teamId)
     {
         m_TeamId = teamId;
     }
@@ -117,7 +117,7 @@ namespace lfg
         return m_LockedDungeons;
     }
 
-    TeamId LfgPlayerData::GetTeam() const
+    TeamID LfgPlayerData::GetTeam() const
     {
         return m_TeamId;
     }

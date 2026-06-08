@@ -1,30 +1,13 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef NCORE_CRYPTO_HASH_H
+#define NCORE_CRYPTO_HASH_H
 
-#ifndef AZEROTHCORE_CRYPTOHASH_H
-#define AZEROTHCORE_CRYPTOHASH_H
-
-#include "CryptoConstants.h"
-#include "Errors.h"
 #include <array>
-#include <openssl/evp.h>
 #include <string>
 #include <string_view>
 #include <utility>
+#include <openssl/evp.h>
+#include "CryptoConstants.h"
+#include "Errors.h"
 
 class BigNumber;
 
@@ -45,7 +28,7 @@ namespace Acore::Impl
             static constexpr std::size_t DIGEST_LENGTH = DigestLength;
             using Digest = std::array<uint8, DIGEST_LENGTH>;
 
-            static Digest GetDigestOf(uint8 const* data, std::size_t len)
+            static Digest GetDigestOf(uint8 const* data, const std::size_t len)
             {
                 GenericHash hash;
                 hash.UpdateData(data, len);
@@ -64,7 +47,7 @@ namespace Acore::Impl
 
             GenericHash() : _ctx(GenericHashImpl::MakeCTX())
             {
-                int result = EVP_DigestInit_ex(_ctx, HashCreator(), nullptr);
+                const int result = EVP_DigestInit_ex(_ctx, HashCreator(), nullptr);
                 ASSERT(result == 1);
             }
 
@@ -91,7 +74,7 @@ namespace Acore::Impl
                 if (this == &right)
                     return *this;
 
-                int result = EVP_MD_CTX_copy_ex(_ctx, right._ctx);
+                const int result = EVP_MD_CTX_copy_ex(_ctx, right._ctx);
                 ASSERT(result == 1);
                 _digest = right._digest;
                 return *this;
@@ -107,13 +90,17 @@ namespace Acore::Impl
                 return *this;
             }
 
-            void UpdateData(uint8 const* data, std::size_t len)
+            void UpdateData(uint8 const* data, const std::size_t len) const
             {
-                int result = EVP_DigestUpdate(_ctx, data, len);
+                const int result = EVP_DigestUpdate(_ctx, data, len);
                 ASSERT(result == 1);
             }
 
-            void UpdateData(std::string_view str) { UpdateData(reinterpret_cast<uint8 const*>(str.data()), str.size()); }
+            // ReSharper disable once CppMemberFunctionMayBeConst
+            void UpdateData(const std::string_view str)
+            {
+                UpdateData(reinterpret_cast<uint8 const*>(str.data()), str.size());
+            }
             void UpdateData(std::string const& str) { UpdateData(std::string_view(str)); } /* explicit overload to avoid using the container template */
             void UpdateData(char const* str) { UpdateData(std::string_view(str)); } /* explicit overload to avoid using the container template */
 
@@ -123,7 +110,7 @@ namespace Acore::Impl
             void Finalize()
             {
                 uint32 length;
-                int result = EVP_DigestFinal_ex(_ctx, _digest.data(), &length);
+                const int result = EVP_DigestFinal_ex(_ctx, _digest.data(), &length);
                 ASSERT(result == 1);
                 ASSERT(length == DIGEST_LENGTH);
             }
@@ -138,9 +125,9 @@ namespace Acore::Impl
 
 namespace Acore::Crypto
 {
-    using MD5 = Acore::Impl::GenericHash<EVP_md5, Constants::MD5_DIGEST_LENGTH_BYTES>;
-    using SHA1 = Acore::Impl::GenericHash<EVP_sha1, Constants::SHA1_DIGEST_LENGTH_BYTES>;
-    using SHA256 = Acore::Impl::GenericHash<EVP_sha256, Constants::SHA256_DIGEST_LENGTH_BYTES>;
+    using MD5 = Impl::GenericHash<EVP_md5, Constants::MD5_DIGEST_LENGTH_BYTES>;
+    using SHA1 = Impl::GenericHash<EVP_sha1, Constants::SHA1_DIGEST_LENGTH_BYTES>;
+    using SHA256 = Impl::GenericHash<EVP_sha256, Constants::SHA256_DIGEST_LENGTH_BYTES>;
 }
 
 #endif

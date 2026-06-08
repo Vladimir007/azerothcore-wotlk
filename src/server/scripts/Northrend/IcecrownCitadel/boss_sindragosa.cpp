@@ -290,7 +290,7 @@ public:
             _bombCount = 0;
             _mysticBuffetStack = 0;
             _Reset();
-            me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->speed_run);
+            me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->SpeedRun);
             me->SetReactState(REACT_AGGRESSIVE);
             me->CastSpell(me, SPELL_TANK_MARKER, true);
         }
@@ -411,7 +411,7 @@ public:
                 case POINT_FROSTWYRM_LAND:
                     me->setActive(false);
                     me->SetDisableGravity(false);
-                    me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->speed_run);
+                    me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->SpeedRun);
                     me->SetHomePosition(SindragosaLandPos);
                     me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
 
@@ -438,7 +438,7 @@ public:
                     {
                         _isInAirPhase = false;
                         me->SetDisableGravity(false);
-                        me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->speed_run);
+                        me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->SpeedRun);
                         me->SetReactState(REACT_AGGRESSIVE);
                         if (Unit* target = me->SelectVictim())
                             AttackStart(target);
@@ -492,8 +492,8 @@ public:
         {
             if (target->IsPlayer())
                 if (uint32 spellId = sSpellMgr->GetSpellIdForDifficulty(70127, me))
-                    if (spellId == spell->Id)
-                        if (Aura const* mysticBuffet = target->GetAura(spell->Id))
+                    if (spellId == spell->ID)
+                        if (Aura const* mysticBuffet = target->GetAura(spell->ID))
                             _mysticBuffetStack = std::max<uint8>(_mysticBuffetStack, mysticBuffet->GetStackAmount());
         }
 
@@ -778,7 +778,7 @@ class spell_sindragosa_s_fury : public SpellScript
         // This script should execute only in Icecrown Citadel
         if (InstanceMap* instance = GetCaster()->GetMap()->ToInstanceMap())
             if (instance->GetInstanceScript())
-                if (instance->GetScriptId() == sObjectMgr->GetScriptId(ICCScriptName))
+                if (instance->GetScriptId() == sObjectMgr->GetScriptID(ICCScriptName))
                     return true;
 
         return false;
@@ -1041,7 +1041,7 @@ class spell_sindragosa_ice_tomb_trap : public SpellScript
 
     void FilterTargets(std::list<WorldObject*>& unitList)
     {
-        unitList.remove_if(Acore::UnitAuraCheck(true, GetSpellInfo()->Id));
+        unitList.remove_if(Acore::UnitAuraCheck(true, GetSpellInfo()->ID));
         _targetList.clear();
         _targetList = unitList;
     }

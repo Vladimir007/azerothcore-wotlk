@@ -115,7 +115,7 @@ namespace Acore::Impl::ChatCommands
                 if (Utf8toWStr(utf8view, val))
                     return next;
                 else
-                    return GetAcoreString(handler, LANG_CMDPARSER_INVALID_UTF8);
+                    return GetNcoreString(handler, LANG_CMDPARSER_INVALID_UTF8);
             }
             else
                 return std::nullopt;
@@ -272,9 +272,9 @@ namespace Acore::Impl::ChatCommands
                     if (!nestedResult.HasErrorMessage())
                         return thisResult;
                     if (StringStartsWith(nestedResult.GetErrorMessage(), "\""))
-                        return Acore::StringFormat("\"{}\"\n{} {}", thisResult.GetErrorMessage(), GetAcoreString(handler, LANG_CMDPARSER_OR), nestedResult.GetErrorMessage());
+                        return Acore::StringFormat("\"{}\"\n{} {}", thisResult.GetErrorMessage(), GetNcoreString(handler, LANG_CMDPARSER_OR), nestedResult.GetErrorMessage());
                     else
-                        return Acore::StringFormat("\"{}\"\n{} \"{}\"", thisResult.GetErrorMessage(), GetAcoreString(handler, LANG_CMDPARSER_OR), nestedResult.GetErrorMessage());
+                        return Acore::StringFormat("\"{}\"\n{} \"{}\"", thisResult.GetErrorMessage(), GetNcoreString(handler, LANG_CMDPARSER_OR), nestedResult.GetErrorMessage());
                 }
             }
             else
@@ -285,7 +285,7 @@ namespace Acore::Impl::ChatCommands
         {
             ChatCommandResult result = TryAtIndex<0>(val, handler, args);
             if (result.HasErrorMessage() && (result.GetErrorMessage().find('\n') != std::string::npos))
-                return Acore::StringFormat("{} {}", GetAcoreString(handler, LANG_CMDPARSER_EITHER), result.GetErrorMessage());
+                return Acore::StringFormat("{} {}", GetNcoreString(handler, LANG_CMDPARSER_EITHER), result.GetErrorMessage());
             return result;
         }
     };

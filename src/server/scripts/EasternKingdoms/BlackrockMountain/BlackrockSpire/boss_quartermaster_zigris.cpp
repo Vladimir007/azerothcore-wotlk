@@ -73,7 +73,7 @@ struct boss_quartermaster_zigris : public BossAI
 
     void SpellHitTarget(Unit* /*target*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_STUNBOMB || spellInfo->Id == SPELL_HOOKEDNET)
+        if (spellInfo->ID == SPELL_STUNBOMB || spellInfo->ID == SPELL_HOOKEDNET)
         {
             if (me->IsWithinMeleeRange(me->GetVictim()))
             {

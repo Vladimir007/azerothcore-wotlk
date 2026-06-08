@@ -1,18 +1,3 @@
-#
-# This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
-#
-# This file is free software; as a special exception the author gives
-# unlimited permission to copy and/or distribute it, with or without
-# modifications, as long as this notice is preserved.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY, to the extent permitted by law; without even the
-# implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
-#
-
-# An interface library to make the target com available to other targets
-add_library(acore-compile-option-interface INTERFACE)
-
 # Use -std=c++11 instead of -std=gnu++11
 set(CXX_EXTENSIONS OFF)
 
@@ -20,53 +5,27 @@ set(CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD 20)
 message(STATUS "Enabled С++20 standard")
 
-# Set build-directive (used in core to tell which buildtype we used)
-target_compile_definitions(acore-compile-option-interface
-  INTERFACE
-    AC_BUILD_TYPE="$<CONFIG>"
-    AC_BUILD_HAS_DEBUG_INFO=$<OR:$<CONFIG:Debug>,$<CONFIG:RelWithDebInfo>>)
+# An interface library to make the target com available to other targets
+add_library(ncore-compile-option-interface INTERFACE)
 
 # An interface library to make the warnings level available to other targets
 # This interface taget is set-up through the platform specific script
-add_library(acore-warning-interface INTERFACE)
+add_library(ncore-warning-interface INTERFACE)
 
 # An interface used for all other interfaces
-add_library(acore-default-interface INTERFACE)
-
-target_link_libraries(acore-default-interface
-  INTERFACE
-    acore-compile-option-interface)
+add_library(ncore-default-interface INTERFACE)
+target_link_libraries(ncore-default-interface INTERFACE ncore-compile-option-interface)
 
 # An interface used for silencing all warnings
-add_library(acore-no-warning-interface INTERFACE)
-
-if (MSVC)
-  target_compile_options(acore-no-warning-interface
-    INTERFACE
-      /W0)
-else()
-  target_compile_options(acore-no-warning-interface
-    INTERFACE
-      -w)
-endif()
-
-# An interface library to change the default behaviour
-# to hide symbols automatically.
-add_library(acore-hidden-symbols-interface INTERFACE)
+add_library(ncore-no-warning-interface INTERFACE)
+target_compile_options(ncore-no-warning-interface INTERFACE -w)
 
 # An interface amalgamation which provides the flags and definitions
 # used by the dependency targets.
-add_library(acore-dependency-interface INTERFACE)
-target_link_libraries(acore-dependency-interface
-  INTERFACE
-    acore-default-interface
-    acore-no-warning-interface
-    acore-hidden-symbols-interface)
+add_library(ncore-dependency-interface INTERFACE)
+target_link_libraries(ncore-dependency-interface INTERFACE ncore-default-interface ncore-no-warning-interface)
 
 # An interface amalgamation which provides the flags and definitions
 # used by the core targets.
-add_library(acore-core-interface INTERFACE)
-target_link_libraries(acore-core-interface
-  INTERFACE
-    acore-default-interface
-    acore-warning-interface)
+add_library(ncore-core-interface INTERFACE)
+target_link_libraries(ncore-core-interface INTERFACE ncore-default-interface ncore-warning-interface)

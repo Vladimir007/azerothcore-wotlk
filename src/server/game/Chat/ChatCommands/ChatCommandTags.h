@@ -132,7 +132,7 @@ namespace Acore::ChatCommands
             if (Utf8toWStr(args, *this))
                 return std::string_view();
             else
-                return Acore::Impl::ChatCommands::GetAcoreString(handler, LANG_CMDPARSER_INVALID_UTF8);
+                return Acore::Impl::ChatCommands::GetNcoreString(handler, LANG_CMDPARSER_INVALID_UTF8);
         }
     };
 
@@ -218,7 +218,7 @@ namespace Acore::ChatCommands
 
             // store value
             if (!linktag::StoreTo(val, info.data))
-                return Acore::Impl::ChatCommands::GetAcoreString(handler, LANG_CMDPARSER_LINKDATA_INVALID);
+                return Acore::Impl::ChatCommands::GetNcoreString(handler, LANG_CMDPARSER_LINKDATA_INVALID);
 
             // finally, skip any potential delimiters
             auto [token, next] = Acore::Impl::ChatCommands::tokenize(info.tail);

@@ -1,28 +1,10 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef CONFIG_VALUE_CACHE_H
+#define CONFIG_VALUE_CACHE_H
 
-#ifndef CONFIGVALUECACHE_H
-#define CONFIGVALUECACHE_H
-
-#include "Common.h"
+#include <variant>
 #include "Config.h"
 #include "Errors.h"
 #include "Log.h"
-#include <variant>
 
 template<typename ConfigEnum>
 class ConfigValueCache
@@ -30,48 +12,32 @@ class ConfigValueCache
     static_assert(std::is_enum_v<ConfigEnum>);
 
 public:
+    virtual ~ConfigValueCache() = default;
+
     enum class Reloadable : bool
     {
         No = false,
         Yes = true
     };
 
-    ConfigValueCache(ConfigEnum const configCount)
+    explicit ConfigValueCache(ConfigEnum const configCount)
     {
         _configs.resize(static_cast<uint32>(configCount));
-        _reloading = false;
     }
 
-    void Initialize(bool reload)
+    void Initialize()
     {
-        _reloading = reload;
         BuildConfigCache();
-        _reloading = false;
         VerifyAllConfigsLoaded();
     }
 
     template<class T>
-    void SetConfigValue(ConfigEnum const config, std::string const& configName, T const& defaultValue, Reloadable reloadable = Reloadable::Yes, std::function<bool(T const& value)>&& checker = {}, std::string const& validationErrorText = "")
+    void SetConfigValue(const ConfigEnum config, const std::string& configName, const T& defaultValue, std::function<bool(const T& value)>&& checker = {}, const std::string& validationErrorText = "")
     {
         uint32 const configIndex = static_cast<uint32>(config);
         ASSERT(configIndex < _configs.size(), "Config index out of bounds");
         T const& configValue = sConfigMgr->GetOption<T>(configName, defaultValue);
-
-        bool configValueChanged = false;
-        if (_reloading)
-        {
-            if (std::get<T>(_configs[configIndex]) != configValue)
-                configValueChanged = true;
-
-            if (reloadable == Reloadable::No)
-            {
-                if (configValueChanged)
-                    LOG_ERROR("server.loading", "Server Config (Name: {}) cannot be changed by reload. A server restart is required to update this config value.", configName);
-                return;
-            }
-        }
-        else
-            ASSERT(_configs[configIndex].index() == 0, "Config overwriting an existing value");
+        ASSERT(_configs[configIndex].index() == 0, "Config overwriting an existing value");
 
         if (checker && !checker(configValue))
         {
@@ -83,7 +49,7 @@ public:
     }
 
     template<class T>
-    void OverwriteConfigValue(ConfigEnum const config, T const& value)
+    void OverwriteConfigValue(const ConfigEnum config, const T& value)
     {
         uint32 const configIndex = static_cast<uint32>(config);
         ASSERT(configIndex < _configs.size(), "Config index out of bounds");
@@ -94,36 +60,36 @@ public:
     }
 
     template<class T>
-    T GetConfigValue(ConfigEnum const config) const
+    T GetConfigValue(const ConfigEnum config) const
     {
         uint32 const configIndex = static_cast<uint32>(config);
         ASSERT(configIndex < _configs.size(), "Config index out of bounds");
         ASSERT(_configs[configIndex].index() != 0, "Config value must already be set");
 
-        T const* value = std::get_if<T>(&_configs[configIndex]);
+        const T* value = std::get_if<T>(&_configs[configIndex]);
         ASSERT(value, "Wrong config variant type");
 
-        return *value;
+        return value ? *value : T();
     }
 
     // Custom handling for string configs to convert from std::string to std::string_view
-    std::string_view GetConfigValue(ConfigEnum const config) const
+    std::string_view GetConfigValue(const ConfigEnum config) const
     {
         uint32 const configIndex = static_cast<uint32>(config);
         ASSERT(configIndex < _configs.size(), "Config index out of bounds");
         ASSERT(_configs[configIndex].index() != 0, "Config value must already be set");
 
-        std::string const* stringValue = std::get_if<std::string>(&_configs[configIndex]);
+        const std::string* stringValue = std::get_if<std::string>(&_configs[configIndex]);
         ASSERT(stringValue, "Wrong config variant type");
 
-        return std::string_view(*stringValue);
+        return std::string_view(stringValue ? *stringValue : "");
     }
 
 protected:
     virtual void BuildConfigCache() = 0;
 
 private:
-    void VerifyAllConfigsLoaded()
+    void VerifyAllConfigsLoaded() const
     {
         uint32 configIndex = 0;
         for (auto const& variant : _configs)
@@ -139,7 +105,6 @@ private:
     }
 
     std::vector<std::variant<std::monostate, float, bool, uint32, std::string>> _configs;
-    bool _reloading;
 };
 
 #endif

@@ -43,7 +43,7 @@ public:
      *
      * @param updateFlags Update flags from the loader
      */
-    virtual void OnAfterDatabasesLoaded(uint32 /*updateFlags*/) { }
+    virtual void OnAfterDatabasesLoaded() { }
 
     /**
      * @brief Called after all creature template data has been loaded from the database. This hook could be called multiple times, not just at server startup.

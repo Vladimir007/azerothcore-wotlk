@@ -89,8 +89,8 @@ namespace Acore::Impl::ChatCommands
             if (result1.HasErrorMessage() && result2.HasErrorMessage())
             {
                 return Acore::StringFormat("{} \"{}\"\n{} \"{}\"",
-                    GetAcoreString(handler, LANG_CMDPARSER_EITHER), result2.GetErrorMessage(),
-                    GetAcoreString(handler, LANG_CMDPARSER_OR), result1.GetErrorMessage());
+                    GetNcoreString(handler, LANG_CMDPARSER_EITHER), result2.GetErrorMessage(),
+                    GetNcoreString(handler, LANG_CMDPARSER_OR), result1.GetErrorMessage());
             }
             else if (result1.HasErrorMessage())
                 return result1;
@@ -165,9 +165,11 @@ namespace Acore::Impl::ChatCommands
 
     struct CommandPermissions
     {
-        CommandPermissions() : RequiredLevel{}, AllowConsole{} { }
-        CommandPermissions(uint32 securityLevel, Acore::ChatCommands::Console console) : RequiredLevel{ securityLevel }, AllowConsole{ console } {}
-        uint32 RequiredLevel;
+        CommandPermissions() : RequireGM{}, AllowConsole{} { }
+        CommandPermissions(const bool requireGM, const Acore::ChatCommands::Console console):
+            RequireGM{ requireGM }, AllowConsole{ console } {}
+
+        bool RequireGM;
         Acore::ChatCommands::Console AllowConsole;
     };
 

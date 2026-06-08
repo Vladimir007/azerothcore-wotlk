@@ -260,7 +260,7 @@ struct boss_zuljin : public BossAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_CLAW_RAGE_CHARGE && target != me)
+        if (spellInfo->ID == SPELL_CLAW_RAGE_CHARGE && target != me)
         {
             DoCastSelf(SPELL_CLAW_RAGE_AURA);
             _chargeTargetGUID = target->GetGUID();

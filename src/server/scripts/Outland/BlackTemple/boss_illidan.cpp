@@ -1213,7 +1213,7 @@ struct npc_maiev_illidan : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_CAGE_TRAP)
+        if (spell->ID == SPELL_CAGE_TRAP)
         {
             DoCastSelf(SPELL_CAGE_TRAP_SUMMON, true);
             Talk(SAY_MAIEV_SHADOWSONG_TRAP);

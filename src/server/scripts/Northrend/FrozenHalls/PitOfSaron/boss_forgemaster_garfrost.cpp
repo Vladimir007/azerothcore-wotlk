@@ -194,7 +194,7 @@ public:
 
         void SpellHitTarget(Unit*  /*target*/, SpellInfo const* spell) override
         {
-            if (spell->Id == sSpellMgr->GetSpellIdForDifficulty(SPELL_SARONITE_TRIGGERED, me))
+            if (spell->ID == sSpellMgr->GetSpellIdForDifficulty(SPELL_SARONITE_TRIGGERED, me))
             {
                 if (bCanSayBoulderHit)
                 {

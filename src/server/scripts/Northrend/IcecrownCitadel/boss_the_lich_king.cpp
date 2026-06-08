@@ -912,7 +912,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == sSpellMgr->GetSpellIdForDifficulty(SPELL_HARVESTED_SOUL_LK_BUFF, me) && me->IsInCombat() && !IsHeroic() && _phase != PHASE_OUTRO && _lastTalkTimeBuff + 5 <= GameTime::GetGameTime().count())
+            if (spell->ID == sSpellMgr->GetSpellIdForDifficulty(SPELL_HARVESTED_SOUL_LK_BUFF, me) && me->IsInCombat() && !IsHeroic() && _phase != PHASE_OUTRO && _lastTalkTimeBuff + 5 <= GameTime::GetGameTime().count())
             {
                 _lastTalkTimeBuff = GameTime::GetGameTime().count();
                 Talk(SAY_LK_FROSTMOURNE_KILL);
@@ -921,7 +921,7 @@ public:
 
         void SpellHitTarget(Unit* /*target*/, SpellInfo const* spell) override
         {
-            if (spell->Id == sSpellMgr->GetSpellIdForDifficulty(SPELL_REMORSELESS_WINTER_1, me) || spell->Id == sSpellMgr->GetSpellIdForDifficulty(SPELL_REMORSELESS_WINTER_2, me))
+            if (spell->ID == sSpellMgr->GetSpellIdForDifficulty(SPELL_REMORSELESS_WINTER_1, me) || spell->ID == sSpellMgr->GetSpellIdForDifficulty(SPELL_REMORSELESS_WINTER_2, me))
             {
                 me->GetMap()->SetZoneOverrideLight(AREA_THE_FROZEN_THRONE, LIGHT_SNOWSTORM, 5s);
                 me->GetMap()->SetZoneWeather(AREA_THE_FROZEN_THRONE, WEATHER_STATE_LIGHT_SNOW, 0.5f);
@@ -1346,13 +1346,13 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_ICE_LOCK)
+            if (spell->ID == SPELL_ICE_LOCK)
             {
                 me->StopMoving();
                 me->GetMotionMaster()->Clear(true);
                 me->SetFacingTo(3.085098f);
             }
-            else if (spell->Id == SPELL_BROKEN_FROSTMOURNE_KNOCK)
+            else if (spell->ID == SPELL_BROKEN_FROSTMOURNE_KNOCK)
             {
                 // remove glow on ashbringer and tirion
                 me->RemoveAllAuras();
@@ -1933,7 +1933,7 @@ class spell_the_lich_king_necrotic_plague_jump : public SpellScript
             return;
         }
 
-        if (GetHitUnit()->HasAura(GetSpellInfo()->Id))
+        if (GetHitUnit()->HasAura(GetSpellInfo()->ID))
             _hadJumpingAura = true;
         else if (uint32 spellId = sSpellMgr->GetSpellIdForDifficulty(SPELL_NECROTIC_PLAGUE, GetHitUnit()))
             if (GetHitUnit()->HasAura(spellId))
@@ -2699,13 +2699,13 @@ class spell_the_lich_king_valkyr_target_search : public SpellScript
             targets.clear();
             return;
         }
-        targets.remove_if(Acore::UnitAuraCheck(true, GetSpellInfo()->Id));
+        targets.remove_if(Acore::UnitAuraCheck(true, GetSpellInfo()->ID));
         targets.remove_if(Acore::UnitAuraCheck(true, SPELL_BOSS_HITTIN_YA_AURA)); // done in dbc, but just to be sure xd
         targets.remove_if(Acore::UnitAuraCheck(true, SPELL_HARVEST_SOUL_VALKYR));
         if (InstanceScript* _instance = caster->GetInstanceScript())
             if (Creature* lichKing = ObjectAccessor::GetCreature(*caster, _instance->GetGuidData(DATA_THE_LICH_KING)))
                 if (Spell* s = lichKing->GetCurrentSpell(CURRENT_GENERIC_SPELL))
-                    if (s->GetSpellInfo()->Id == SPELL_DEFILE && s->m_targets.GetUnitTarget())
+                    if (s->GetSpellInfo()->ID == SPELL_DEFILE && s->m_targets.GetUnitTarget())
                         targets.remove(s->m_targets.GetUnitTarget());
 
         if (targets.empty())

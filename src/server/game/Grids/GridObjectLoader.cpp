@@ -92,7 +92,7 @@ void GridObjectLoader::LoadGameObjects(CellGuidSet const& guid_set, Map* map)
 void GridObjectLoader::LoadAllCellsInGrid()
 {
     CellObjectGuids const& cell_guids = sObjectMgr->GetGridObjectGuids(_map->GetId(), _map->GetSpawnMode(), _grid.GetId());
-    LoadGameObjects(cell_guids.gameobjects, _map);
+    LoadGameObjects(cell_guids.gameObjects, _map);
     LoadCreatures(cell_guids.creatures, _map);
 
     if (std::unordered_set<Corpse*> const* corpses = _map->GetCorpsesInGrid(_grid.GetId()))

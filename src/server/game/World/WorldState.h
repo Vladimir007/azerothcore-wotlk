@@ -318,8 +318,8 @@ class WorldState
         void BuffAdalsSongOfBattle();
         void DispelAdalsSongOfBattle();
         uint32 _adalSongOfBattleTimer;
-        void BuffMagtheridonTeam(TeamId team);
-        void DispelMagtheridonTeam(TeamId team);
+        void BuffMagtheridonTeam(TeamID team);
+        void DispelMagtheridonTeam(TeamID team);
         bool _isMagtheridonHeadSpawnedHorde;
         bool _isMagtheridonHeadSpawnedAlliance;
         SunsReachReclamationData m_sunsReachData;

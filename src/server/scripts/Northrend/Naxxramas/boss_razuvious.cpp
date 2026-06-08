@@ -230,7 +230,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_TAUNT)
+            if (spell->ID == SPELL_TAUNT)
             {
                 Talk(SAY_TAUNTED, caster);
             }

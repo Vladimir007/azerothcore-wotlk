@@ -357,11 +357,11 @@ class spell_festergut_gastric_bloat : public SpellScript
 
     void HandleScript(SpellEffIndex /*effIndex*/)
     {
-        Aura const* aura = GetHitUnit()->GetAura(GetSpellInfo()->Id);
+        Aura const* aura = GetHitUnit()->GetAura(GetSpellInfo()->ID);
         if (!(aura && aura->GetStackAmount() == 10))
             return;
 
-        GetHitUnit()->RemoveAurasDueToSpell(GetSpellInfo()->Id);
+        GetHitUnit()->RemoveAurasDueToSpell(GetSpellInfo()->ID);
         GetHitUnit()->CastSpell(GetHitUnit(), SPELL_GASTRIC_EXPLOSION, true);
     }
 

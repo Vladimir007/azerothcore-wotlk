@@ -3805,7 +3805,7 @@ public:
                             break;
                         case 163:
                             me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
-                            me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                            me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                             Talk(THRALL_SAY_THRONE_11);
                             UpdateWorldState(me->GetMap(), WORLD_STATE_BATTLE_FOR_UNDERCITY_ROYAL_QUARTER_FIGHT_H, 0);
                             UpdateWorldState(me->GetMap(), WORLD_STATE_BATTLE_FOR_UNDERCITY_INNER_SANCTUM_FIGHT_H, 0);

@@ -455,7 +455,7 @@ public:
         if (!playerCaster)
             return;
 
-        if (spell->Id == SPELL_RENEW_SKIRMISHER && playerCaster->GetQuestStatus(QUEST_OVERWHELMED) == QUEST_STATUS_INCOMPLETE)
+        if (spell->ID == SPELL_RENEW_SKIRMISHER && playerCaster->GetQuestStatus(QUEST_OVERWHELMED) == QUEST_STATUS_INCOMPLETE)
         {
             me->SetFacingToObject(caster);
             me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
@@ -686,7 +686,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_SMOKE_BOMB && caster->IsPlayer())
+            if (spell->ID == SPELL_SMOKE_BOMB && caster->IsPlayer())
             {
                 me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
                 me->SetImmuneToPC(true);

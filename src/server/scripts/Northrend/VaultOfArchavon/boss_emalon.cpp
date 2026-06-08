@@ -127,7 +127,7 @@ public:
         void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
         {
             // restore minions health
-            if (spellInfo->Id == SPELL_OVERCHARGE)
+            if (spellInfo->ID == SPELL_OVERCHARGE)
                 target->SetFullHealth();
         }
 

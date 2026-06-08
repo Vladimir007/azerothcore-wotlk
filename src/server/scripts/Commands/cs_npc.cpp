@@ -52,19 +52,19 @@ NpcFlagText const npcFlagTexts[NPCFLAG_COUNT] =
     { UNIT_NPC_FLAG_AUCTIONEER,         LANG_NPCINFO_AUCTIONEER         },
     { UNIT_NPC_FLAG_BANKER,             LANG_NPCINFO_BANKER             },
     { UNIT_NPC_FLAG_BATTLEMASTER,       LANG_NPCINFO_BATTLEMASTER       },
-    { UNIT_NPC_FLAG_FLIGHTMASTER,       LANG_NPCINFO_FLIGHTMASTER       },
+    { UNIT_NPC_FLAG_FLIGHT_MASTER,       LANG_NPCINFO_FLIGHTMASTER       },
     { UNIT_NPC_FLAG_GOSSIP,             LANG_NPCINFO_GOSSIP             },
     { UNIT_NPC_FLAG_GUILD_BANKER,       LANG_NPCINFO_GUILD_BANKER       },
     { UNIT_NPC_FLAG_INNKEEPER,          LANG_NPCINFO_INNKEEPER          },
     { UNIT_NPC_FLAG_PETITIONER,         LANG_NPCINFO_PETITIONER         },
     { UNIT_NPC_FLAG_PLAYER_VEHICLE,     LANG_NPCINFO_PLAYER_VEHICLE     },
-    { UNIT_NPC_FLAG_QUESTGIVER,         LANG_NPCINFO_QUESTGIVER         },
+    { UNIT_NPC_FLAG_QUEST_GIVER,         LANG_NPCINFO_QUESTGIVER         },
     { UNIT_NPC_FLAG_REPAIR,             LANG_NPCINFO_REPAIR             },
-    { UNIT_NPC_FLAG_SPELLCLICK,         LANG_NPCINFO_SPELLCLICK         },
-    { UNIT_NPC_FLAG_SPIRITGUIDE,        LANG_NPCINFO_SPIRITGUIDE        },
-    { UNIT_NPC_FLAG_SPIRITHEALER,       LANG_NPCINFO_SPIRITHEALER       },
+    { UNIT_NPC_FLAG_SPELL_CLICK,         LANG_NPCINFO_SPELLCLICK         },
+    { UNIT_NPC_FLAG_SPIRIT_GUIDE,        LANG_NPCINFO_SPIRITGUIDE        },
+    { UNIT_NPC_FLAG_SPIRIT_HEALER,       LANG_NPCINFO_SPIRITHEALER       },
     { UNIT_NPC_FLAG_STABLEMASTER,       LANG_NPCINFO_STABLEMASTER       },
-    { UNIT_NPC_FLAG_TABARDDESIGNER,     LANG_NPCINFO_TABARDDESIGNER     },
+    { UNIT_NPC_FLAG_TABARD_DESIGNER,     LANG_NPCINFO_TABARDDESIGNER     },
     { UNIT_NPC_FLAG_TRAINER,            LANG_NPCINFO_TRAINER            },
     { UNIT_NPC_FLAG_TRAINER_CLASS,      LANG_NPCINFO_TRAINER_CLASS      },
     { UNIT_NPC_FLAG_TRAINER_PROFESSION, LANG_NPCINFO_TRAINER_PROFESSION },
@@ -156,8 +156,8 @@ public:
         };
         static ChatCommandTable npcFollowCommandTable =
         {
-            { "stop",           HandleNpcUnFollowCommand,          SEC_GAMEMASTER, Console::No },
-            { "",               HandleNpcFollowCommand,            SEC_GAMEMASTER, Console::No }
+            { "stop",           HandleNpcUnFollowCommand,          SEC_GAME_MASTER, Console::No },
+            { "",               HandleNpcFollowCommand,            SEC_GAME_MASTER, Console::No }
         };
 
         static ChatCommandTable npcFactionCommandTable =
@@ -184,17 +184,17 @@ public:
         };
         static ChatCommandTable npcCommandTable =
         {
-            { "info",           HandleNpcInfoCommand,              SEC_GAMEMASTER, Console::No },
-            { "guid",           HandleNpcGuidCommand,              SEC_GAMEMASTER, Console::No },
-            { "near",           HandleNpcNearCommand,              SEC_GAMEMASTER, Console::No },
-            { "move",           HandleNpcMoveCommand,              SEC_GAMEMASTER, Console::No },
-            { "playemote",      HandleNpcPlayEmoteCommand,         SEC_GAMEMASTER, Console::No },
-            { "say",            HandleNpcSayCommand,               SEC_GAMEMASTER, Console::No },
-            { "textemote",      HandleNpcTextEmoteCommand,         SEC_GAMEMASTER, Console::No },
-            { "whisper",        HandleNpcWhisperCommand,           SEC_GAMEMASTER, Console::No },
-            { "yell",           HandleNpcYellCommand,              SEC_GAMEMASTER, Console::No },
-            { "tame",           HandleNpcTameCommand,              SEC_GAMEMASTER, Console::No },
-            { "do",             HandleNpcDoActionCommand,          SEC_GAMEMASTER, Console::No },
+            { "info",           HandleNpcInfoCommand,              SEC_GAME_MASTER, Console::No },
+            { "guid",           HandleNpcGuidCommand,              SEC_GAME_MASTER, Console::No },
+            { "near",           HandleNpcNearCommand,              SEC_GAME_MASTER, Console::No },
+            { "move",           HandleNpcMoveCommand,              SEC_GAME_MASTER, Console::No },
+            { "playemote",      HandleNpcPlayEmoteCommand,         SEC_GAME_MASTER, Console::No },
+            { "say",            HandleNpcSayCommand,               SEC_GAME_MASTER, Console::No },
+            { "textemote",      HandleNpcTextEmoteCommand,         SEC_GAME_MASTER, Console::No },
+            { "whisper",        HandleNpcWhisperCommand,           SEC_GAME_MASTER, Console::No },
+            { "yell",           HandleNpcYellCommand,              SEC_GAME_MASTER, Console::No },
+            { "tame",           HandleNpcTameCommand,              SEC_GAME_MASTER, Console::No },
+            { "do",             HandleNpcDoActionCommand,          SEC_GAME_MASTER, Console::No },
             { "add",            npcAddCommandTable },
             { "delete",         npcDeleteCommandTable },
             { "follow",         npcFollowCommandTable },
@@ -224,7 +224,7 @@ public:
         if (Transport* tt = chr->GetTransport())
             if (MotionTransport* trans = tt->ToMotionTransport())
             {
-                ObjectGuid::LowType guid = sObjectMgr->GenerateCreatureSpawnId();
+                ObjectGuid::LowType guid = sObjectMgr->GenerateCreatureSpawnID();
                 CreatureData& data = sObjectMgr->NewOrExistCreatureData(guid);
                 data.id1 = id;
                 data.phaseMask = chr->GetPhaseMaskForSpawn();
@@ -235,7 +235,7 @@ public:
 
                 Creature* creature = trans->CreateNPCPassenger(guid, &data);
 
-                creature->SaveToDB(trans->GetGOInfo()->moTransport.mapID, 1 << map->GetSpawnMode(), chr->GetPhaseMaskForSpawn());
+                creature->SaveToDB(trans->GetGOInfo()->MOTransport.mapID, 1 << map->GetSpawnMode(), chr->GetPhaseMaskForSpawn());
 
                 sObjectMgr->AddCreatureToGrid(guid, &data);
                 return true;
@@ -298,10 +298,10 @@ public:
             return false;
         }
 
-        Map* map = sMapMgr->FindBaseNonInstanceMap(data->mapid);
+        Map* map = sMapMgr->FindBaseNonInstanceMap(data->mapID);
         if (!map)
         {
-            handler->SendErrorMessage("Creature spawn {} is on a non-continent map (ID: {}). Only continent maps are supported.", uint32(spawnId), data->mapid);
+            handler->SendErrorMessage("Creature spawn {} is on a non-continent map (ID: {}). Only continent maps are supported.", uint32(spawnId), data->mapID);
             return false;
         }
 
@@ -506,7 +506,7 @@ public:
 
         // Update in memory..
         if (CreatureTemplate const* cinfo = creature->GetCreatureTemplate())
-            const_cast<CreatureTemplate*>(cinfo)->faction = factionId;
+            const_cast<CreatureTemplate*>(cinfo)->Faction = factionId;
 
         // ..and DB
         WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_UPD_CREATURE_FACTION);
@@ -572,7 +572,7 @@ public:
 
         creature->ReplaceAllNpcFlags(NPCFlags(npcFlags));
 
-        WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_UPD_CREATURE_NPCFLAG);
+        WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_UPD_CREATURE_NPC_FLAG);
 
         stmt->SetData(0, NPCFlags(npcFlags));
         stmt->SetData(1, creature->GetEntry());
@@ -658,7 +658,7 @@ public:
         uint64 mechanicImmuneMask = 0;
         uint32 spellSchoolImmuneMask = 0;
 
-        if (CreatureImmunities const* immunities = sSpellMgr->GetCreatureImmunities(cInfo->CreatureImmunitiesId))
+        if (CreatureImmunities const* immunities = sSpellMgr->GetCreatureImmunities(cInfo->CreatureImmunitiesID))
         {
             mechanicImmuneMask = immunities->Mechanic.to_ullong();
             for (std::size_t j = 0; j < immunities->School.size(); ++j)
@@ -692,7 +692,7 @@ public:
         handler->PSendSysMessage(LANG_NPCINFO_HEALTH, target->GetCreateHealth(), target->GetMaxHealth(), target->GetHealth());
         handler->PSendSysMessage(LANG_NPCINFO_FLAGS, target->GetUnitFlags(), target->GetUnitFlags2(), target->GetDynamicFlags(), target->GetFaction());
         handler->PSendSysMessage(LANG_COMMAND_RAWPAWNTIMES, defRespawnDelayStr, curRespawnDelayStr);
-        handler->PSendSysMessage(LANG_NPCINFO_LOOT,  cInfo->lootid, cInfo->pickpocketLootId, cInfo->SkinLootId);
+        handler->PSendSysMessage(LANG_NPCINFO_LOOT,  cInfo->LootID, cInfo->PickpocketLootID, cInfo->SkinLootID);
         handler->PSendSysMessage(LANG_NPCINFO_DUNGEON_ID, target->GetInstanceId());
         handler->PSendSysMessage(LANG_NPCINFO_PHASEMASK, target->GetPhaseMask());
         handler->PSendSysMessage(LANG_NPCINFO_ARMOR, target->GetArmor());
@@ -726,15 +726,15 @@ public:
         }
 
         handler->PSendSysMessage("(Not in world - showing DB data)");
-        uint32 scriptId = cData->ScriptId ? cData->ScriptId : cInfo->ScriptID;
+        uint32 scriptId = cData->ScriptID ? cData->ScriptID : cInfo->ScriptID;
         handler->PSendSysMessage(LANG_NPCINFO_CHAR, lowGuid, ObjectGuid::Create<HighGuid::Unit>(cData->id1, lowGuid).ToString(), cData->id1,
-            cData->id2, cData->id3, cData->displayid, cData->displayid, cInfo->faction,
-            cData->npcflag);
+            cData->id2, cData->id3, cData->displayid, cData->displayid, cInfo->Faction,
+            cData->npcFlag);
         handler->PSendSysMessage(LANG_NPCINFO_PHASEMASK, cData->phaseMask);
         handler->PSendSysMessage(LANG_NPCINFO_POSITION, cData->posX, cData->posY, cData->posZ);
-        handler->PSendSysMessage("Map: {} Spawn time: {}s", cData->mapid,
-            cData->spawntimesecs);
-        handler->PSendSysMessage(LANG_NPCINFO_EQUIPMENT, cData->equipmentId, cData->equipmentId);
+        handler->PSendSysMessage("Map: {} Spawn time: {}s", cData->mapID,
+            cData->spawnTimeSecs);
+        handler->PSendSysMessage(LANG_NPCINFO_EQUIPMENT, cData->equipmentID, cData->equipmentID);
         handler->PSendSysMessage(LANG_NPCINFO_AIINFO, cInfo->AIName,
             sObjectMgr->GetScriptName(scriptId));
         return true;
@@ -770,22 +770,22 @@ public:
         return true;
     }
 
-    static bool HandleNpcNearCommand(ChatHandler* handler, Optional<float> dist)
+    static bool HandleNpcNearCommand(ChatHandler* handler, const Optional<float> dist)
     {
         float distance = dist.value_or(10.0f);
         uint32 count = 0;
 
-        Player* player = handler->GetSession()->GetPlayer();
+        const Player* player = handler->GetSession()->GetPlayer();
 
         // Grid search - finds all creatures including temporary spawns
         std::list<Creature*> creatures;
         Acore::AllWorldObjectsInRange check(player, distance);
-        Acore::CreatureListSearcher<Acore::AllWorldObjectsInRange> searcher(player, creatures, check);
+        Acore::CreatureListSearcher searcher(player, creatures, check);
         Cell::VisitObjects(player, searcher, distance);
 
         std::unordered_set<ObjectGuid::LowType> gridSpawnIds;
 
-        for (Creature* creature : creatures)
+        for (const Creature* creature : creatures)
         {
             CreatureTemplate const* creatureTemplate = sObjectMgr->GetCreatureTemplate(creature->GetEntry());
             if (!creatureTemplate)
@@ -809,41 +809,38 @@ public:
 
         // Fallback to DB query
         WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_CREATURE_NEAREST);
-        stmt->SetData(0, player->GetPositionX());
-        stmt->SetData(1, player->GetPositionY());
-        stmt->SetData(2, player->GetPositionZ());
-        stmt->SetData(3, player->GetMapId());
-        stmt->SetData(4, player->GetPositionX());
-        stmt->SetData(5, player->GetPositionY());
-        stmt->SetData(6, player->GetPositionZ());
-        stmt->SetData(7, distance * distance);
-        stmt->SetData(8, player->GetPhaseMask());
-        PreparedQueryResult result = WorldDatabase.Query(stmt);
+        stmt->SetData(0, player->GetMapId());
+        stmt->SetData(1, player->GetPositionX());
+        stmt->SetData(2, player->GetPositionY());
+        stmt->SetData(3, player->GetPositionZ());
+        stmt->SetData(4, distance * distance);
+        stmt->SetData(5, player->GetPhaseMask());
 
-        if (result)
+        if (const QueryResult result = WorldDatabase.Query(stmt))
         {
             do
             {
-                Field* fields = result->Fetch();
+                const Field* fields = result->Fetch();
                 ObjectGuid::LowType guid = fields[0].Get<uint32>();
 
                 // Skip entries already emitted via grid search
-                if (gridSpawnIds.count(guid))
+                if (gridSpawnIds.contains(guid))
                     continue;
 
                 uint32 entry = fields[1].Get<uint32>();
-                //uint32 entry2 = fields[2].Get<uint32>();
-                //uint32 entry3 = fields[3].Get<uint32>();
-                float x = fields[4].Get<float>();
-                float y = fields[5].Get<float>();
-                float z = fields[6].Get<float>();
-                uint16 mapId = fields[7].Get<uint16>();
+                // uint32 entry2 = fields[2].Get<uint32>();
+                // uint32 entry3 = fields[3].Get<uint32>();
+                const auto pos = fields[4].GetArray<float, 3>();
+                float x = pos[0];
+                float y = pos[1];
+                float z = pos[2];
+                uint16 mapID = fields[5].Get<uint16>();
 
                 CreatureTemplate const* creatureTemplate = sObjectMgr->GetCreatureTemplate(entry);
                 if (!creatureTemplate)
                     continue;
 
-                handler->PSendSysMessage(LANG_CREATURE_LIST_CHAT, guid, entry, guid, creatureTemplate->Name, x, y, z, mapId, "", "");
+                handler->PSendSysMessage(LANG_CREATURE_LIST_CHAT, guid, entry, guid, creatureTemplate->Name, x, y, z, mapID, "", "");
 
                 ++count;
             } while (result->NextRow());
@@ -854,8 +851,8 @@ public:
         return true;
     }
 
-    //move selected creature
-    static bool HandleNpcMoveCommand(ChatHandler* handler, Optional<ObjectGuid::LowType> guid)
+    // Move selected creature
+    static bool HandleNpcMoveCommand(ChatHandler* handler, const Optional<ObjectGuid::LowType> guid)
     {
         Creature* creature;
         if (guid.has_value())
@@ -879,7 +876,7 @@ public:
             return false;
         }
 
-        if (handler->GetSession()->GetPlayer()->GetMapId() != data->mapid)
+        if (handler->GetSession()->GetPlayer()->GetMapId() != data->mapID)
         {
             handler->SendErrorMessage(LANG_COMMAND_CREATUREATSAMEMAP, lowGuid);
             return false;

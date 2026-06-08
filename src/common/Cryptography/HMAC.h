@@ -1,29 +1,12 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef NCORE_HMAC_H
+#define NCORE_HMAC_H
 
-#ifndef AZEROTHCORE_HMAC_H
-#define AZEROTHCORE_HMAC_H
-
-#include "CryptoConstants.h"
-#include "CryptoHash.h"
-#include "Errors.h"
 #include <array>
 #include <string>
 #include <string_view>
+#include "CryptoConstants.h"
+#include "CryptoHash.h"
+#include "Errors.h"
 
 class BigNumber;
 
@@ -54,14 +37,14 @@ namespace Acore::Impl
                 return hash.GetDigest();
             }
 
-            GenericHMAC(uint8 const* seed, std::size_t len) : _ctx(GenericHashImpl::MakeCTX()), _key(EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, seed, len))
+            GenericHMAC(uint8 const* seed, const std::size_t len) : _ctx(GenericHashImpl::MakeCTX()), _key(EVP_PKEY_new_mac_key(EVP_PKEY_HMAC, nullptr, seed, len))
             {
-                int result = EVP_DigestSignInit(_ctx, nullptr, HashCreator(), nullptr, _key);
+                const int result = EVP_DigestSignInit(_ctx, nullptr, HashCreator(), nullptr, _key);
                 ASSERT(result == 1);
             }
 
             template <typename Container>
-            GenericHMAC(Container const& container) : GenericHMAC(std::data(container), std::size(container)) {}
+            explicit GenericHMAC(Container const& container) : GenericHMAC(std::data(container), std::size(container)) {}
 
             GenericHMAC(GenericHMAC const& right) : _ctx(GenericHashImpl::MakeCTX())
             {
@@ -105,13 +88,16 @@ namespace Acore::Impl
                 return *this;
             }
 
-            void UpdateData(uint8 const* data, std::size_t len)
+            void UpdateData(uint8 const* data, const std::size_t len) const
             {
-                int result = EVP_DigestSignUpdate(_ctx, data, len);
+                const int result = EVP_DigestSignUpdate(_ctx, data, len);
                 ASSERT(result == 1);
             }
 
-            void UpdateData(std::string_view str) { UpdateData(reinterpret_cast<uint8 const*>(str.data()), str.size()); }
+            void UpdateData(const std::string_view str) const
+            {
+                UpdateData(reinterpret_cast<uint8 const*>(str.data()), str.size());
+            }
             void UpdateData(std::string const& str) { UpdateData(std::string_view(str)); } /* explicit overload to avoid using the container template */
             void UpdateData(char const* str) { UpdateData(std::string_view(str)); } /* explicit overload to avoid using the container template */
 
@@ -121,7 +107,7 @@ namespace Acore::Impl
             void Finalize()
             {
                 std::size_t length = DIGEST_LENGTH;
-                int result = EVP_DigestSignFinal(_ctx, _digest.data(), &length);
+                const int result = EVP_DigestSignFinal(_ctx, _digest.data(), &length);
                 ASSERT(result == 1);
                 ASSERT(length == DIGEST_LENGTH);
             }
@@ -136,8 +122,8 @@ namespace Acore::Impl
 
 namespace Acore::Crypto
 {
-    using HMAC_SHA1 = Acore::Impl::GenericHMAC<EVP_sha1, Constants::SHA1_DIGEST_LENGTH_BYTES>;
-    using HMAC_SHA256 = Acore::Impl::GenericHMAC<EVP_sha256, Constants::SHA256_DIGEST_LENGTH_BYTES>;
+    using HMAC_SHA1 = Impl::GenericHMAC<EVP_sha1, Constants::SHA1_DIGEST_LENGTH_BYTES>;
+    using HMAC_SHA256 = Impl::GenericHMAC<EVP_sha256, Constants::SHA256_DIGEST_LENGTH_BYTES>;
 }
 
 #endif

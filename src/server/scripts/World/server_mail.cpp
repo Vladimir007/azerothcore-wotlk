@@ -45,7 +45,7 @@ public:
             stmt->SetData(1, mailId);
 
             // Capture servMail by value
-            auto callback = [session, servMailWrapper = std::reference_wrapper<ServerMail const>(servMail), isAlliance](PreparedQueryResult result)
+            auto callback = [session, servMailWrapper = std::reference_wrapper<ServerMail const>(servMail), isAlliance](QueryResult result)
                 {
                     ServerMail const& servMail = servMailWrapper.get();  // Dereference the wrapper to get the original object
 

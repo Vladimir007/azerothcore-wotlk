@@ -259,17 +259,17 @@ public:
     void HandleAreaTrigger(Player* player, uint32 trigger) override;
     bool SetupBattleground() override;
     void Init() override;
-    void EndBattleground(TeamId winnerTeamId) override;
+    void EndBattleground(TeamID winnerTeamId) override;
     GraveyardStruct const* GetClosestGraveyard(Player* player) override;
 
     bool UpdatePlayerScore(Player* player, uint32 type, uint32 value, bool doAddHonor = true) override;
     void FillInitialWorldStates(WorldPackets::WorldState::InitWorldStates& packet) override;
     void EventPlayerClickedOnFlag(Player* source, GameObject* gameObject) override;
 
-    bool AllNodesConrolledByTeam(TeamId teamId) const override;
-    bool IsTeamScores500Disadvantage(TeamId teamId) const { return _teamScores500Disadvantage[teamId]; }
+    bool AllNodesConrolledByTeam(TeamID teamId) const override;
+    bool IsTeamScores500Disadvantage(TeamID teamId) const { return _teamScores500Disadvantage[teamId]; }
 
-    TeamId GetPrematureWinner() override;
+    TeamID GetPrematureWinner() override;
 private:
     void PostUpdateImpl(uint32 diff) override;
 
@@ -285,7 +285,7 @@ private:
         {
         }
 
-        TeamId _ownerTeamId;
+        TeamID _ownerTeamId;
         uint32 _iconNone;
         uint32 _iconCapture;
         uint8 _state;

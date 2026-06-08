@@ -1096,7 +1096,7 @@ class spell_pal_lay_on_hands : public SpellScript
             caster->CastSpell(caster, SPELL_PALADIN_IMMUNE_SHIELD_MARKER, true);
         }
         // Xinef: Glyph of Divinity
-        else if (target && caster->HasAura(54939) && GetSpellInfo()->Id != 633 && _manaAmount > 0) // excluding first rank
+        else if (target && caster->HasAura(54939) && GetSpellInfo()->ID != 633 && _manaAmount > 0) // excluding first rank
         {
             _manaAmount = target->GetPower(POWER_MANA) - _manaAmount;
             if (_manaAmount > 0)
@@ -1915,7 +1915,7 @@ class spell_pal_seal_of_vengeance_aura : public AuraScript
     bool Load() override
     {
         // Seal of Vengeance = 31801, Seal of Corruption = 53736
-        _isVengeance = GetSpellInfo()->Id == 31801;
+        _isVengeance = GetSpellInfo()->ID == 31801;
         return true;
     }
 
@@ -2114,7 +2114,7 @@ public:
 
     void HandleEffectRemove(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
     {
-        uint32 spellId = GetSpellInfo()->GetFirstRankSpell()->Id;
+        uint32 spellId = GetSpellInfo()->GetFirstRankSpell()->ID;
 
         if ((spellId == SPELL_PALADIN_SANCTIFIED_RETRIBUTION_R1 && GetTarget()->GetAuraOfRankedSpell(SPELL_PALADIN_SWIFT_RETRIBUTION_R1))
             || (spellId == SPELL_PALADIN_SWIFT_RETRIBUTION_R1 && GetTarget()->GetAuraOfRankedSpell(SPELL_PALADIN_SANCTIFIED_RETRIBUTION_R1)))

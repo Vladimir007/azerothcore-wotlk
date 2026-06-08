@@ -35,12 +35,10 @@ RUN apt-get update \
         clang lldb lld clang-format clang-tidy \
         make cmake \
         gcc g++ \
-        libmysqlclient-dev \
         libssl-dev \
         libbz2-dev \
         libreadline-dev \
         libncurses-dev \
-        mysql-server \
         libboost-all-dev \
         # Other
         curl  \
@@ -51,8 +49,6 @@ RUN apt-get update \
         build-essential \
         cmake-data \
         openssl \
-        google-perftools libgoogle-perftools-dev \
-        libmysql++-dev \
         ccache \
         tzdata \
         # Utility for column command used by dashboard
@@ -79,10 +75,10 @@ RUN userdel --remove ubuntu \
 RUN mkdir -p \
     /azerothcore/env/dist/bin \
     /azerothcore/env/dist/data/Cameras \
-    /azerothcore/env/dist/data/dbc \
-    /azerothcore/env/dist/data/maps \
-    /azerothcore/env/dist/data/mmaps \
-    /azerothcore/env/dist/data/vmaps \
+    /azerothcore/env/dist/data/DBC \
+    /azerothcore/env/dist/data/Maps \
+    /azerothcore/env/dist/data/mMaps \
+    /azerothcore/env/dist/data/vMaps \
     /azerothcore/env/dist/logs \
     /azerothcore/env/dist/temp \
     /azerothcore/env/dist/etc \

@@ -296,8 +296,8 @@ public:
     [[nodiscard]] bool AllBossesDone() const;
     [[nodiscard]] bool AllBossesDone(std::initializer_list<uint32> bossIds) const;
 
-    TeamId GetTeamIdInInstance() const { return _teamIdInInstance; }
-    void SetTeamIdInInstance(TeamId teamId) { _teamIdInInstance = teamId; }
+    TeamID GetTeamIdInInstance() const { return _teamIdInInstance; }
+    void SetTeamIdInInstance(TeamID teamId) { _teamIdInInstance = teamId; }
     bool IsTwoFactionInstance() const;
 
     TaskScheduler scheduler;
@@ -354,7 +354,7 @@ private:
     ObjectGuidMap _objectGuids;
     ObjectStateMap _objectStateMap;
     uint32 completedEncounters; // completed encounter mask, bit indexes are DungeonEncounter.dbc boss numbers, used for packets
-    TeamId _teamIdInInstance;
+    TeamID _teamIdInInstance;
     std::unordered_set<uint32> _activatedAreaTriggers;
 };
 

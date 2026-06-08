@@ -21,7 +21,7 @@
 #include "Battleground.h"
 #include "BattlegroundQueue.h"
 #include "CreatureAIImpl.h"
-#include "DBCEnums.h"
+#include "DBCDefines.h"
 #include <unordered_map>
 
 typedef std::map<uint32, Battleground*> BattlegroundContainer;
@@ -74,7 +74,7 @@ public:
     void BuildPlayerLeftBattlegroundPacket(WorldPacket* data, ObjectGuid guid);
     void BuildBattlegroundListPacket(WorldPacket* data, ObjectGuid guid, Player* player, BattlegroundTypeId bgTypeId, uint8 fromWhere);
     void BuildGroupJoinedBattlegroundPacket(WorldPacket* data, GroupJoinBattlegroundResult result);
-    void BuildBattlegroundStatusPacket(WorldPacket* data, Battleground* bg, uint8 queueSlot, uint8 statusId, uint32 time1, uint32 time2, uint8 arenaType, TeamId teamId, bool isRated = false, BattlegroundTypeId forceBgTypeId = BATTLEGROUND_TYPE_NONE);
+    void BuildBattlegroundStatusPacket(WorldPacket* data, Battleground* bg, uint8 queueSlot, uint8 statusId, uint32 time1, uint32 time2, uint8 arenaType, TeamID teamId, bool isRated = false, BattlegroundTypeId forceBgTypeId = BATTLEGROUND_TYPE_NONE);
     void SendAreaSpiritHealerQueryOpcode(Player* player, Battleground* bg, ObjectGuid guid);
 
     /* Battlegrounds */
@@ -97,7 +97,7 @@ public:
 
     /* Battleground queues */
     BattlegroundQueue& GetBattlegroundQueue(BattlegroundQueueTypeId bgQueueTypeId) { return m_BattlegroundQueues[bgQueueTypeId]; }
-    void ScheduleQueueUpdate(uint32 arenaMatchmakerRating, uint8 arenaType, BattlegroundQueueTypeId bgQueueTypeId, BattlegroundTypeId bgTypeId, BattlegroundBracketId bracket_id);
+    void ScheduleQueueUpdate(uint32 arenaMatchmakerRating, uint8 arenaType, BattlegroundQueueTypeId bgQueueTypeId, BattlegroundTypeId bgTypeId, BattlegroundBracketID bracket_id);
     uint32 GetPrematureFinishTime() const;
 
     void ToggleArenaTesting();
@@ -133,7 +133,7 @@ public:
 
     static std::unordered_map<int, BattlegroundQueueTypeId> bgToQueue;      // BattlegroundTypeId -> BattlegroundQueueTypeId
     static std::unordered_map<int, BattlegroundTypeId> queueToBg;           // BattlegroundQueueTypeId -> BattlegroundTypeId
-    static std::unordered_map<int, Battleground*> bgtypeToBattleground;     // BattlegroundTypeId -> Battleground*
+    static std::unordered_map<int, Battleground*> BgTypeToBattleground;     // BattlegroundTypeId -> Battleground*
     static std::unordered_map<int, bgRef> bgTypeToTemplate;                 // BattlegroundTypeId -> bgRef
     static std::unordered_map<int, bgMapRef> getBgFromMap;                  // BattlegroundMapID -> bgMapRef
     static std::unordered_map<int, bgTypeRef> getBgFromTypeID;              // BattlegroundTypeID -> bgTypeRef
@@ -141,8 +141,8 @@ public:
     static std::unordered_map<uint32, ArenaType> QueueToArenaType;                  // BattlegroundQueueTypeId -> ArenaType
 
 private:
-    bool CreateBattleground(BattlegroundTemplate const* bgTemplate);
-    uint32 CreateClientVisibleInstanceId(BattlegroundTypeId bgTypeId, BattlegroundBracketId bracket_id);
+    void CreateBattleground(BattlegroundTemplate const* bgTemplate);
+    uint32 CreateClientVisibleInstanceId(BattlegroundTypeId bgTypeId, BattlegroundBracketID bracket_id);
     BattlegroundTypeId GetRandomBG(BattlegroundTypeId id, uint32 minLevel);
 
     typedef std::map<BattlegroundTypeId, BattlegroundData> BattlegroundDataContainer;

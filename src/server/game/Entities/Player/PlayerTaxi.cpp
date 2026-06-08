@@ -127,7 +127,7 @@ void PlayerTaxi::AppendTaximaskTo(ByteBuffer& data, bool all)
     }
 }
 
-bool PlayerTaxi::LoadTaxiDestinationsFromString(const std::string& values, TeamId teamId)
+bool PlayerTaxi::LoadTaxiDestinationsFromString(const std::string& values, TeamID teamId)
 {
     ClearTaxiDestinations();
 
@@ -182,7 +182,7 @@ bool PlayerTaxi::LoadTaxiDestinationsFromString(const std::string& values, TeamI
     }
 
     // can't load taxi path without mount set (quest taxi path?)
-    if (!sObjectMgr->GetTaxiMountDisplayId(GetTaxiSource(), teamId, true))
+    if (!sObjectMgr->GetTaxiMountDisplayID(GetTaxiSource(), teamId, true))
     {
         return false;
     }

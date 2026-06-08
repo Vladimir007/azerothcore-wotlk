@@ -24,9 +24,9 @@ void ScriptMgr::OnOpenStateChange(bool open)
     CALL_ENABLED_HOOKS(WorldScript, WORLDHOOK_ON_OPEN_STATE_CHANGE, script->OnOpenStateChange(open));
 }
 
-void ScriptMgr::OnAfterConfigLoad(bool reload)
+void ScriptMgr::OnAfterConfigLoad()
 {
-    CALL_ENABLED_HOOKS(WorldScript, WORLDHOOK_ON_AFTER_CONFIG_LOAD, script->OnAfterConfigLoad(reload));
+    CALL_ENABLED_HOOKS(WorldScript, WORLDHOOK_ON_AFTER_CONFIG_LOAD, script->OnAfterConfigLoad());
 }
 
 void ScriptMgr::OnLoadCustomDatabaseTable()
@@ -34,9 +34,9 @@ void ScriptMgr::OnLoadCustomDatabaseTable()
     CALL_ENABLED_HOOKS(WorldScript, WORLDHOOK_ON_LOAD_CUSTOM_DATABASE_TABLE, script->OnLoadCustomDatabaseTable());
 }
 
-void ScriptMgr::OnBeforeConfigLoad(bool reload)
+void ScriptMgr::OnBeforeConfigLoad()
 {
-    CALL_ENABLED_HOOKS(WorldScript, WORLDHOOK_ON_BEFORE_CONFIG_LOAD, script->OnBeforeConfigLoad(reload));
+    CALL_ENABLED_HOOKS(WorldScript, WORLDHOOK_ON_BEFORE_CONFIG_LOAD, script->OnBeforeConfigLoad());
 }
 
 void ScriptMgr::OnMotdChange(std::string& newMotd, LocaleConstant& locale)

@@ -190,13 +190,13 @@ public:
                 CloseGossipMenuFor(player);
                 if (creature->AI())
                     creature->AI()->DoAction(ACTION_START_INTRO);
-                creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                 break;
             case GOSSIP_ACTION_INFO_DEF + 2:
                 CloseGossipMenuFor(player);
                 if (creature->AI())
                     creature->AI()->DoAction(ACTION_SKIP_INTRO);
-                creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                 break;
         }
 
@@ -279,7 +279,7 @@ public:
                 me->HandleEmoteCommand(EMOTE_ONESHOT_EXCLAMATION);
                 break;
             case EVENT_PRE_INTRO_3:
-                me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                 me->SetSheath(SHEATH_STATE_MELEE);
                 break;
             case EVENT_START_INTRO:
@@ -1601,7 +1601,7 @@ struct npc_hor_lich_king : public NullCreatureAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spell) override
     {
-        if (target && target->IsAlive() && spell->Id == SPELL_LICH_KING_ZAP_PLAYER)
+        if (target && target->IsAlive() && spell->ID == SPELL_LICH_KING_ZAP_PLAYER)
             Unit::DealDamage(me, target, 10000);
     }
 
@@ -1678,7 +1678,7 @@ struct npc_hor_lich_king : public NullCreatureAI
                 break;
             case EVENT_LK_REMORSELESS_WINTER:
                 {
-                    me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->speed_run);
+                    me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->SpeedRun);
                     Talk(SAY_LK_WINTER);
                     DoCastSelf(SPELL_REMORSELESS_WINTER, true);
                     Movement::PointsArray path;
@@ -1756,7 +1756,7 @@ public:
         if (InstanceScript* instance = creature->GetInstanceScript())
             if (instance->GetBossState(DATA_LICH_KING) != DONE)
             {
-                creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                 creature->AI()->DoAction(ACTION_START_LK_FIGHT_REAL);
                 return true;
             }
@@ -1818,7 +1818,7 @@ public:
 
         void MoveToNextStopPoint()
         {
-            me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->speed_run);
+            me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->SpeedRun);
             me->InterruptNonMeleeSpells(true);
             me->SetSheath(SHEATH_STATE_MELEE);
             ++currentStopPoint;
@@ -1899,7 +1899,7 @@ public:
                         Talk(me->GetEntry() == NPC_JAINA_PART2 ? SAY_JAINA_AGGRO : SAY_SYLVANA_AGGRO);
                         me->SetSheath(SHEATH_STATE_MELEE);
                         me->SetWalk(false);
-                        me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->speed_run);
+                        me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->SpeedRun);
                         me->GetMotionMaster()->MovePoint(0, LeaderEscapePos);
                         events.ScheduleEvent(EVENT_ADD_GOSSIP, 7s);
                     }

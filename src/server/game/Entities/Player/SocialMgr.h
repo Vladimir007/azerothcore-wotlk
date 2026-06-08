@@ -138,7 +138,7 @@ class SocialMgr
         void SendFriendStatus(Player* player, FriendsResult result, ObjectGuid const& friend_guid, bool broadcast);
         void BroadcastToFriendListers(Player* player, WorldPacket* packet);
         // Loading
-        PlayerSocial* LoadFromDB(PreparedQueryResult result, ObjectGuid const& guid);
+        PlayerSocial* LoadFromDB(QueryResult result, ObjectGuid const& guid);
     private:
         typedef std::map<ObjectGuid, PlayerSocial> SocialMap;
         SocialMap m_socialMap;

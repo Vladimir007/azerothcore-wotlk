@@ -881,7 +881,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spell) override
         {
-            if (target && spell && target->IsPlayer() && spell->Id == 70827 && pInstance)
+            if (target && spell && target->IsPlayer() && spell->ID == 70827 && pInstance)
                 pInstance->SetData(DATA_ACHIEV_DONT_LOOK_UP, 0);
         }
 
@@ -1152,7 +1152,7 @@ public:
             pInstance = me->GetInstanceScript();
             barrierGUID.Clear();
             events.Reset();
-            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
 
             if (pInstance)
             {
@@ -1185,7 +1185,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spell) override
         {
-            if ((spell->Id == SPELL_TELEPORT_JAINA || spell->Id == SPELL_TELEPORT_SYLVANAS) && target && target->IsPlayer())
+            if ((spell->ID == SPELL_TELEPORT_JAINA || spell->ID == SPELL_TELEPORT_SYLVANAS) && target && target->IsPlayer())
             {
                 float angle = rand_norm() * 2 * M_PI;
                 float dist = urand(1, 4);
@@ -1210,7 +1210,7 @@ public:
                     }
                     break;
                 case 7:
-                    me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                    me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                     if (GameObject* g = me->FindNearestGameObject(GO_HOR_PORTCULLIS, 50.0f))
                         g->SetGoState(GO_STATE_ACTIVE);
                     break;

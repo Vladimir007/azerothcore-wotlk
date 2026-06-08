@@ -236,7 +236,7 @@ struct boss_attumen : public BossAI
             Talk(SAY_DISARMED);
         }
 
-        if (spellInfo->Id == SPELL_MOUNT)
+        if (spellInfo->ID == SPELL_MOUNT)
         {
             if (Creature* midnight = instance->GetCreature(DATA_MIDNIGHT))
             {

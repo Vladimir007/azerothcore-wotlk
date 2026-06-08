@@ -117,7 +117,7 @@ uint32 OPvPCapturePointNA::GetAliveGuardsCount()
     return count;
 }
 
-TeamId OPvPCapturePointNA::GetControllingFaction() const
+TeamID OPvPCapturePointNA::GetControllingFaction() const
 {
     return m_ControllingFaction;
 }
@@ -160,7 +160,7 @@ void OPvPCapturePointNA::SpawnNPCsForTeam(HalaaNPCS teamNPC)
     }
 }
 
-void OPvPCapturePointNA::SpawnGOsForTeam(TeamId teamId)
+void OPvPCapturePointNA::SpawnGOsForTeam(TeamID teamId)
 {
     const go_type* gos = nullptr;
     if (teamId == TEAM_ALLIANCE)
@@ -192,14 +192,14 @@ void OPvPCapturePointNA::DespawnGOs()
     }
 }
 
-void OPvPCapturePointNA::FactionTakeOver(TeamId teamId)
+void OPvPCapturePointNA::FactionTakeOver(TeamID teamId)
 {
     if (m_ControllingFaction != TEAM_NEUTRAL)
         sGraveyard->RemoveGraveyardLink(NA_HALAA_GRAVEYARD, NA_HALAA_GRAVEYARD_ZONE, m_ControllingFaction, false);
     if (m_ControllingFaction == TEAM_ALLIANCE)
-        _pvp->GetMap()->SendZoneText(NA_HALAA_GRAVEYARD_ZONE, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_NA_LOSE_A).c_str());
+        _pvp->GetMap()->SendZoneText(NA_HALAA_GRAVEYARD_ZONE, sObjectMgr->GetNcoreString(LANG_OPVP_NA_LOSE_A).c_str());
     else if (m_ControllingFaction == TEAM_HORDE)
-        _pvp->GetMap()->SendZoneText(NA_HALAA_GRAVEYARD_ZONE, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_NA_LOSE_H).c_str());
+        _pvp->GetMap()->SendZoneText(NA_HALAA_GRAVEYARD_ZONE, sObjectMgr->GetNcoreString(LANG_OPVP_NA_LOSE_H).c_str());
     DespawnCreatures(GetControllingFaction() == TEAM_HORDE ? halaaNPCHorde : halaaNPCAlly);
     m_ControllingFaction = teamId;
     if (m_ControllingFaction != TEAM_NEUTRAL)
@@ -221,7 +221,7 @@ void OPvPCapturePointNA::FactionTakeOver(TeamId teamId)
         _pvp->SendUpdateWorldState(WORLD_STATE_OPVP_NA_UI_HORDE_GUARDS_SHOW, 0);
         _pvp->SendUpdateWorldState(WORLD_STATE_OPVP_NA_UI_ALLIANCE_GUARDS_SHOW, 1);
         _pvp->SendUpdateWorldState(WORLD_STATE_OPVP_NA_UI_GUARDS_LEFT, m_GuardsAlive);
-        _pvp->GetMap()->SendZoneText(NA_HALAA_GRAVEYARD_ZONE, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_NA_CAPTURE_A).c_str());
+        _pvp->GetMap()->SendZoneText(NA_HALAA_GRAVEYARD_ZONE, sObjectMgr->GetNcoreString(LANG_OPVP_NA_CAPTURE_A).c_str());
     }
     else
     {
@@ -233,7 +233,7 @@ void OPvPCapturePointNA::FactionTakeOver(TeamId teamId)
         _pvp->SendUpdateWorldState(WORLD_STATE_OPVP_NA_UI_HORDE_GUARDS_SHOW, 1);
         _pvp->SendUpdateWorldState(WORLD_STATE_OPVP_NA_UI_ALLIANCE_GUARDS_SHOW, 0);
         _pvp->SendUpdateWorldState(WORLD_STATE_OPVP_NA_UI_GUARDS_LEFT, m_GuardsAlive);
-        _pvp->GetMap()->SendZoneText(NA_HALAA_GRAVEYARD_ZONE, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_NA_CAPTURE_H).c_str());
+        _pvp->GetMap()->SendZoneText(NA_HALAA_GRAVEYARD_ZONE, sObjectMgr->GetNcoreString(LANG_OPVP_NA_CAPTURE_H).c_str());
     }
     UpdateWyvernRoostWorldState(NA_ROOST_S);
     UpdateWyvernRoostWorldState(NA_ROOST_N);
@@ -600,7 +600,7 @@ bool OPvPCapturePointNA::Update(uint32 diff)
     if (!_capturePoint)
         return false;
 
-    float radius = ((float)_capturePoint->GetGOInfo()->capturePoint.radius);
+    float radius = ((float)_capturePoint->GetGOInfo()->CapturePoint.radius);
 
     for (PlayerSet playerSet : _activePlayers)
     {
@@ -637,7 +637,7 @@ bool OPvPCapturePointNA::Update(uint32 diff)
             {
                 m_capturable = true;
                 m_RespawnTimer = NA_RESPAWN_TIME;
-                _pvp->GetMap()->SendZoneText(NA_HALAA_GRAVEYARD_ZONE, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_NA_DEFENSELESS).c_str());
+                _pvp->GetMap()->SendZoneText(NA_HALAA_GRAVEYARD_ZONE, sObjectMgr->GetNcoreString(LANG_OPVP_NA_DEFENSELESS).c_str());
             }
             else
                 m_capturable = false;
@@ -699,7 +699,7 @@ bool OPvPCapturePointNA::Update(uint32 diff)
         }
 
         float oldValue = _value;
-        TeamId oldTeam = _team;
+        TeamID oldTeam = _team;
 
         _oldState = _state;
 

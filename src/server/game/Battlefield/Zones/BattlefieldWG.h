@@ -206,7 +206,7 @@ struct BfWGCoordGY
     uint32 gyid;
     uint8 type;
     uint32 textid;              // for gossip menu
-    TeamId startcontrol;
+    TeamID startcontrol;
 };
 
 uint32 const WGQuest[2][6] =
@@ -234,12 +234,12 @@ BfWGCoordGY const WGGraveyard[BATTLEFIELD_WG_GRAVEYARD_MAX] =
 class WintergraspCapturePoint : public BfCapturePoint
 {
 public:
-    WintergraspCapturePoint(BattlefieldWG* battlefield, TeamId teamInControl);
+    WintergraspCapturePoint(BattlefieldWG* battlefield, TeamID teamInControl);
 
     void LinkToWorkshop(WGWorkshop* workshop) { LinkedWorkshop = workshop; }
 
-    void ChangeTeam(TeamId oldteam) override;
-    TeamId GetTeam() const { return Team; }
+    void ChangeTeam(TeamID oldteam) override;
+    TeamID GetTeam() const { return Team; }
 
 protected:
     WGWorkshop* LinkedWorkshop;
@@ -338,20 +338,20 @@ public:
      * \brief Called when a wall/tower is broken
      * - Update quest
      */
-    void BrokenWallOrTower(TeamId team);
+    void BrokenWallOrTower(TeamID team);
 
     /**
      * \brief Called when a tower is damaged
      * - Update tower count (for reward calcul)
      */
-    void UpdateDamagedTowerCount(TeamId team);
+    void UpdateDamagedTowerCount(TeamID team);
 
     /**
      * \brief Called when tower is broken
      * - Update tower buff
      * - check if three south tower is down for remove 10 minutes to wg
      */
-    void UpdatedDestroyedTowerCount(TeamId team, GameObject* go);
+    void UpdatedDestroyedTowerCount(TeamID team, GameObject* go);
 
     //void DoCompleteOrIncrementAchievement(uint32 achievement, Player* player, uint8 incrementNumber = 1);
 
@@ -1058,7 +1058,7 @@ struct BfWGGameObjectBuilding
     }
 
     // the team that controls this point
-    TeamId m_Team;
+    TeamID m_Team;
 
     // WG object
     BattlefieldWG* m_WG;
@@ -1158,7 +1158,7 @@ struct BfWGGameObjectBuilding
         {
             // Inform the global wintergrasp script of the destruction of this object
             case BATTLEFIELD_WG_OBJECTTYPE_TOWER:
-                m_WG->UpdatedDestroyedTowerCount(TeamId(m_Team), m_WG->GetGameObject(m_Build));
+                m_WG->UpdatedDestroyedTowerCount(TeamID(m_Team), m_WG->GetGameObject(m_Build));
                 break;
             case BATTLEFIELD_WG_OBJECTTYPE_DOOR_LAST:
                 m_WG->SetRelicInteractible(true);
@@ -1170,11 +1170,11 @@ struct BfWGGameObjectBuilding
             case BATTLEFIELD_WG_OBJECTTYPE_DOOR:
             case BATTLEFIELD_WG_OBJECTTYPE_WALL:
             case BATTLEFIELD_WG_OBJECTTYPE_KEEP_TOWER:
-                m_WG->UpdatedDestroyedTowerCount(TeamId(m_Team), m_WG->GetGameObject(m_Build));
+                m_WG->UpdatedDestroyedTowerCount(TeamID(m_Team), m_WG->GetGameObject(m_Build));
                 break;
         }
 
-        m_WG->BrokenWallOrTower(TeamId(m_Team));
+        m_WG->BrokenWallOrTower(TeamID(m_Team));
     }
 
     void Init(GameObject* gobj, uint32 type, uint32 worldstate, uint8 damageText, uint8 destroyText)
@@ -1404,7 +1404,7 @@ struct WGWorkshop
     // id of the workshop, useful to retrieve data of the WorkshopsData array
     uint8 workshopId;
     // team that controls the node
-    TeamId teamControl;
+    TeamID teamControl;
     // for worldstate
     uint32 state;
 
@@ -1418,7 +1418,7 @@ struct WGWorkshop
         state = BATTLEFIELD_WG_OBJECTSTATE_NONE;
     }
 
-    void GiveControlTo(TeamId team, bool init /* for first call in setup*/)
+    void GiveControlTo(TeamID team, bool init /* for first call in setup*/)
     {
         switch (team)
         {
@@ -1471,7 +1471,7 @@ struct WGWorkshop
     void UpdateGraveyardAndWorkshop()
     {
         if (workshopId < BATTLEFIELD_WG_WORKSHOP_KEEP_WEST)
-            bf->GetGraveyardById(workshopId)->GiveControlTo(TeamId(teamControl));
+            bf->GetGraveyardById(workshopId)->GiveControlTo(TeamID(teamControl));
         else
             GiveControlTo(bf->GetDefenderTeam(), true);
     }

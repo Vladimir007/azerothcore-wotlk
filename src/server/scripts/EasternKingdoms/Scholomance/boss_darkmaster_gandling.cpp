@@ -293,7 +293,7 @@ public:
         void SpellHitTarget(Unit* target, SpellInfo const* spellinfo) override
         {
             uint32 room = 0;
-            if (spellinfo && spellinfo->Id == SPELL_SHADOW_PORTAL && target)
+            if (spellinfo && spellinfo->ID == SPELL_SHADOW_PORTAL && target)
             {
                 room = GetData(GANDLING_ROOM_TO_USE);
                 SetGate(room, CLOSED);

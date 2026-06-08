@@ -50,7 +50,7 @@ public:
             { "trigger",       HandleGoTriggerCommand,           SEC_MODERATOR,  Console::No },
             { "zonexy",        HandleGoZoneXYCommand,            SEC_MODERATOR,  Console::No },
             { "xyz",           HandleGoXYZCommand,               SEC_MODERATOR,  Console::No },
-            { "ticket",        HandleGoTicketCommand,            SEC_GAMEMASTER, Console::No },
+            { "ticket",        HandleGoTicketCommand,            SEC_GAME_MASTER, Console::No },
             { "quest",         HandleGoQuestCommand,             SEC_MODERATOR,  Console::No },
         };
 
@@ -98,7 +98,7 @@ public:
         uint32 transportEntry = 0;
         for (auto const& [entry, goTemplate] : *sObjectMgr->GetGameObjectTemplates())
         {
-            if (goTemplate.type == GAMEOBJECT_TYPE_MO_TRANSPORT && goTemplate.moTransport.mapID == transportMapId)
+            if (goTemplate.Type == GAME_OBJECT_TYPE_MO_TRANSPORT && goTemplate.MOTransport.mapID == transportMapId)
             {
                 transportEntry = entry;
                 break;
@@ -198,7 +198,7 @@ public:
 
         CreatureData const* spawnpoint = spawnpoints[--pos];
 
-        return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapid);
+        return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapID);
     }
 
     static bool HandleGoCreatureSpawnIdCommand(ChatHandler* handler, Variant<Hyperlink<creature>, ObjectGuid::LowType> spawnId)
@@ -210,7 +210,7 @@ public:
             return false;
         }
 
-        return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapid);
+        return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapID);
     }
 
     static bool HandleGoCreatureNameCommand(ChatHandler* handler, Tail name)
@@ -218,9 +218,8 @@ public:
         if (!name.data())
             return false;
 
-        // Make sure we don't pass double quotes into the SQL query. Otherwise it causes a MySQL error
+        // Make sure we don't pass double quotes into the SQL query. Otherwise it causes a PostgreSQL error
         std::string str = name.data(); // Making subtractions to the last character does not with in string_view
-        WorldDatabase.EscapeString(str);
 
         QueryResult result = WorldDatabase.Query("SELECT entry FROM creature_template WHERE name = \"{}\" LIMIT 1", str);
         if (!result)
@@ -237,7 +236,7 @@ public:
             return false;
         }
 
-        return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapid);
+        return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapID);
     }
 
     static bool HandleGoGameObjectSpawnIdCommand(ChatHandler* handler, uint32 spawnId)
@@ -249,7 +248,7 @@ public:
             return false;
         }
 
-        return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapid);
+        return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapID);
     }
 
     static bool HandleGoGameObjectGOIdCommand(ChatHandler* handler, uint32 goId, Optional<uint32> _pos)
@@ -281,7 +280,7 @@ public:
 
         GameObjectData const* spawnpoint = spawnpoints[--pos];
 
-        return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapid);
+        return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapID);
     }
 
     static bool HandleGoGraveyardCommand(ChatHandler* handler, uint32 gyId)
@@ -355,7 +354,7 @@ public:
             handler->SendErrorMessage(LANG_COMMAND_GOTAXINODENOTFOUND, uint32(nodeId));
             return false;
         }
-        return DoTeleport(handler, { node->x, node->y, node->z }, node->map_id);
+        return DoTeleport(handler, { node->X, node->Y, node->Z }, node->MapID);
     }
 
     static bool HandleGoTriggerCommand(ChatHandler* handler, Variant<Hyperlink<areatrigger>, uint32> areaTriggerId)
@@ -385,22 +384,22 @@ public:
         }
 
         // update to parent zone if exist (client map show only zones without parents)
-        AreaTableEntry const* zoneEntry = areaEntry->zone ? sAreaTableStore.LookupEntry(areaEntry->zone) : areaEntry;
+        AreaTableEntry const* zoneEntry = areaEntry->Zone ? sAreaTableStore.LookupEntry(areaEntry->Zone) : areaEntry;
                 ASSERT(zoneEntry);
 
-        Map const* map = sMapMgr->CreateBaseMap(zoneEntry->mapid);
+        Map const* map = sMapMgr->CreateBaseMap(zoneEntry->MapID);
 
         if (map->Instanceable())
         {
-            handler->SendErrorMessage(LANG_INVALID_ZONE_MAP, areaEntry->ID, areaEntry->area_name[handler->GetSessionDbcLocale()], map->GetId(), map->GetMapName());
+            handler->SendErrorMessage(LANG_INVALID_ZONE_MAP, areaEntry->ID, areaEntry->AreaName, map->GetId(), map->GetMapName());
             return false;
         }
 
         Zone2MapCoordinates(x, y, zoneEntry->ID);
 
-        if (!MapMgr::IsValidMapCoord(zoneEntry->mapid, x, y))
+        if (!MapMgr::IsValidMapCoord(zoneEntry->MapID, x, y))
         {
-            handler->SendErrorMessage(LANG_INVALID_TARGET_COORD, x, y, zoneEntry->mapid);
+            handler->SendErrorMessage(LANG_INVALID_TARGET_COORD, x, y, zoneEntry->MapID);
             return false;
         }
 
@@ -416,7 +415,7 @@ public:
 
         float z = std::max(map->GetHeight(x, y, MAX_HEIGHT), map->GetWaterLevel(x, y));
 
-        player->TeleportTo(zoneEntry->mapid, x, y, z, player->GetOrientation());
+        player->TeleportTo(zoneEntry->MapID, x, y, z, player->GetOrientation());
         return true;
     }
 
@@ -536,7 +535,7 @@ public:
                     }
 
                     // We've found a creature, teleport to it.
-                    return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapid);
+                    return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapID);
                 }
             }
 
@@ -553,7 +552,7 @@ public:
                         return false;
                     }
 
-                    return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapid);
+                    return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapID);
                 }
             }
         }
@@ -573,7 +572,7 @@ public:
                     }
 
                     // We've found a creature, teleport to it.
-                    return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapid);
+                    return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapID);
                 }
             }
 
@@ -590,7 +589,7 @@ public:
                         return false;
                     }
 
-                    return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapid);
+                    return DoTeleport(handler, { spawnpoint->posX, spawnpoint->posY, spawnpoint->posZ }, spawnpoint->mapID);
                 }
             }
         }

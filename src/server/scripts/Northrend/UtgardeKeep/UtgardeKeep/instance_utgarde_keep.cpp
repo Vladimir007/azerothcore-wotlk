@@ -225,10 +225,10 @@ public:
                         c->SetDynamicFlag(UNIT_DYNFLAG_LOOTABLE | UNIT_DYNFLAG_TAPPED | UNIT_DYNFLAG_TAPPED_BY_PLAYER);
                         c->SetLootMode(1);
                         c->loot.clear();
-                        if (uint32 lootid = c->GetCreatureTemplate()->lootid)
+                        if (uint32 lootid = c->GetCreatureTemplate()->LootID)
                             c->loot.FillLoot(lootid, LootTemplates_Creature, c->GetLootRecipient(), false, false, c->GetLootMode(), c);
                         if (c->GetLootMode())
-                            c->loot.generateMoneyLoot(c->GetCreatureTemplate()->mingold, c->GetCreatureTemplate()->maxgold);
+                            c->loot.generateMoneyLoot(c->GetCreatureTemplate()->GoldMin, c->GetCreatureTemplate()->GoldMax);
                         c->DestroyForVisiblePlayers();
                         c->SetVisible(true);
                     }
@@ -240,10 +240,10 @@ public:
                         c->SetDynamicFlag(UNIT_DYNFLAG_LOOTABLE | UNIT_DYNFLAG_TAPPED | UNIT_DYNFLAG_TAPPED_BY_PLAYER);
                         c->SetLootMode(1);
                         c->loot.clear();
-                        if (uint32 lootid = c->GetCreatureTemplate()->lootid)
+                        if (uint32 lootid = c->GetCreatureTemplate()->LootID)
                             c->loot.FillLoot(lootid, LootTemplates_Creature, c->GetLootRecipient(), false, false, c->GetLootMode(), c);
                         if (c->GetLootMode())
-                            c->loot.generateMoneyLoot(c->GetCreatureTemplate()->mingold, c->GetCreatureTemplate()->maxgold);
+                            c->loot.generateMoneyLoot(c->GetCreatureTemplate()->GoldMin, c->GetCreatureTemplate()->GoldMax);
                         c->DestroyForVisiblePlayers();
                         c->SetVisible(true);
                     }

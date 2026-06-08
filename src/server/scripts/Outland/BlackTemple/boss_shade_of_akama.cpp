@@ -137,7 +137,7 @@ struct boss_shade_of_akama : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_AKAMA_SOUL_CHANNEL)
+        if (spell->ID == SPELL_AKAMA_SOUL_CHANNEL)
         {
             instance->SetBossState(DATA_SHADE_OF_AKAMA, IN_PROGRESS);
 

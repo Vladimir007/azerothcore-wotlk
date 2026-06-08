@@ -1,34 +1,15 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-#ifndef TYPECONTAINER_FUNCTIONS_H
-#define TYPECONTAINER_FUNCTIONS_H
-
-/*
- * Here you'll find a list of helper functions to make
- * the TypeContainer usefull.  Without it, its hard
- * to access or mutate the container.
- */
+#ifndef TYPE_CONTAINER_FUNCTIONS_H
+#define TYPE_CONTAINER_FUNCTIONS_H
 
 #include "Dynamic/TypeList.h"
 
+/*
+ * Here you'll find a list of helper functions to make the TypeContainer useful.
+ * Without it, it's hard to access or mutate the container.
+*/
+
 namespace Acore
 {
-    // Helpers
     // Insert helpers
     template<class SPECIFIC_TYPE, class KEY_TYPE>
     bool Insert(ContainerUnorderedMap<SPECIFIC_TYPE, KEY_TYPE>& elements, KEY_TYPE const& handle, SPECIFIC_TYPE* obj)
@@ -39,11 +20,8 @@ namespace Acore
             elements._element[handle] = obj;
             return true;
         }
-        else
-        {
-            ASSERT(i->second == obj, "Object with certain key already in but objects are different!");
-            return false;
-        }
+        ASSERT(i->second == obj, "Object with certain key already in but objects are different!");
+        return false;
     }
 
     template<class SPECIFIC_TYPE, class KEY_TYPE>
@@ -74,10 +52,7 @@ namespace Acore
         {
             return nullptr;
         }
-        else
-        {
-            return i->second;
-        }
+        return i->second;
     }
 
     template<class SPECIFIC_TYPE, class KEY_TYPE>
@@ -95,8 +70,8 @@ namespace Acore
     template<class SPECIFIC_TYPE, class KEY_TYPE, class H, class T>
     SPECIFIC_TYPE* Find(ContainerUnorderedMap<TypeList<H, T>, KEY_TYPE> const& elements, KEY_TYPE const& handle, SPECIFIC_TYPE* /*obj*/)
     {
-        SPECIFIC_TYPE* ret = Find(elements._elements, handle, (SPECIFIC_TYPE*)nullptr);
-        return ret ? ret : Find(elements._TailElements, handle, (SPECIFIC_TYPE*)nullptr);
+        SPECIFIC_TYPE* ret = Find(elements._elements, handle, static_cast<SPECIFIC_TYPE*>(nullptr));
+        return ret ? ret : Find(elements._TailElements, handle, static_cast<SPECIFIC_TYPE*>(nullptr));
     }
 
     // Erase helpers
@@ -122,8 +97,8 @@ namespace Acore
     template<class SPECIFIC_TYPE, class KEY_TYPE, class H, class T>
     bool Remove(ContainerUnorderedMap<TypeList<H, T>, KEY_TYPE>& elements, KEY_TYPE const& handle, SPECIFIC_TYPE* /*obj*/)
     {
-        bool ret = Remove(elements._elements, handle, (SPECIFIC_TYPE*)nullptr);
-        return ret ? ret : Remove(elements._TailElements, handle, (SPECIFIC_TYPE*)nullptr);
+        bool ret = Remove(elements._elements, handle, static_cast<SPECIFIC_TYPE*>(nullptr));
+        return ret ? ret : Remove(elements._TailElements, handle, static_cast<SPECIFIC_TYPE*>(nullptr));
     }
 
     // Count helpers
@@ -149,12 +124,11 @@ namespace Acore
     template<class SPECIFIC_TYPE, class KEY_TYPE, class H, class T>
     bool Size(ContainerUnorderedMap<TypeList<H, T>, KEY_TYPE> const& elements, std::size_t* size, SPECIFIC_TYPE* /*obj*/)
     {
-        bool ret = Size(elements._elements, size, (SPECIFIC_TYPE*)nullptr);
-        return ret ? ret : Size(elements._TailElements, size, (SPECIFIC_TYPE*)nullptr);
+        bool ret = Size(elements._elements, size, static_cast<SPECIFIC_TYPE*>(nullptr));
+        return ret ? ret : Size(elements._TailElements, size, static_cast<SPECIFIC_TYPE*>(nullptr));
     }
 
-    /* ContainerMapList Helpers */
-    // count functions
+    // Count functions
     template<class SPECIFIC_TYPE>
     std::size_t Count(const ContainerMapList<SPECIFIC_TYPE>& elements, SPECIFIC_TYPE* /*fake*/)
     {
@@ -185,11 +159,10 @@ namespace Acore
         return Count(elements._TailElements, fake);
     }
 
-    // non-const insert functions
+    // Non-const insert functions
     template<class SPECIFIC_TYPE>
     SPECIFIC_TYPE* Insert(ContainerMapList<SPECIFIC_TYPE>& elements, SPECIFIC_TYPE* obj)
     {
-        //elements._element[hdl] = obj;
         obj->AddToGrid(elements._element);
         return obj;
     }
@@ -200,11 +173,11 @@ namespace Acore
         return nullptr;
     }
 
-    // this is a missed
+    // This is a missed
     template<class SPECIFIC_TYPE, class T>
     SPECIFIC_TYPE* Insert(ContainerMapList<T>& /*elements*/, SPECIFIC_TYPE* /*obj*/)
     {
-        return nullptr;                                        // a missed
+        return nullptr; // A missed
     }
 
     // Recursion
@@ -212,36 +185,10 @@ namespace Acore
     SPECIFIC_TYPE* Insert(ContainerMapList<TypeList<H, T>>& elements, SPECIFIC_TYPE* obj)
     {
         SPECIFIC_TYPE* t = Insert(elements._elements, obj);
-        return (t != nullptr ? t : Insert(elements._TailElements, obj));
+        return t != nullptr ? t : Insert(elements._TailElements, obj);
     }
 
-    //// non-const remove method
-    //template<class SPECIFIC_TYPE> SPECIFIC_TYPE* Remove(ContainerMapList<SPECIFIC_TYPE> & /*elements*/, SPECIFIC_TYPE *obj)
-    //{
-    //    obj->GetGridRef().unlink();
-    //    return obj;
-    //}
-
-    //template<class SPECIFIC_TYPE> SPECIFIC_TYPE* Remove(ContainerMapList<TypeNull> &/*elements*/, SPECIFIC_TYPE * /*obj*/)
-    //{
-    //    return nullptr;
-    //}
-
-    //// this is a missed
-    //template<class SPECIFIC_TYPE, class T> SPECIFIC_TYPE* Remove(ContainerMapList<T> &/*elements*/, SPECIFIC_TYPE * /*obj*/)
-    //{
-    //    return nullptr;                                        // a missed
-    //}
-
-    //template<class SPECIFIC_TYPE, class T, class H> SPECIFIC_TYPE* Remove(ContainerMapList<TypeList<H, T> > &elements, SPECIFIC_TYPE *obj)
-    //{
-    //    // The head element is bad
-    //    SPECIFIC_TYPE* t = Remove(elements._elements, obj);
-    //    return ( t != nullptr ? t : Remove(elements._TailElements, obj));
-    //}
-
-    /* ContainerVector Helpers */
-    // count functions
+    // Count functions
     template<class SPECIFIC_TYPE>
     std::size_t Count(const ContainerVector<SPECIFIC_TYPE>& elements, SPECIFIC_TYPE* /*fake*/)
     {
@@ -272,7 +219,7 @@ namespace Acore
         return Count(elements._TailElements, fake);
     }
 
-    // non-const insert functions
+    // Non-const insert functions
     template<class SPECIFIC_TYPE>
     SPECIFIC_TYPE* Insert(ContainerVector<SPECIFIC_TYPE>& elements, SPECIFIC_TYPE* obj)
     {
@@ -286,11 +233,11 @@ namespace Acore
         return nullptr;
     }
 
-    // this is a missed
+    // This is a missed
     template<class SPECIFIC_TYPE, class T>
     SPECIFIC_TYPE* Insert(ContainerVector<T>& /*elements*/, SPECIFIC_TYPE* /*obj*/)
     {
-        return nullptr;                                        // a missed
+        return nullptr;  // A missed
     }
 
     // Recursion
@@ -298,13 +245,13 @@ namespace Acore
     SPECIFIC_TYPE* Insert(ContainerVector<TypeList<H, T>>& elements, SPECIFIC_TYPE* obj)
     {
         SPECIFIC_TYPE* t = Insert(elements._elements, obj);
-        return (t != nullptr ? t : Insert(elements._TailElements, obj));
+        return t != nullptr ? t : Insert(elements._TailElements, obj);
     }
 
-    // non-const remove method
+    // Non-const remove method
     template<class SPECIFIC_TYPE> SPECIFIC_TYPE* Remove(ContainerVector<SPECIFIC_TYPE>& elements, SPECIFIC_TYPE *obj)
     {
-        // Simple vector find/swap/pop, this container should be very lightly used
+        // Simple vector find/swap/pop, this container should be very lightly used,
         // so I don't suspect the linear search complexity to be an issue
         auto itr = std::find(elements._element.begin(), elements._element.end(), obj);
         if (itr != elements._element.end())
@@ -323,17 +270,17 @@ namespace Acore
         return nullptr;
     }
 
-    // this is a missed
+    // This is a missed
     template<class SPECIFIC_TYPE, class T> SPECIFIC_TYPE* Remove(ContainerVector<T> &/*elements*/, SPECIFIC_TYPE * /*obj*/)
     {
-        return nullptr;                                        // a missed
+        return nullptr;  // A missed
     }
 
     template<class SPECIFIC_TYPE, class T, class H> SPECIFIC_TYPE* Remove(ContainerVector<TypeList<H, T> > &elements, SPECIFIC_TYPE *obj)
     {
         // The head element is bad
         SPECIFIC_TYPE* t = Remove(elements._elements, obj);
-        return ( t != nullptr ? t : Remove(elements._TailElements, obj));
+        return t != nullptr ? t : Remove(elements._TailElements, obj);
     }
 }
 #endif

@@ -1,26 +1,9 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by the
- * Free Software Foundation; either version 3 of the License, or (at your
- * option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef TRAINER_H
+#define TRAINER_H
 
-#ifndef Trainer_h__
-#define Trainer_h__
-
-#include "Common.h"
 #include <array>
 #include <vector>
+#include "Common.h"
 
 class Creature;
 class ObjectMgr;
@@ -32,7 +15,7 @@ namespace Trainer
     {
         Class = 0,
         Mount = 1,
-        Tradeskill = 2,
+        TradeSkill = 2,
         Pet = 3
     };
 
@@ -50,48 +33,46 @@ namespace Trainer
         NotEnoughSkill = 2
     };
 
-    struct AC_GAME_API Spell
+    struct Spell
     {
-        uint32 SpellId = 0;
+        uint32 SpellID = 0;
         uint32 MoneyCost = 0;
         uint32 ReqSkillLine = 0;
         uint32 ReqSkillRank = 0;
-        std::array<uint32, 3> ReqAbility = { };
+        std::array<uint32, 3> ReqAbility = {};
         uint8 ReqLevel = 0;
 
         [[nodiscard]] bool IsCastable() const;
     };
 
-    class AC_GAME_API Trainer
+    class Trainer
     {
-        public:
-            Trainer(uint32 trainerId, Type type, uint32 requirement, std::string greeting, std::vector<Spell> spells);
+        friend ObjectMgr;
 
-            [[nodiscard]] Spell const* GetSpell(uint32 spellId) const;
-            [[nodiscard]] std::vector<Spell> const& GetSpells() const { return _spells; }
-            void SendSpells(Creature* npc, Player* player, LocaleConstant locale) const;
-            bool CanTeachSpell(Player const* player, Spell const* trainerSpell) const;
-            void TeachSpell(Creature* npc, Player* player, uint32 spellId);
+        uint32 _trainerID;
+        Type _type;
+        uint32 _requirement;
+        std::vector<Spell> _spells;
+        std::string _greeting;
 
-            [[nodiscard]] Type GetTrainerType() const { return _type; }
-            [[nodiscard]] uint32 GetTrainerRequirement() const { return _requirement; }
-            bool IsTrainerValidForPlayer(Player const* player) const;
+    public:
+        Trainer(uint32 trainerID, Type type, uint32 requirement, std::string greeting, std::vector<Spell> spells);
 
-            private:
-            SpellState GetSpellState(Player const* player, Spell const* trainerSpell) const;
-            void SendTeachFailure(Creature const* npc, Player const* player, uint32 spellId, FailReason reason) const;
-            void SendTeachSucceeded(Creature const* npc, Player const* player, uint32 spellId) const;
-            [[nodiscard]] std::string const& GetGreeting(LocaleConstant locale) const;
+        [[nodiscard]] const Spell* GetSpell(uint32 spellID) const;
+        [[nodiscard]] const std::vector<Spell>& GetSpells() const { return _spells; }
+        void SendSpells(const Creature* npc, const Player* player) const;
+        static bool CanTeachSpell(const Player* player, Spell const* trainerSpell);
+        void TeachSpell(Creature* npc, Player* player, uint32 spellID);
 
-            friend ObjectMgr;
-            void AddGreetingLocale(LocaleConstant locale, std::string greeting);
+        [[nodiscard]] Type GetTrainerType() const { return _type; }
+        [[nodiscard]] uint32 GetTrainerRequirement() const { return _requirement; }
+        bool IsTrainerValidForPlayer(const Player* player) const;
 
-            uint32 _trainerId;
-            Type _type;
-            uint32 _requirement;
-            std::vector<Spell> _spells;
-            std::array<std::string, TOTAL_LOCALES> _greeting;
+    private:
+        static SpellState GetSpellState(const Player* player, const Spell* trainerSpell);
+        static void SendTeachFailure(const Creature* npc, const Player* player, uint32 spellID, FailReason reason);
+        static void SendTeachSucceeded(const Creature* npc, const Player* player, uint32 spellID);
     };
 }
 
-#endif // Trainer_h__
+#endif

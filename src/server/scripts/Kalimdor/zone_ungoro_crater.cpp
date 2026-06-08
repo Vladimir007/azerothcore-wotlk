@@ -228,7 +228,7 @@ public:
 
         void SpellHit(Unit* /*pCaster*/, SpellInfo const* pSpell) override
         {
-            if (HasFollowState(STATE_FOLLOW_INPROGRESS | STATE_FOLLOW_PAUSED) && pSpell->Id == SPELL_REVIVE_RINGO)
+            if (HasFollowState(STATE_FOLLOW_INPROGRESS | STATE_FOLLOW_PAUSED) && pSpell->ID == SPELL_REVIVE_RINGO)
                 ClearFaint();
         }
 

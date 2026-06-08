@@ -146,7 +146,7 @@ struct boss_magus_telestra : public BossAI
 
     void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id >= SPELL_FIRE_MAGUS_DEATH && spellInfo->Id <= SPELL_ARCANE_MAGUS_DEATH && caster->ToCreature())
+        if (spellInfo->ID >= SPELL_FIRE_MAGUS_DEATH && spellInfo->ID <= SPELL_ARCANE_MAGUS_DEATH && caster->ToCreature())
         {
             events.ScheduleEvent(EVENT_MAGUS_FAIL_ACHIEVEMENT, 5s);
             caster->ToCreature()->DespawnOrUnsummon(1s);

@@ -1,26 +1,9 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef RESOLVER_HPP
+#define RESOLVER_HPP
 
-#ifndef Resolver_h__
-#define Resolver_h__
-
-#include "Optional.h"
 #include <boost/asio/ip/tcp.hpp>
 #include <string>
+#include "Optional.h"
 
 namespace Acore::Asio
 {
@@ -32,11 +15,11 @@ namespace Acore::Asio
     public:
         explicit Resolver(IoContext& ioContext) : _impl(ioContext) { }
 
-        Optional<boost::asio::ip::tcp::endpoint> Resolve(boost::asio::ip::tcp const& protocol, std::string const& host, std::string const& service)
+        Optional<tcp::endpoint> Resolve(const tcp& protocol, const std::string& host, const std::string& service)
         {
             boost::system::error_code ec;
-            boost::asio::ip::resolver_base::flags flagsResolver = boost::asio::ip::resolver_base::all_matching;
-            boost::asio::ip::tcp::resolver::results_type results = _impl.resolve(protocol, host, service, flagsResolver, ec);
+            constexpr boost::asio::ip::resolver_base::flags flagsResolver = boost::asio::ip::resolver_base::all_matching;
+            const tcp::resolver::results_type results = _impl.resolve(protocol, host, service, flagsResolver, ec);
             if (results.begin() == results.end() || ec)
                 return {};
 
@@ -44,8 +27,8 @@ namespace Acore::Asio
         }
 
     private:
-        boost::asio::ip::tcp::resolver _impl;
+        tcp::resolver _impl;
     };
 }
 
-#endif // Resolver_h__
+#endif

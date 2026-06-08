@@ -46,12 +46,12 @@ SmartWaypointMgr* SmartWaypointMgr::instance()
 
 void SmartWaypointMgr::LoadFromDB()
 {
-    uint32 oldMSTime = getMSTime();
+    const uint32 oldMSTime = getMSTime();
 
     waypoint_map.clear();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_SMARTAI_WP);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    const QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -67,16 +67,17 @@ void SmartWaypointMgr::LoadFromDB()
 
     do
     {
-        Field* fields = result->Fetch();
+        const Field* fields = result->Fetch();
         uint32 entry = fields[0].Get<uint32>();
         uint32 id = fields[1].Get<uint32>();
-        float x = fields[2].Get<float>();
-        float y = fields[3].Get<float>();
-        float z = fields[4].Get<float>();
+        const auto position = fields[2].GetArray<float, 3>();
+        const float x = position[0];
+        const float y = position[1];
+        const float z = position[2];
         std::optional<float> o;
-        if (!fields[5].IsNull())
-            o = fields[5].Get<float>();
-        uint32 delay = fields[6].Get<uint32>();
+        if (!fields[3].IsNull())
+            o = fields[3].Get<float>();
+        const uint32 delay = fields[4].Get<uint32>();
 
         if (last_entry != entry)
         {
@@ -116,13 +117,13 @@ SmartAIMgr* SmartAIMgr::instance()
 
 void SmartAIMgr::LoadSmartAIFromDB()
 {
-    uint32 oldMSTime = getMSTime();
+    const uint32 oldMSTime = getMSTime();
 
     for (uint8 i = 0; i < SMART_SCRIPT_TYPE_MAX; i++)
-        mEventMap[i].clear();  //Drop Existing SmartAI List
+        mEventMap[i].clear();  // Drop Existing SmartAI List
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_SMART_SCRIPTS);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    const QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -135,58 +136,59 @@ void SmartAIMgr::LoadSmartAIFromDB()
 
     do
     {
-        Field* fields = result->Fetch();
+        const Field* fields = result->Fetch();
 
         SmartScriptHolder temp;
 
         temp.entryOrGuid = fields[0].Get<int32>();
         if (!temp.entryOrGuid)
         {
-            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: invalid entryorguid (0), skipped loading.");
+            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: invalid entry (0), skipped loading.");
             continue;
         }
 
-        SmartScriptType source_type = (SmartScriptType)fields[1].Get<uint8>();
+        const auto source_type = static_cast<SmartScriptType>(fields[1].Get<uint8>());
         if (source_type >= SMART_SCRIPT_TYPE_MAX)
         {
-            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: invalid source_type ({}), skipped loading.", uint32(source_type));
+            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: invalid source_type ({}), skipped loading.", static_cast<uint32>(source_type));
             continue;
         }
+        uint32 uEntryOrGuid = static_cast<uint32>(std::abs(temp.entryOrGuid));
         if (temp.entryOrGuid >= 0)
         {
             switch (source_type)
             {
                 case SMART_SCRIPT_TYPE_CREATURE:
                     {
-                        if (!sObjectMgr->GetCreatureTemplate((uint32)temp.entryOrGuid))
+                        if (!sObjectMgr->GetCreatureTemplate(uEntryOrGuid))
                         {
-                            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: Creature entry ({}) does not exist, skipped loading.", uint32(temp.entryOrGuid));
+                            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: Creature entry ({}) does not exist, skipped loading.", uEntryOrGuid);
                             continue;
                         }
                         break;
                     }
                 case SMART_SCRIPT_TYPE_GAMEOBJECT:
                     {
-                        if (!sObjectMgr->GetGameObjectTemplate((uint32)temp.entryOrGuid))
+                        if (!sObjectMgr->GetGameObjectTemplate(uEntryOrGuid))
                         {
-                            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: GameObject entry ({}) does not exist, skipped loading.", uint32(temp.entryOrGuid));
+                            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: GameObject entry ({}) does not exist, skipped loading.", uEntryOrGuid);
                             continue;
                         }
                         break;
                     }
                 case SMART_SCRIPT_TYPE_AREATRIGGER:
                     {
-                        if (!sObjectMgr->GetAreaTrigger((uint32)temp.entryOrGuid))
+                        if (!sObjectMgr->GetAreaTrigger(uEntryOrGuid))
                         {
-                            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: AreaTrigger entry ({}) does not exist, skipped loading.", uint32(temp.entryOrGuid));
+                            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: AreaTrigger entry ({}) does not exist, skipped loading.", uEntryOrGuid);
                             continue;
                         }
                         break;
                     }
                 case SMART_SCRIPT_TYPE_TIMED_ACTIONLIST:
-                    break;//nothing to check, really
+                    break; // Nothing to check
                 default:
-                    LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: not yet implemented source_type {}", (uint32)source_type);
+                    LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: not yet implemented source_type {}", static_cast<uint32>(source_type));
                     continue;
             }
         }
@@ -196,24 +198,24 @@ void SmartAIMgr::LoadSmartAIFromDB()
             {
                 case SMART_SCRIPT_TYPE_CREATURE:
                     {
-                        if (!sObjectMgr->GetCreatureData(uint32(std::abs(temp.entryOrGuid))))
+                        if (!sObjectMgr->GetCreatureData(uEntryOrGuid))
                         {
-                            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: Creature guid ({}) does not exist, skipped loading.", uint32(std::abs(temp.entryOrGuid)));
+                            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: Creature guid ({}) does not exist, skipped loading.", uEntryOrGuid);
                             continue;
                         }
                         break;
                     }
                 case SMART_SCRIPT_TYPE_GAMEOBJECT:
                     {
-                        if (!sObjectMgr->GetGameObjectData(uint32(std::abs(temp.entryOrGuid))))
+                        if (!sObjectMgr->GetGameObjectData(uEntryOrGuid))
                         {
-                            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: GameObject guid ({}) does not exist, skipped loading.", uint32(temp.entryOrGuid));
+                            LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: GameObject guid ({}) does not exist, skipped loading.", uEntryOrGuid);
                             continue;
                         }
                         break;
                     }
                 default:
-                    LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: not yet implemented source_type {}", (uint32)source_type);
+                    LOG_ERROR("sql.sql", "SmartAIMgr::LoadSmartAIFromDB: not yet implemented source_type {}", static_cast<uint32>(source_type));
                     continue;
             }
         }
@@ -221,45 +223,49 @@ void SmartAIMgr::LoadSmartAIFromDB()
         temp.source_type = source_type;
         temp.event_id = fields[2].Get<uint16>();
         temp.link = fields[3].Get<uint16>();
-        temp.event.type = (SMART_EVENT)fields[4].Get<uint8>();
+        temp.event.type = static_cast<SMART_EVENT>(fields[4].Get<uint8>());
         temp.event.event_phase_mask = fields[5].Get<uint16>();
         temp.event.event_chance = fields[6].Get<uint8>();
         temp.event.event_flags = fields[7].Get<uint16>();
 
-        temp.event.raw.param1 = fields[8].Get<uint32>();
-        temp.event.raw.param2 = fields[9].Get<uint32>();
-        temp.event.raw.param3 = fields[10].Get<uint32>();
-        temp.event.raw.param4 = fields[11].Get<uint32>();
-        temp.event.raw.param5 = fields[12].Get<uint32>();
-        temp.event.raw.param6 = fields[13].Get<uint32>();
+        const auto eventParams = fields[8].GetArray<uint32, 6>();
+        temp.event.raw.param1 = eventParams[0];
+        temp.event.raw.param2 = eventParams[1];
+        temp.event.raw.param3 = eventParams[2];
+        temp.event.raw.param4 = eventParams[3];
+        temp.event.raw.param5 = eventParams[4];
+        temp.event.raw.param6 = eventParams[5];
 
-        temp.action.type = (SMART_ACTION)fields[14].Get<uint8>();
-        temp.action.raw.param1 = fields[15].Get<uint32>();
-        temp.action.raw.param2 = fields[16].Get<uint32>();
-        temp.action.raw.param3 = fields[17].Get<uint32>();
-        temp.action.raw.param4 = fields[18].Get<uint32>();
-        temp.action.raw.param5 = fields[19].Get<uint32>();
-        temp.action.raw.param6 = fields[20].Get<uint32>();
+        temp.action.type = static_cast<SMART_ACTION>(fields[9].Get<uint8>());
+        const auto actionParams = fields[10].GetArray<uint32, 6>();
+        temp.action.raw.param1 = actionParams[0];
+        temp.action.raw.param2 = actionParams[1];
+        temp.action.raw.param3 = actionParams[2];
+        temp.action.raw.param4 = actionParams[3];
+        temp.action.raw.param5 = actionParams[4];
+        temp.action.raw.param6 = actionParams[5];
 
-        temp.target.type = (SMARTAI_TARGETS)fields[21].Get<uint8>();
-        temp.target.raw.param1 = fields[22].Get<uint32>();
-        temp.target.raw.param2 = fields[23].Get<uint32>();
-        temp.target.raw.param3 = fields[24].Get<uint32>();
-        temp.target.raw.param4 = fields[25].Get<uint32>();
-        temp.target.x = fields[26].Get<float>();
-        temp.target.y = fields[27].Get<float>();
-        temp.target.z = fields[28].Get<float>();
-        temp.target.o = fields[29].Get<float>();
+        temp.target.type = static_cast<SMARTAI_TARGETS>(fields[11].Get<uint8>());
+        const auto targetParams = fields[12].GetArray<uint32, 4>();
+        temp.target.raw.param1 = targetParams[0];
+        temp.target.raw.param2 = targetParams[1];
+        temp.target.raw.param3 = targetParams[2];
+        temp.target.raw.param4 = targetParams[3];
+        const auto targetPos = fields[13].GetArray<float, 3>();
+        temp.target.x = targetPos[0];
+        temp.target.y = targetPos[1];
+        temp.target.z = targetPos[2];
+        temp.target.o = fields[14].Get<float>();
 
-        //check target
+        // Check target
         if (!IsTargetValid(temp))
             continue;
 
-        // check all event and action params
+        // Check all event and action params
         if (!IsEventValid(temp))
             continue;
 
-        // xinef: specific check for timed events, fix db makers
+        // Specific check for timed events, fix db makers
         switch (temp.event.type)
         {
             case SMART_EVENT_UPDATE:
@@ -295,14 +301,14 @@ void SmartAIMgr::LoadSmartAIFromDB()
             if (temp.target.type == SMART_TARGET_SELF && (std::fabs(temp.target.x) > 200.0f || std::fabs(temp.target.y) > 200.0f || std::fabs(temp.target.z) > 200.0f))
                 temp.target.type = SMART_TARGET_POSITION;
 
-        // creature entry / guid not found in storage, create empty event list for it and increase counters
-        if (mEventMap[source_type].find(temp.entryOrGuid) == mEventMap[source_type].end())
+        // Creature entry / guid not found in storage, create empty event list for it and increase counters
+        if (!mEventMap[source_type].contains(temp.entryOrGuid))
         {
             ++count;
-            SmartAIEventList eventList;
+            constexpr SmartAIEventList eventList;
             mEventMap[source_type][temp.entryOrGuid] = eventList;
         }
-        // store the new event
+        // Store the new event
         mEventMap[source_type][temp.entryOrGuid].push_back(temp);
     } while (result->NextRow());
 
@@ -354,14 +360,14 @@ void SmartAIMgr::CheckIfSmartAIInDatabaseExists()
         bool found = false;
 
         // check template SAI
-        if (mEventMap[uint32(SmartScriptType::SMART_SCRIPT_TYPE_GAMEOBJECT)].find(gameobjectTemplate.entry) != mEventMap[uint32(SmartScriptType::SMART_SCRIPT_TYPE_GAMEOBJECT)].end())
+        if (mEventMap[uint32(SmartScriptType::SMART_SCRIPT_TYPE_GAMEOBJECT)].find(gameobjectTemplate.Entry) != mEventMap[uint32(SmartScriptType::SMART_SCRIPT_TYPE_GAMEOBJECT)].end())
             found = true;
         else
         {
             // check GUID SAI
             for (auto const& pair : sObjectMgr->GetAllGOData())
             {
-                if (pair.second.id != gameobjectTemplate.entry)
+                if (pair.second.id != gameobjectTemplate.Entry)
                     continue;
 
                 if (mEventMap[uint32(SmartScriptType::SMART_SCRIPT_TYPE_GAMEOBJECT)].find((-1) * pair.first) != mEventMap[uint32(SmartScriptType::SMART_SCRIPT_TYPE_GAMEOBJECT)].end())
@@ -373,11 +379,11 @@ void SmartAIMgr::CheckIfSmartAIInDatabaseExists()
         }
 
         if (!found)
-            LOG_ERROR("sql.sql", "Gameobject entry ({}) has SmartGameobjectAI enabled but no SmartAI entries in the database.", gameobjectTemplate.entry);
+            LOG_ERROR("sql.sql", "Gameobject entry ({}) has SmartGameobjectAI enabled but no SmartAI entries in the database.", gameobjectTemplate.Entry);
     }
 
     // SMART_SCRIPT_TYPE_AREATRIGGER
-    uint32 scriptID = sObjectMgr->GetScriptId("SmartTrigger");
+    uint32 scriptID = sObjectMgr->GetScriptID("SmartTrigger");
 
     for (auto const& pair : sObjectMgr->GetAllAreaTriggerScriptData())
     {

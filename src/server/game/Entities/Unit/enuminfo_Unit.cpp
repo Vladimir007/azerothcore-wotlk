@@ -114,9 +114,9 @@ AC_API_EXPORT UnitFlags EnumUtils<UnitFlags>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<UnitFlags>::ToIndex(UnitFlags value)
+AC_API_EXPORT std::size_t EnumUtils<UnitFlags>::ToIndex(UnitFlags index)
 {
-    switch (value)
+    switch (index)
     {
         case UNIT_FLAG_NONE: return 0;
         case UNIT_FLAG_SERVER_CONTROLLED: return 1;
@@ -164,7 +164,7 @@ AC_API_EXPORT EnumText EnumUtils<NPCFlags>::ToString(NPCFlags value)
     switch (value)
     {
         case UNIT_NPC_FLAG_GOSSIP: return { "UNIT_NPC_FLAG_GOSSIP", "has gossip menu", "100%" };
-        case UNIT_NPC_FLAG_QUESTGIVER: return { "UNIT_NPC_FLAG_QUESTGIVER", "is quest giver", "guessed, probably ok" };
+        case UNIT_NPC_FLAG_QUEST_GIVER: return { "UNIT_NPC_FLAG_QUESTGIVER", "is quest giver", "guessed, probably ok" };
         case UNIT_NPC_FLAG_UNK1: return { "UNIT_NPC_FLAG_UNK1", "UNIT_NPC_FLAG_UNK1", "" };
         case UNIT_NPC_FLAG_UNK2: return { "UNIT_NPC_FLAG_UNK2", "UNIT_NPC_FLAG_UNK2", "" };
         case UNIT_NPC_FLAG_TRAINER: return { "UNIT_NPC_FLAG_TRAINER", "is trainer", "100%" };
@@ -176,18 +176,18 @@ AC_API_EXPORT EnumText EnumUtils<NPCFlags>::ToString(NPCFlags value)
         case UNIT_NPC_FLAG_VENDOR_POISON: return { "UNIT_NPC_FLAG_VENDOR_POISON", "is vendor (poison)", "guessed" };
         case UNIT_NPC_FLAG_VENDOR_REAGENT: return { "UNIT_NPC_FLAG_VENDOR_REAGENT", "is vendor (reagents)", "100%" };
         case UNIT_NPC_FLAG_REPAIR: return { "UNIT_NPC_FLAG_REPAIR", "can repair", "100%" };
-        case UNIT_NPC_FLAG_FLIGHTMASTER: return { "UNIT_NPC_FLAG_FLIGHTMASTER", "is flight master", "100%" };
-        case UNIT_NPC_FLAG_SPIRITHEALER: return { "UNIT_NPC_FLAG_SPIRITHEALER", "is spirit healer", "guessed" };
-        case UNIT_NPC_FLAG_SPIRITGUIDE: return { "UNIT_NPC_FLAG_SPIRITGUIDE", "is spirit guide", "guessed" };
+        case UNIT_NPC_FLAG_FLIGHT_MASTER: return { "UNIT_NPC_FLAG_FLIGHTMASTER", "is flight master", "100%" };
+        case UNIT_NPC_FLAG_SPIRIT_HEALER: return { "UNIT_NPC_FLAG_SPIRITHEALER", "is spirit healer", "guessed" };
+        case UNIT_NPC_FLAG_SPIRIT_GUIDE: return { "UNIT_NPC_FLAG_SPIRITGUIDE", "is spirit guide", "guessed" };
         case UNIT_NPC_FLAG_INNKEEPER: return { "UNIT_NPC_FLAG_INNKEEPER", "is innkeeper", "" };
         case UNIT_NPC_FLAG_BANKER: return { "UNIT_NPC_FLAG_BANKER", "is banker", "100%" };
         case UNIT_NPC_FLAG_PETITIONER: return { "UNIT_NPC_FLAG_PETITIONER", "handles guild/arena petitions", "100% 0xC0000 = guild petitions, 0x40000 = arena team petitions" };
-        case UNIT_NPC_FLAG_TABARDDESIGNER: return { "UNIT_NPC_FLAG_TABARDDESIGNER", "is guild tabard designer", "100%" };
+        case UNIT_NPC_FLAG_TABARD_DESIGNER: return { "UNIT_NPC_FLAG_TABARDDESIGNER", "is guild tabard designer", "100%" };
         case UNIT_NPC_FLAG_BATTLEMASTER: return { "UNIT_NPC_FLAG_BATTLEMASTER", "is battlemaster", "100%" };
         case UNIT_NPC_FLAG_AUCTIONEER: return { "UNIT_NPC_FLAG_AUCTIONEER", "is auctioneer", "100%" };
         case UNIT_NPC_FLAG_STABLEMASTER: return { "UNIT_NPC_FLAG_STABLEMASTER", "is stable master", "100%" };
         case UNIT_NPC_FLAG_GUILD_BANKER: return { "UNIT_NPC_FLAG_GUILD_BANKER", "is guild banker", "cause client to send 997 opcode" };
-        case UNIT_NPC_FLAG_SPELLCLICK: return { "UNIT_NPC_FLAG_SPELLCLICK", "has spell click enabled", "cause client to send 1015 opcode (spell click)" };
+        case UNIT_NPC_FLAG_SPELL_CLICK: return { "UNIT_NPC_FLAG_SPELLCLICK", "has spell click enabled", "cause client to send 1015 opcode (spell click)" };
         case UNIT_NPC_FLAG_PLAYER_VEHICLE: return { "UNIT_NPC_FLAG_PLAYER_VEHICLE", "is player vehicle", "players with mounts that have vehicle data should have it set" };
         case UNIT_NPC_FLAG_MAILBOX: return { "UNIT_NPC_FLAG_MAILBOX", "is mailbox", "" };
         case UNIT_NPC_FLAG_VENDOR_MASK: return { "UNIT_NPC_FLAG_VENDOR_MASK", "UNIT_NPC_FLAG_VENDOR_MASK", "" };
@@ -204,7 +204,7 @@ AC_API_EXPORT NPCFlags EnumUtils<NPCFlags>::FromIndex(std::size_t index)
     switch (index)
     {
         case 0: return UNIT_NPC_FLAG_GOSSIP;
-        case 1: return UNIT_NPC_FLAG_QUESTGIVER;
+        case 1: return UNIT_NPC_FLAG_QUEST_GIVER;
         case 2: return UNIT_NPC_FLAG_UNK1;
         case 3: return UNIT_NPC_FLAG_UNK2;
         case 4: return UNIT_NPC_FLAG_TRAINER;
@@ -216,18 +216,18 @@ AC_API_EXPORT NPCFlags EnumUtils<NPCFlags>::FromIndex(std::size_t index)
         case 10: return UNIT_NPC_FLAG_VENDOR_POISON;
         case 11: return UNIT_NPC_FLAG_VENDOR_REAGENT;
         case 12: return UNIT_NPC_FLAG_REPAIR;
-        case 13: return UNIT_NPC_FLAG_FLIGHTMASTER;
-        case 14: return UNIT_NPC_FLAG_SPIRITHEALER;
-        case 15: return UNIT_NPC_FLAG_SPIRITGUIDE;
+        case 13: return UNIT_NPC_FLAG_FLIGHT_MASTER;
+        case 14: return UNIT_NPC_FLAG_SPIRIT_HEALER;
+        case 15: return UNIT_NPC_FLAG_SPIRIT_GUIDE;
         case 16: return UNIT_NPC_FLAG_INNKEEPER;
         case 17: return UNIT_NPC_FLAG_BANKER;
         case 18: return UNIT_NPC_FLAG_PETITIONER;
-        case 19: return UNIT_NPC_FLAG_TABARDDESIGNER;
+        case 19: return UNIT_NPC_FLAG_TABARD_DESIGNER;
         case 20: return UNIT_NPC_FLAG_BATTLEMASTER;
         case 21: return UNIT_NPC_FLAG_AUCTIONEER;
         case 22: return UNIT_NPC_FLAG_STABLEMASTER;
         case 23: return UNIT_NPC_FLAG_GUILD_BANKER;
-        case 24: return UNIT_NPC_FLAG_SPELLCLICK;
+        case 24: return UNIT_NPC_FLAG_SPELL_CLICK;
         case 25: return UNIT_NPC_FLAG_PLAYER_VEHICLE;
         case 26: return UNIT_NPC_FLAG_MAILBOX;
         case 27: return UNIT_NPC_FLAG_VENDOR_MASK;
@@ -236,12 +236,12 @@ AC_API_EXPORT NPCFlags EnumUtils<NPCFlags>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<NPCFlags>::ToIndex(NPCFlags value)
+AC_API_EXPORT std::size_t EnumUtils<NPCFlags>::ToIndex(NPCFlags index)
 {
-    switch (value)
+    switch (index)
     {
         case UNIT_NPC_FLAG_GOSSIP: return 0;
-        case UNIT_NPC_FLAG_QUESTGIVER: return 1;
+        case UNIT_NPC_FLAG_QUEST_GIVER: return 1;
         case UNIT_NPC_FLAG_UNK1: return 2;
         case UNIT_NPC_FLAG_UNK2: return 3;
         case UNIT_NPC_FLAG_TRAINER: return 4;
@@ -253,18 +253,18 @@ AC_API_EXPORT std::size_t EnumUtils<NPCFlags>::ToIndex(NPCFlags value)
         case UNIT_NPC_FLAG_VENDOR_POISON: return 10;
         case UNIT_NPC_FLAG_VENDOR_REAGENT: return 11;
         case UNIT_NPC_FLAG_REPAIR: return 12;
-        case UNIT_NPC_FLAG_FLIGHTMASTER: return 13;
-        case UNIT_NPC_FLAG_SPIRITHEALER: return 14;
-        case UNIT_NPC_FLAG_SPIRITGUIDE: return 15;
+        case UNIT_NPC_FLAG_FLIGHT_MASTER: return 13;
+        case UNIT_NPC_FLAG_SPIRIT_HEALER: return 14;
+        case UNIT_NPC_FLAG_SPIRIT_GUIDE: return 15;
         case UNIT_NPC_FLAG_INNKEEPER: return 16;
         case UNIT_NPC_FLAG_BANKER: return 17;
         case UNIT_NPC_FLAG_PETITIONER: return 18;
-        case UNIT_NPC_FLAG_TABARDDESIGNER: return 19;
+        case UNIT_NPC_FLAG_TABARD_DESIGNER: return 19;
         case UNIT_NPC_FLAG_BATTLEMASTER: return 20;
         case UNIT_NPC_FLAG_AUCTIONEER: return 21;
         case UNIT_NPC_FLAG_STABLEMASTER: return 22;
         case UNIT_NPC_FLAG_GUILD_BANKER: return 23;
-        case UNIT_NPC_FLAG_SPELLCLICK: return 24;
+        case UNIT_NPC_FLAG_SPELL_CLICK: return 24;
         case UNIT_NPC_FLAG_PLAYER_VEHICLE: return 25;
         case UNIT_NPC_FLAG_MAILBOX: return 26;
         case UNIT_NPC_FLAG_VENDOR_MASK: return 27;

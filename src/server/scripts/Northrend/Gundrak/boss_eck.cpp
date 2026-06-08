@@ -64,7 +64,7 @@ struct boss_eck : public BossAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_ECK_SPRING)
+        if (spell->ID == SPELL_ECK_SPRING)
         {
             me->GetThreatMgr().ResetAllThreat();
             me->AddThreat(target, 1.0f);

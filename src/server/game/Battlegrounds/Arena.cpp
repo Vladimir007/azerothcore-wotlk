@@ -204,7 +204,7 @@ void Arena::CheckWinConditions()
         EndBattleground(TEAM_ALLIANCE);
 }
 
-void Arena::EndBattleground(TeamId winnerTeamId)
+void Arena::EndBattleground(TeamID winnerTeamId)
 {
     if (isRated())
     {

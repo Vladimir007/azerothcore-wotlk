@@ -35,10 +35,10 @@ public:
     {
         static ChatCommandTable eventCommandTable =
         {
-            { "activelist", HandleEventActiveListCommand, SEC_GAMEMASTER, Console::Yes },
-            { "start",      HandleEventStartCommand,      SEC_GAMEMASTER, Console::Yes },
-            { "stop",       HandleEventStopCommand,       SEC_GAMEMASTER, Console::Yes },
-            { "info",       HandleEventInfoCommand,       SEC_GAMEMASTER, Console::Yes }
+            { "activelist", HandleEventActiveListCommand, SEC_GAME_MASTER, Console::Yes },
+            { "start",      HandleEventStartCommand,      SEC_GAME_MASTER, Console::Yes },
+            { "stop",       HandleEventStopCommand,       SEC_GAME_MASTER, Console::Yes },
+            { "info",       HandleEventInfoCommand,       SEC_GAME_MASTER, Console::Yes }
         };
         static ChatCommandTable commandTable =
         {
@@ -54,7 +54,7 @@ public:
         GameEventMgr::GameEventDataMap const& events = sGameEventMgr->GetEventMap();
         GameEventMgr::ActiveEvents const& activeEvents = sGameEventMgr->GetActiveEventList();
 
-        std::string active = handler->GetAcoreString(LANG_ACTIVE);
+        std::string active = handler->GetNcoreString(LANG_ACTIVE);
 
         for (uint16 eventId : activeEvents)
         {
@@ -93,7 +93,7 @@ public:
 
         GameEventMgr::ActiveEvents const& activeEvents = sGameEventMgr->GetActiveEventList();
         bool active = activeEvents.find(eventId) != activeEvents.end();
-        std::string activeStr = active ? handler->GetAcoreString(LANG_ACTIVE) : "";
+        std::string activeStr = active ? handler->GetNcoreString(LANG_ACTIVE) : "";
 
         std::string startTimeStr = Acore::Time::TimeToTimestampStr(Seconds(eventData.Start));
         std::string endTimeStr = Acore::Time::TimeToTimestampStr(Seconds(eventData.End));

@@ -328,9 +328,6 @@ public:
     // Called when a player logs out.
     virtual void OnPlayerLogout(Player* /*player*/) { }
 
-    // Called when a player is created.
-    virtual void OnPlayerCreate(Player* /*player*/) { }
-
     // Called when a player is deleted.
     virtual void OnPlayerDelete(ObjectGuid /*guid*/, uint32 /*accountId*/) { }
 
@@ -630,7 +627,7 @@ public:
     virtual void OnPlayerResurrect(Player* /*player*/, float /*restore_percent*/, bool /*applySickness*/) { }
 
     // Called before selecting the graveyard when releasing spirit
-    virtual void OnPlayerBeforeChooseGraveyard(Player* /*player*/, TeamId /*teamId*/, bool /*nearCorpse*/, uint32& /*graveyardOverride*/) { }
+    virtual void OnPlayerBeforeChooseGraveyard(Player* /*player*/, TeamID /*teamId*/, bool /*nearCorpse*/, uint32& /*graveyardOverride*/) { }
 
     /**
      * @brief This hook called before player sending message in default chat

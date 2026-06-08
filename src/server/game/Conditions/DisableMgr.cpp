@@ -24,7 +24,7 @@
 #include "SpellMgr.h"
 #include "StringConvert.h"
 #include "Tokenize.h"
-#include "VMapMgr2.h"
+#include "VMapMgr.h"
 #include "World.h"
 
 DisableMgr::DisableMap DisableMgr::m_DisableMap;
@@ -40,13 +40,13 @@ DisableMgr* DisableMgr::instance()
 
 void DisableMgr::LoadDisables()
 {
-    uint32 oldMSTime = getMSTime();
+    const uint32 oldMSTime = getMSTime();
 
-    // reload case
+    // Reload case
     for (DisableTypeMap& disableTypeMap : m_DisableMap)
         disableTypeMap.clear();
 
-    QueryResult result = WorldDatabase.Query("SELECT sourceType, entry, flags, params_0, params_1 FROM disables");
+    const QueryResult result = WorldDatabase.Query("SELECT type, entry, flags, params0, params1 FROM world_disable_data");
 
     uint32 total_count = 0;
 
@@ -57,11 +57,10 @@ void DisableMgr::LoadDisables()
         return;
     }
 
-    Field* fields;
     do
     {
-        fields = result->Fetch();
-        DisableType type = DisableType(fields[0].Get<uint32>());
+        const Field* fields = result->Fetch();
+        auto type = static_cast<DisableType>(fields[0].Get<uint32>());
         if (type >= MAX_DISABLE_TYPES)
         {
             LOG_ERROR("sql.sql", "Invalid type {} specified in `disables` table, skipped.", type);
@@ -69,14 +68,14 @@ void DisableMgr::LoadDisables()
         }
 
         uint32 entry = fields[1].Get<uint32>();
-        uint8 flags = fields[2].Get<uint8>();
-        std::string params_0 = fields[3].Get<std::string>();
-        std::string params_1 = fields[4].Get<std::string>();
+        const uint8 flags = fields[2].Get<uint8>();
+        auto params0 = fields[3].GetVector<uint32>();
+        auto params1 = fields[4].GetVector<uint32>();
 
         DisableData data;
         data.flags = flags;
 
-        if (!HandleDisableType(type, entry, flags, params_0, params_1, data))
+        if (!HandleDisableType(type, entry, flags, params0, params1, data))
             continue;
 
         m_DisableMap[type].insert(DisableTypeMap::value_type(entry, data));
@@ -87,33 +86,7 @@ void DisableMgr::LoadDisables()
     LOG_INFO("server.loading", " ");
 }
 
-/**
-* @brief Allow to add disables without adding it to the database. Useful for modules.
-*
-* @param type Disable type
-* @param entry Entry of Spell/Quest/Map/BG/Achievement/Map/GameEvent/Item
-* @param flags Flag depending on Type
-* @param param0 MapId if DISABLE_TYPE_SPELL used, 0 for all maps.
-* @param param1 AreaId if DISABLE_TYPE_SPELL used, 0 for all areas.
-*/
-void DisableMgr::AddDisable(DisableType type, uint32 entry, uint8 flags, std::string const& param0, std::string const& param1)
-{
-    if (type >= MAX_DISABLE_TYPES)
-    {
-        LOG_ERROR("disables", "AddDisable: Invalid type {} specified for entry {}, skipped.", type);
-        return;
-    }
-
-    DisableData data;
-    data.flags = flags;
-
-    if (!HandleDisableType(type, entry, flags, param0, param1, data))
-        return;
-
-    m_DisableMap[type].insert(DisableTypeMap::value_type(entry, data));
-}
-
-bool DisableMgr::HandleDisableType(DisableType type, uint32 entry, uint8 flags, std::string const& params_0, std::string const& params_1, DisableData& data)
+bool DisableMgr::HandleDisableType(const DisableType type, uint32 entry, const uint8 flags, const std::vector<uint32>& params0, const std::vector<uint32>& params1, DisableData& data)
 {
     switch (type)
     {
@@ -140,36 +113,22 @@ bool DisableMgr::HandleDisableType(DisableType type, uint32 entry, uint8 flags, 
         }
 
         if (flags & SPELL_DISABLE_MAP)
-        {
-            for (std::string_view mapStr : Acore::Tokenize(params_0, ',', true))
-            {
-                if (Optional<uint32> mapId = Acore::StringTo<uint32>(mapStr))
-                    data.params[0].insert(*mapId);
-                else
-                    LOG_ERROR("sql.sql", "Disable map '{}' for spell {} is invalid, skipped.", mapStr, entry);
-            }
-        }
+            for (auto mapID : params0)
+                data.params[0].insert(mapID);
 
         if (flags & SPELL_DISABLE_AREA)
-        {
-            for (std::string_view areaStr : Acore::Tokenize(params_1, ',', true))
-            {
-                if (Optional<uint32> areaId = Acore::StringTo<uint32>(areaStr))
-                    data.params[1].insert(*areaId);
-                else
-                    LOG_ERROR("sql.sql", "Disable area '{}' for spell {} is invalid, skipped.", areaStr, entry);
-            }
-        }
+            for (auto areaID : params1)
+                data.params[1].insert(areaID);
 
-        // xinef: if spell has disabled los, add flag
+        // If spell has disabled los, add flag
         if (flags & SPELL_DISABLE_LOS)
         {
-            SpellInfo* spellInfo = const_cast<SpellInfo*>(sSpellMgr->GetSpellInfo(entry));
+            const auto spellInfo = const_cast<SpellInfo*>(sSpellMgr->GetSpellInfo(entry));
             spellInfo->AttributesEx2 |= SPELL_ATTR2_IGNORE_LINE_OF_SIGHT;
         }
 
         break;
-        // checked later
+        // Checked later
     case DISABLE_TYPE_QUEST:
         break;
     case DISABLE_TYPE_MAP:
@@ -182,7 +141,7 @@ bool DisableMgr::HandleDisableType(DisableType type, uint32 entry, uint8 flags, 
             return false;
         }
         bool isFlagInvalid = false;
-        switch (mapEntry->map_type)
+        switch (mapEntry->MapType)
         {
         case MAP_COMMON:
             if (flags)
@@ -201,6 +160,7 @@ bool DisableMgr::HandleDisableType(DisableType type, uint32 entry, uint8 flags, 
         case MAP_ARENA:
             LOG_ERROR("sql.sql", "Battleground map {} specified to be disabled in map case, skipped.", entry);
             return false;
+        default: break;
         }
         if (isFlagInvalid)
         {
@@ -218,7 +178,7 @@ bool DisableMgr::HandleDisableType(DisableType type, uint32 entry, uint8 flags, 
         if (flags)
             LOG_ERROR("sql.sql", "Disable flags specified for battleground {}, useless data.", entry);
         break;
-    case DISABLE_TYPE_OUTDOORPVP:
+    case DISABLE_TYPE_OUTDOOR_PVP:
         if (entry > MAX_OUTDOORPVP_TYPES)
         {
             LOG_ERROR("sql.sql", "OutdoorPvPTypes value {} from `disables` is invalid, skipped.", entry);
@@ -244,12 +204,12 @@ bool DisableMgr::HandleDisableType(DisableType type, uint32 entry, uint8 flags, 
             LOG_ERROR("sql.sql", "Map entry {} from `disables` doesn't exist in dbc, skipped.", entry);
             return false;
         }
-        switch (mapEntry->map_type)
+        switch (mapEntry->MapType)
         {
         case MAP_COMMON:
-            if (flags & VMAP::VMAP_DISABLE_AREAFLAG)
+            if (flags & VMAP::VMAP_DISABLE_AREA_FLAG)
                 LOG_INFO("disable", "Areaflag disabled for world map {}.", entry);
-            if (flags & VMAP::VMAP_DISABLE_LIQUIDSTATUS)
+            if (flags & VMAP::VMAP_DISABLE_LIQUID_STATUS)
                 LOG_INFO("disable", "Liquid status disabled for world map {}.", entry);
             break;
         case MAP_INSTANCE:
@@ -278,8 +238,7 @@ bool DisableMgr::HandleDisableType(DisableType type, uint32 entry, uint8 flags, 
     }
     case DISABLE_TYPE_GAME_EVENT:
     {
-        GameEventMgr::ActiveEvents const& activeEvents = sGameEventMgr->GetActiveEventList();
-        if (activeEvents.find(entry) != activeEvents.end())
+        if (sGameEventMgr->GetActiveEventList().contains(entry))
         {
             sGameEventMgr->StopEvent(entry);
             LOG_INFO("disable", "Event entry {} was stopped because it has been disabled.", entry);
@@ -301,7 +260,7 @@ bool DisableMgr::HandleDisableType(DisableType type, uint32 entry, uint8 flags, 
 
 void DisableMgr::CheckQuestDisables()
 {
-    uint32 oldMSTime = getMSTime();
+    const uint32 oldMSTime = getMSTime();
 
     uint32 count = m_DisableMap[DISABLE_TYPE_QUEST].size();
     if (!count)
@@ -311,8 +270,8 @@ void DisableMgr::CheckQuestDisables()
         return;
     }
 
-    // check only quests, rest already done at startup
-    for (DisableTypeMap::iterator itr = m_DisableMap[DISABLE_TYPE_QUEST].begin(); itr != m_DisableMap[DISABLE_TYPE_QUEST].end();)
+    // Check only quests, rest already done at startup
+    for (auto itr = m_DisableMap[DISABLE_TYPE_QUEST].begin(); itr != m_DisableMap[DISABLE_TYPE_QUEST].end();)
     {
         const uint32 entry = itr->first;
         if (!sObjectMgr->GetQuestTemplate(entry))
@@ -393,7 +352,7 @@ bool DisableMgr::IsDisabledFor(DisableType type, uint32 entry, Unit const* unit,
                 return false;
 
             if (!mapEntry->IsDungeon())
-                return mapEntry->map_type == MAP_COMMON;
+                return mapEntry->MapType == MAP_COMMON;
 
             uint8 disabledModes = itr->second.flags;
 
@@ -424,7 +383,7 @@ bool DisableMgr::IsDisabledFor(DisableType type, uint32 entry, Unit const* unit,
             return flags & itr->second.flags;
         case DISABLE_TYPE_QUEST:
         case DISABLE_TYPE_BATTLEGROUND:
-        case DISABLE_TYPE_OUTDOORPVP:
+        case DISABLE_TYPE_OUTDOOR_PVP:
         case DISABLE_TYPE_ACHIEVEMENT_CRITERIA:
         case DISABLE_TYPE_GO_LOS:
         case DISABLE_TYPE_GAME_EVENT:
@@ -458,6 +417,5 @@ bool DisableMgr::IsPathfindingEnabled(Map const* map)
     default:
         break;
     }
-
-    return (sWorld->getBoolConfig(CONFIG_ENABLE_MMAPS) ? true : map->IsBattlegroundOrArena());
+    return true;
 }

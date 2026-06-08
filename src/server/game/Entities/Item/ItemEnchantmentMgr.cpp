@@ -27,46 +27,39 @@
 #include <functional>
 #include <vector>
 
-struct EnchStoreItem
+struct EnchantmentStoreItem
 {
-    uint32  ench;
-    float   chance;
+    uint32 enchantment;
+    float chance;
 
-    EnchStoreItem()
-        : ench(0), chance(0) {}
-
-    EnchStoreItem(uint32 _ench, float _chance)
-        : ench(_ench), chance(_chance) {}
+    EnchantmentStoreItem() : enchantment(0), chance(0) {}
+    EnchantmentStoreItem(const uint32 _enchantment, const float _chance) : enchantment(_enchantment), chance(_chance) {}
 };
 
-typedef std::vector<EnchStoreItem> EnchStoreList;
-typedef std::unordered_map<uint32, EnchStoreList> EnchantmentStore;
+typedef std::vector<EnchantmentStoreItem> EnchantmentStoreList;
+typedef std::unordered_map<uint32, EnchantmentStoreList> EnchantmentStore;
 
-static EnchantmentStore RandomItemEnch;
+static EnchantmentStore RandomItemEnchantment;
 
 void LoadRandomEnchantmentsTable()
 {
-    uint32 oldMSTime = getMSTime();
+    const uint32 oldMSTime = getMSTime();
 
-    RandomItemEnch.clear();                                 // for reload case
+    RandomItemEnchantment.clear();  // For reload case
 
-    //                                                 0      1      2
-    QueryResult result = WorldDatabase.Query("SELECT entry, ench, chance FROM item_enchantment_template");
-
-    if (result)
+    if (const QueryResult result = WorldDatabase.Query("SELECT entry, enchantment, chance FROM world_item_enchantment_template"))
     {
         uint32 count = 0;
 
         do
         {
-            Field* fields = result->Fetch();
+            const Field* fields = result->Fetch();
 
             uint32 entry = fields[0].Get<uint32>();
-            uint32 ench = fields[1].Get<uint32>();
-            float chance = fields[2].Get<float>();
-
+            const uint32 enchantment = fields[1].Get<uint32>();
+            const float chance = fields[2].Get<float>();
             if (chance > 0.000001f && chance <= 100.0f)
-                RandomItemEnch[entry].push_back(EnchStoreItem(ench, chance));
+                RandomItemEnchantment[entry].push_back(EnchantmentStoreItem(enchantment, chance));
 
             ++count;
         } while (result->NextRow());
@@ -76,7 +69,7 @@ void LoadRandomEnchantmentsTable()
     }
     else
     {
-        LOG_WARN("server.loading", ">> Loaded 0 Item Enchantment definitions. DB table `item_enchantment_template` is empty.");
+        LOG_WARN("server.loading", ">> Loaded 0 Item Enchantment definitions. DB table `world_item_enchantment_template` is empty.");
         LOG_INFO("server.loading", " ");
     }
 }
@@ -89,8 +82,8 @@ uint32 GetItemEnchantMod(int32 entry)
     if (entry == -1)
         return 0;
 
-    EnchantmentStore::const_iterator tab = RandomItemEnch.find(entry);
-    if (tab == RandomItemEnch.end())
+    EnchantmentStore::const_iterator tab = RandomItemEnchantment.find(entry);
+    if (tab == RandomItemEnchantment.end())
     {
         LOG_ERROR("sql.sql", "Item RandomProperty / RandomSuffix id #{} used in `item_template` but it does not have records in `item_enchantment_template` table.", entry);
         return 0;
@@ -99,24 +92,24 @@ uint32 GetItemEnchantMod(int32 entry)
     double dRoll = rand_chance();
     float fCount = 0;
 
-    for (EnchStoreList::const_iterator ench_iter = tab->second.begin(); ench_iter != tab->second.end(); ++ench_iter)
+    for (EnchantmentStoreList::const_iterator ench_iter = tab->second.begin(); ench_iter != tab->second.end(); ++ench_iter)
     {
         fCount += ench_iter->chance;
 
         if (fCount > dRoll)
-            return ench_iter->ench;
+            return ench_iter->enchantment;
     }
 
     //we could get here only if sum of all enchantment chances is lower than 100%
     dRoll = (irand(0, (int)std::floor(fCount * 100) + 1)) / 100;
     fCount = 0;
 
-    for (EnchStoreList::const_iterator ench_iter = tab->second.begin(); ench_iter != tab->second.end(); ++ench_iter)
+    for (EnchantmentStoreList::const_iterator ench_iter = tab->second.begin(); ench_iter != tab->second.end(); ++ench_iter)
     {
         fCount += ench_iter->chance;
 
         if (fCount > dRoll)
-            return ench_iter->ench;
+            return ench_iter->enchantment;
     }
 
     return 0;

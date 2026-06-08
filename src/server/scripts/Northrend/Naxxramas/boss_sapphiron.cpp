@@ -192,7 +192,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_ICEBOLT_CAST)
+            if (spellInfo->ID == SPELL_ICEBOLT_CAST)
             {
                 me->CastSpell(target, SPELL_ICEBOLT_TRIGGER, true);
             }

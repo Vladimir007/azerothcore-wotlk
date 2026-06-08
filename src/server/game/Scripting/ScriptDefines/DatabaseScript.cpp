@@ -19,9 +19,9 @@
 #include "ScriptMgr.h"
 #include "ScriptMgrMacros.h"
 
-void ScriptMgr::OnAfterDatabasesLoaded(uint32 updateFlags)
+void ScriptMgr::OnAfterDatabasesLoaded()
 {
-    CALL_ENABLED_HOOKS(DatabaseScript, DATABASEHOOK_ON_AFTER_DATABASES_LOADED, script->OnAfterDatabasesLoaded(updateFlags));
+    CALL_ENABLED_HOOKS(DatabaseScript, DATABASEHOOK_ON_AFTER_DATABASES_LOADED, script->OnAfterDatabasesLoaded());
 }
 
 void ScriptMgr::OnAfterDatabaseLoadCreatureTemplates(std::vector<CreatureTemplate*> creatureTemplates)

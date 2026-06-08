@@ -128,9 +128,9 @@ struct boss_devourer_of_souls : public BossAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_PHANTOM_BLAST_H)
+        if (spell->ID == SPELL_PHANTOM_BLAST_H)
             AchievementCompleted = false;
-        else if (spell->Id == SPELL_WAILING_SOULS_TARGETING)
+        else if (spell->ID == SPELL_WAILING_SOULS_TARGETING)
         {
             me->SetOrientation(me->GetAngle(target));
             me->SetControlled(true, UNIT_STATE_ROOT);
@@ -157,7 +157,7 @@ struct boss_devourer_of_souls : public BossAI
         events.Update(diff);
 
         if (Spell* s = me->GetCurrentSpell(CURRENT_CHANNELED_SPELL))
-            if (s->m_spellInfo->Id == SPELL_MIRRORED_SOUL)
+            if (s->m_spellInfo->ID == SPELL_MIRRORED_SOUL)
             {
                 switch (events.ExecuteEvent())
                 {

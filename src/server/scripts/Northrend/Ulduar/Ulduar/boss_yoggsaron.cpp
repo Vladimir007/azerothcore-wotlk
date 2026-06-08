@@ -609,7 +609,7 @@ struct boss_yoggsaron_sara : public ScriptedAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_SANITY)
+        if (spellInfo->ID == SPELL_SANITY)
             if (Aura* aur = target->GetAura(SPELL_SANITY))
                 aur->SetStackAmount(100);
     }
@@ -1165,7 +1165,7 @@ struct boss_yoggsaron : public ScriptedAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_IN_THE_MAWS_OF_THE_OLD_GOD)
+        if (spellInfo->ID == SPELL_IN_THE_MAWS_OF_THE_OLD_GOD)
             me->AddLootMode(32);
     }
 
@@ -1769,7 +1769,7 @@ struct boss_yoggsaron_immortal_guardian : public ScriptedAI
 
     void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_SHADOW_BEACON)
+        if (spellInfo->ID == SPELL_SHADOW_BEACON)
             caster->GetAI()->DoAction(ACTION_YOGG_SARON_SHADOW_BEACON);
     }
 
@@ -2066,7 +2066,7 @@ struct boss_yoggsaron_voice : public NullCreatureAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_INSANE1)
+        if (spellInfo->ID == SPELL_INSANE1)
         {
             // Drive Me Crazy achievement failed
             if (me->GetInstanceScript())
@@ -2552,7 +2552,7 @@ class spell_yogg_saron_sanity_reduce : public SpellScript
             return;
 
         uint8 _reduceAmount = 0;
-        switch (GetSpellInfo()->Id)
+        switch (GetSpellInfo()->ID)
         {
             case SPELL_SARA_PSYCHOSIS_10:
                 _reduceAmount = 9;
@@ -2643,7 +2643,7 @@ class spell_yogg_saron_in_the_maws_of_the_old_god : public SpellScript
             return SPELL_FAILED_BAD_TARGETS;
 
         Spell* spell = target->GetCurrentSpell(CURRENT_GENERIC_SPELL);
-        if (!spell || spell->GetSpellInfo()->Id != SPELL_DEAFENING_ROAR)
+        if (!spell || spell->GetSpellInfo()->ID != SPELL_DEAFENING_ROAR)
             return SPELL_FAILED_TARGET_AURASTATE;
 
         return SPELL_CAST_OK;

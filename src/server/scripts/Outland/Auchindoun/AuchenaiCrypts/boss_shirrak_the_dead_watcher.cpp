@@ -152,7 +152,7 @@ struct boss_shirrak_the_dead_watcher : public BossAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_FOCUS_CAST)
+        if (spellInfo->ID == SPELL_FOCUS_CAST)
         {
             target->CastSpell(target, SPELL_FIERY_BLAST, false);
         }

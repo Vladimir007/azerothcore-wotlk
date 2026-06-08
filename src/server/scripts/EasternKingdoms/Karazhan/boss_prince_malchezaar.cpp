@@ -244,7 +244,7 @@ struct boss_malchezaar : public BossAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_ENFEEBLE)
+        if (spell->ID == SPELL_ENFEEBLE)
         {
             _enfeebleTargets[target->GetGUID()] = target->GetHealth();
             target->SetHealth(1);
@@ -298,7 +298,7 @@ struct npc_netherspite_infernal : public ScriptedAI
 
     void SpellHit(Unit* /*who*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_INFERNAL_RELAY)
+        if (spell->ID == SPELL_INFERNAL_RELAY)
         {
             me->SetDisplayId(me->GetUInt32Value(UNIT_FIELD_NATIVEDISPLAYID));
             me->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);

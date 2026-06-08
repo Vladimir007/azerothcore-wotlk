@@ -302,7 +302,7 @@ struct boss_freya : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_TELEPORT)
+        if (spellInfo->ID == SPELL_TELEPORT)
         {
             me->DespawnOrUnsummon();
             instance->SetData(EVENT_KEEPER_TELEPORTED, DONE);
@@ -480,7 +480,7 @@ struct boss_freya : public BossAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_NATURE_BOMB_FLIGHT)
+        if (spell->ID == SPELL_NATURE_BOMB_FLIGHT)
             me->SummonCreature(NPC_NATURE_BOMB, target->GetPositionX(), target->GetPositionY(), target->GetPositionZ());
     }
 

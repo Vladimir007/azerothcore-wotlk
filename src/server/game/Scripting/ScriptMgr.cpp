@@ -193,7 +193,7 @@ void ScriptMgr::CheckIfScriptsInDatabaseExist()
 {
     for (auto const& scriptName : sObjectMgr->GetScriptNames())
     {
-        if (uint32 sid = sObjectMgr->GetScriptId(scriptName))
+        if (uint32 sid = sObjectMgr->GetScriptID(scriptName))
         {
             if (!ScriptRegistry<SpellScriptLoader>::GetScriptById(sid) &&
                 !ScriptRegistry<ServerScript>::GetScriptById(sid) &&

@@ -18,7 +18,7 @@
 #ifndef _CHARACTERDATABASE_H
 #define _CHARACTERDATABASE_H
 
-#include "MySQLConnection.h"
+#include "PSQLConnection.h"
 
 enum CharacterDatabaseStatements : uint32
 {
@@ -336,7 +336,6 @@ enum CharacterDatabaseStatements : uint32
     CHAR_SEL_CHARS_BY_ACCOUNT_ID,
     CHAR_SEL_CHAR_PINFO,
     CHAR_SEL_PINFO_XP,
-    CHAR_SEL_PINFO_MAILS,
     CHAR_SEL_PINFO_BANS,
     CHAR_SEL_CHAR_HOMEBIND,
     CHAR_SEL_CHAR_GUID_NAME_BY_ACC,
@@ -536,16 +535,17 @@ enum CharacterDatabaseStatements : uint32
     MAX_CHARACTERDATABASE_STATEMENTS
 };
 
-class AC_DATABASE_API CharacterDatabaseConnection : public MySQLConnection
+class AC_DATABASE_API CharacterDatabaseConnection : public PSQLConnection
 {
 public:
     typedef CharacterDatabaseStatements Statements;
 
     //- Constructors for sync and async connections
-    CharacterDatabaseConnection(MySQLConnectionInfo& connInfo);
-    CharacterDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* q, MySQLConnectionInfo& connInfo);
+    explicit CharacterDatabaseConnection(const std::string& connectionStr);
+    CharacterDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* queue, const std::string& connectionStr);
     ~CharacterDatabaseConnection() override;
 
+protected:
     //- Loads database type specific prepared statements
     void DoPrepareStatements() override;
 };

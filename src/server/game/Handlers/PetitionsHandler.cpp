@@ -196,7 +196,6 @@ void WorldSession::HandlePetitionBuyOpcode(WorldPacket& recvData)
     // datacorruption
     Petition const* petition = sPetitionMgr->GetPetitionByOwnerWithType(_player->GetGUID(), type);
 
-    CharacterDatabase.EscapeString(name);
     CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
 
     if (petition)

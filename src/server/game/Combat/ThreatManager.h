@@ -260,7 +260,6 @@ public:
     friend class ThreatReference;
     friend class ThreatReferenceImpl;
     friend struct CompareThreatLessThan;
-    friend class debug_commandscript;
 };
 
 class AC_GAME_API ThreatReference

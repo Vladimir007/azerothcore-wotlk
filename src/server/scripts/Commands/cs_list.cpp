@@ -158,7 +158,7 @@ public:
         if (!count || !itemId)
             return false;
 
-        PreparedQueryResult result;
+        QueryResult result;
 
         // inventory case
         uint32 inventoryCount = 0;
@@ -227,7 +227,7 @@ public:
             result = CharacterDatabase.Query(stmt);
         }
         else
-            result = PreparedQueryResult(nullptr);
+            result = QueryResult(nullptr);
 
         if (result)
         {
@@ -274,7 +274,7 @@ public:
             result = CharacterDatabase.Query(stmt);
         }
         else
-            result = PreparedQueryResult(nullptr);
+            result = QueryResult(nullptr);
 
         if (result)
         {
@@ -453,8 +453,8 @@ public:
 
         wstrToLower(namePart);
 
-        std::string talentStr = handler->GetAcoreString(LANG_TALENT);
-        std::string passiveStr = handler->GetAcoreString(LANG_PASSIVE);
+        std::string talentStr = handler->GetNcoreString(LANG_TALENT);
+        std::string passiveStr = handler->GetNcoreString(LANG_PASSIVE);
 
         Unit::AuraApplicationMap const& auras = unit->GetAppliedAuras();
         handler->PSendSysMessage(LANG_COMMAND_TARGET_LISTAURAS, auras.size());
@@ -463,15 +463,15 @@ public:
             bool talent = GetTalentSpellCost(aurApp->GetBase()->GetId()) > 0;
 
             Aura const* aura = aurApp->GetBase();
-            char const* name = aura->GetSpellInfo()->SpellName[handler->GetSessionDbcLocale()];
+            std::string name = aura->GetSpellInfo()->SpellName;
 
-            if (!ShouldListAura(aura->GetSpellInfo(), spellId, namePart, handler->GetSessionDbcLocale()))
+            if (!ShouldListAura(aura->GetSpellInfo(), spellId, namePart))
                 continue;
 
             std::ostringstream ss_name;
             ss_name << "|cffffffff|Hspell:" << aura->GetId() << "|h[" << name << "]|h|r";
 
-            handler->PSendSysMessage(LANG_COMMAND_TARGET_AURADETAIL, aura->GetId(), (handler->GetSession() ? ss_name.str() : name),
+            handler->PSendSysMessage(LANG_COMMAND_TARGET_AURADETAIL, aura->GetId(), (handler->GetSession() ? ss_name.str() : name.c_str()),
                                      aurApp->GetEffectMask(), aura->GetCharges(), aura->GetStackAmount(), aurApp->GetSlot(),
                                      aura->GetDuration(), aura->GetMaxDuration(), (aura->IsPassive() ? passiveStr : ""),
                                      (talent ? talentStr : ""), aura->GetCasterGUID().IsPlayer() ? "player" : "creature",
@@ -488,7 +488,7 @@ public:
 
             for (AuraEffect const* effect : auraList)
             {
-                if (!ShouldListAura(effect->GetSpellInfo(), spellId, namePart, handler->GetSessionDbcLocale()))
+                if (!ShouldListAura(effect->GetSpellInfo(), spellId, namePart))
                     continue;
 
                 if (!sizeLogged)
@@ -504,17 +504,12 @@ public:
         return true;
     }
 
-    static bool ShouldListAura(SpellInfo const* spellInfo, Optional<uint32> spellId, std::wstring namePart, uint8 locale)
+    static bool ShouldListAura(SpellInfo const* spellInfo, Optional<uint32> spellId, std::wstring namePart)
     {
         if (spellId)
-            return spellInfo->Id == spellId;
-
+            return spellInfo->ID == spellId;
         if (!namePart.empty())
-        {
-            std::string name = spellInfo->SpellName[locale];
-            return Utf8FitTo(name, namePart);
-        }
-
+            return Utf8FitTo(spellInfo->SpellName, namePart);
         return true;
     }
 };

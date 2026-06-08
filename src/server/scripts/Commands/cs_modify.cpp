@@ -35,35 +35,35 @@ public:
     {
         static ChatCommandTable modifyspeedCommandTable =
         {
-            { "fly",            HandleModifyFlyCommand,           SEC_GAMEMASTER,       Console::No },
-            { "all",            HandleModifyASpeedCommand,        SEC_GAMEMASTER,       Console::No },
-            { "walk",           HandleModifySpeedCommand,         SEC_GAMEMASTER,       Console::No },
-            { "backwalk",       HandleModifyBWalkCommand,         SEC_GAMEMASTER,       Console::No },
-            { "swim",           HandleModifySwimCommand,          SEC_GAMEMASTER,       Console::No },
-            { "",               HandleModifyASpeedCommand,        SEC_GAMEMASTER,       Console::No }
+            { "fly",            HandleModifyFlyCommand,           SEC_GAME_MASTER,       Console::No },
+            { "all",            HandleModifyASpeedCommand,        SEC_GAME_MASTER,       Console::No },
+            { "walk",           HandleModifySpeedCommand,         SEC_GAME_MASTER,       Console::No },
+            { "backwalk",       HandleModifyBWalkCommand,         SEC_GAME_MASTER,       Console::No },
+            { "swim",           HandleModifySwimCommand,          SEC_GAME_MASTER,       Console::No },
+            { "",               HandleModifyASpeedCommand,        SEC_GAME_MASTER,       Console::No }
         };
 
         static ChatCommandTable modifyCommandTable =
         {
-            { "hp",             HandleModifyHPCommand,            SEC_GAMEMASTER,       Console::No },
-            { "mana",           HandleModifyManaCommand,          SEC_GAMEMASTER,       Console::No },
-            { "rage",           HandleModifyRageCommand,          SEC_GAMEMASTER,       Console::No },
-            { "runicpower",     HandleModifyRunicPowerCommand,    SEC_GAMEMASTER,       Console::No },
-            { "energy",         HandleModifyEnergyCommand,        SEC_GAMEMASTER,       Console::No },
-            { "money",          HandleModifyMoneyCommand,         SEC_GAMEMASTER,       Console::No },
-            { "scale",          HandleModifyScaleCommand,         SEC_GAMEMASTER,       Console::No },
-            { "bit",            HandleModifyBitCommand,           SEC_GAMEMASTER,       Console::No },
+            { "hp",             HandleModifyHPCommand,            SEC_GAME_MASTER,       Console::No },
+            { "mana",           HandleModifyManaCommand,          SEC_GAME_MASTER,       Console::No },
+            { "rage",           HandleModifyRageCommand,          SEC_GAME_MASTER,       Console::No },
+            { "runicpower",     HandleModifyRunicPowerCommand,    SEC_GAME_MASTER,       Console::No },
+            { "energy",         HandleModifyEnergyCommand,        SEC_GAME_MASTER,       Console::No },
+            { "money",          HandleModifyMoneyCommand,         SEC_GAME_MASTER,       Console::No },
+            { "scale",          HandleModifyScaleCommand,         SEC_GAME_MASTER,       Console::No },
+            { "bit",            HandleModifyBitCommand,           SEC_GAME_MASTER,       Console::No },
             { "faction",        HandleModifyFactionCommand,       SEC_ADMINISTRATOR,    Console::No },
             { "spell",          HandleModifySpellCommand,         SEC_CONSOLE,          Console::No },
-            { "talentpoints",   HandleModifyTalentCommand,        SEC_GAMEMASTER,       Console::No },
-            { "mount",          HandleModifyMountCommand,         SEC_GAMEMASTER,       Console::No },
-            { "honor",          HandleModifyHonorCommand,         SEC_GAMEMASTER,       Console::No },
-            { "reputation",     HandleModifyRepCommand,           SEC_GAMEMASTER,       Console::No },
-            { "arenapoints",    HandleModifyArenaCommand,         SEC_GAMEMASTER,       Console::No },
-            { "drunk",          HandleModifyDrunkCommand,         SEC_GAMEMASTER,       Console::No },
-            { "standstate",     HandleModifyStandStateCommand,    SEC_GAMEMASTER,       Console::No },
-            { "phase",          HandleModifyPhaseCommand,         SEC_GAMEMASTER,       Console::No },
-            { "gender",         HandleModifyGenderCommand,        SEC_GAMEMASTER,       Console::No },
+            { "talentpoints",   HandleModifyTalentCommand,        SEC_GAME_MASTER,       Console::No },
+            { "mount",          HandleModifyMountCommand,         SEC_GAME_MASTER,       Console::No },
+            { "honor",          HandleModifyHonorCommand,         SEC_GAME_MASTER,       Console::No },
+            { "reputation",     HandleModifyRepCommand,           SEC_GAME_MASTER,       Console::No },
+            { "arenapoints",    HandleModifyArenaCommand,         SEC_GAME_MASTER,       Console::No },
+            { "drunk",          HandleModifyDrunkCommand,         SEC_GAME_MASTER,       Console::No },
+            { "standstate",     HandleModifyStandStateCommand,    SEC_GAME_MASTER,       Console::No },
+            { "phase",          HandleModifyPhaseCommand,         SEC_GAME_MASTER,       Console::No },
+            { "gender",         HandleModifyGenderCommand,        SEC_GAME_MASTER,       Console::No },
             { "speed",          modifyspeedCommandTable }
         };
 
@@ -187,7 +187,7 @@ public:
         target->SetMaxPower(POWER_ENERGY, energyPoints);
         target->SetPower(POWER_ENERGY, energyPoints);
 
-        LOG_DEBUG("misc", handler->GetAcoreString(LANG_CURRENT_ENERGY), target->GetMaxPower(POWER_ENERGY));
+        LOG_DEBUG("misc", handler->GetNcoreString(LANG_CURRENT_ENERGY), target->GetMaxPower(POWER_ENERGY));
 
         return true;
     }
@@ -608,7 +608,7 @@ public:
         {
             int32 newmoney = int32(targetMoney) + moneyToAdd;
 
-            LOG_DEBUG("chat.system", handler->GetAcoreString(LANG_CURRENT_MONEY), targetMoney, moneyToAdd, newmoney);
+            LOG_DEBUG("chat.system", handler->GetNcoreString(LANG_CURRENT_MONEY), targetMoney, moneyToAdd, newmoney);
             if (newmoney <= 0)
             {
                 handler->PSendSysMessage(LANG_YOU_TAKE_ALL_MONEY, handler->GetNameLink(target));
@@ -643,7 +643,7 @@ public:
             target->ModifyMoney(moneyToAdd);
         }
 
-        LOG_DEBUG("chat.system", handler->GetAcoreString(LANG_NEW_MONEY), targetMoney, moneyToAdd, target->GetMoney());
+        LOG_DEBUG("chat.system", handler->GetNcoreString(LANG_NEW_MONEY), targetMoney, moneyToAdd, target->GetMoney());
 
         return true;
     }
@@ -761,7 +761,7 @@ public:
 
             for (; r < MAX_REPUTATION_RANK; ++r)
             {
-                std::string rank = handler->GetAcoreString(ReputationRankStrIndex[r]);
+                std::string rank = handler->GetNcoreString(ReputationRankStrIndex[r]);
                 if (rank.empty())
                     continue;
 
@@ -814,16 +814,16 @@ public:
             return false;
         }
 
-        if (factionEntry->reputationListID < 0)
+        if (factionEntry->ReputationListID < 0)
         {
-            handler->SendErrorMessage(LANG_COMMAND_FACTION_NOREP_ERROR, factionEntry->name[handler->GetSessionDbcLocale()], factionId);
+            handler->SendErrorMessage(LANG_COMMAND_FACTION_NOREP_ERROR, factionEntry->Name, factionId);
             return false;
         }
 
         target->GetReputationMgr().SetOneFactionReputation(factionEntry, float(amount), false);
         target->GetReputationMgr().SendState(target->GetReputationMgr().GetState(factionEntry));
 
-        handler->PSendSysMessage(LANG_COMMAND_MODIFY_REP, factionEntry->name[handler->GetSessionDbcLocale()], factionId,
+        handler->PSendSysMessage(LANG_COMMAND_MODIFY_REP, factionEntry->Name, factionId,
                                  handler->GetNameLink(target), target->GetReputationMgr().GetReputation(factionEntry));
         return true;
     }

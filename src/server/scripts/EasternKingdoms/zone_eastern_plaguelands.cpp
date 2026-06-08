@@ -85,7 +85,7 @@ public:
             _playerGUID.Clear();
             events.Reset();
             summons.DespawnAll();
-            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
         }
 
         void SetData(uint32 faction, uint32) override
@@ -249,7 +249,7 @@ public:
 
         void SpellHit(Unit*, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_SHOOT && roll_chance_i(7))
+            if (spellInfo->ID == SPELL_SHOOT && roll_chance_i(7))
                 me->CastSpell(me, SPELL_DEATHS_DOOR, true);
         }
 

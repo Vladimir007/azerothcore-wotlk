@@ -1,22 +1,5 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-#ifndef MPSCQueue_h__
-#define MPSCQueue_h__
+#ifndef MPSC_QUEUE_H
+#define MPSC_QUEUE_H
 
 #include <atomic>
 #include <memory>
@@ -24,7 +7,7 @@
 namespace Acore::Impl
 {
     /**
-     * @brief C++ implementation of Dmitry Vyukov's lock-free MPSC queue (Non-Intrusive).
+     * @brief C++ implementation of lock-free MPSC queue (Non-Intrusive).
      *
      * This queue allows multiple producers to enqueue items concurrently, but only one consumer
      * can dequeue items. The queue is lock-free and non-intrusive, meaning it does not modify
@@ -41,8 +24,7 @@ namespace Acore::Impl
          *
          * Initializes the queue with a dummy node and sets up atomic pointers to the head and tail.
          */
-        MPSCQueueNonIntrusive()
-            : _head(new Node(nullptr)), _tail(_head.load(std::memory_order_acquire))
+        MPSCQueueNonIntrusive() : _head(new Node(nullptr)), _tail(_head.load(std::memory_order_acquire))
         {
             Node* front = _head.load(std::memory_order_acquire);
             front->Next.store(nullptr, std::memory_order_release);  ///< Store with release to ensure visibility
@@ -57,7 +39,10 @@ namespace Acore::Impl
         {
             T* output;
             while (Dequeue(output))
+            {
                 delete output;
+                output = nullptr;
+            }
 
             // Properly delete remaining nodes
             Node* front = _head.load(std::memory_order_acquire);
@@ -130,7 +115,7 @@ namespace Acore::Impl
     };
 
     /**
-     * @brief C++ implementation of Dmitry Vyukov's lock-free MPSC queue (Intrusive).
+     * @brief C++ implementation of lock-free MPSC queue (Intrusive).
      *
      * This queue allows multiple producers to enqueue items concurrently, but only one consumer
      * can dequeue items. The queue is lock-free and intrusive, meaning that the enqueued objects
@@ -166,7 +151,10 @@ namespace Acore::Impl
         {
             T* output;
             while (Dequeue(output))
+            {
                 delete output;
+                output = nullptr;
+            }
         }
 
         /**
@@ -251,4 +239,4 @@ namespace Acore::Impl
 template<typename T, std::atomic<T*> T::* IntrusiveLink = nullptr>
 using MPSCQueue = std::conditional_t<IntrusiveLink != nullptr, Acore::Impl::MPSCQueueIntrusive<T, IntrusiveLink>, Acore::Impl::MPSCQueueNonIntrusive<T>>;
 
-#endif // MPSCQueue_h__
+#endif

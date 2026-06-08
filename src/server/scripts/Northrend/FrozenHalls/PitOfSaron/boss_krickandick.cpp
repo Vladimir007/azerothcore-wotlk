@@ -115,7 +115,7 @@ public:
         {
             if (!target || !spell)
                 return;
-            if (spell->Id == SPELL_PURSUIT && target->IsPlayer())
+            if (spell->ID == SPELL_PURSUIT && target->IsPlayer())
             {
                 Talk(EMOTE_ICK_CHASE, target);
                 AttackStart(target);

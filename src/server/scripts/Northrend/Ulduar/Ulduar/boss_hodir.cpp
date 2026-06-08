@@ -296,7 +296,7 @@ struct boss_hodir : public BossAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spell) override
     {
-        switch (spell->Id)
+        switch (spell->ID)
         {
             case SPELL_ICICLE_TBBA:
                 me->CastSpell(target, SPELL_ICICLE_VISUAL_UNPACKED, true);
@@ -457,7 +457,7 @@ struct boss_hodir : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_TELEPORT)
+        if (spellInfo->ID == SPELL_TELEPORT)
         {
             me->DespawnOrUnsummon();
             instance->SetData(EVENT_KEEPER_TELEPORTED, DONE);
@@ -667,7 +667,7 @@ struct npc_ulduar_toasty_fire : public NullCreatureAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spell) override
     {
-        switch (spell->Id)
+        switch (spell->ID)
         {
             case SPELL_ICE_SHARDS_SMALL:
             case SPELL_ICE_SHARDS_BIG:
@@ -703,7 +703,7 @@ struct npc_ulduar_hodir_priest : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_FLASH_FREEZE_TRAPPED_NPC)
+        if (spell->ID == SPELL_FLASH_FREEZE_TRAPPED_NPC)
         {
             events.Reset();
             events.ScheduleEvent(EVENT_TRY_FREE_HELPER, 2s);
@@ -788,7 +788,7 @@ struct npc_ulduar_hodir_druid : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_FLASH_FREEZE_TRAPPED_NPC)
+        if (spell->ID == SPELL_FLASH_FREEZE_TRAPPED_NPC)
         {
             events.Reset();
             events.ScheduleEvent(EVENT_TRY_FREE_HELPER, 2s);
@@ -874,7 +874,7 @@ struct npc_ulduar_hodir_shaman : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_FLASH_FREEZE_TRAPPED_NPC)
+        if (spell->ID == SPELL_FLASH_FREEZE_TRAPPED_NPC)
         {
             events.Reset();
             events.ScheduleEvent(EVENT_TRY_FREE_HELPER, 2s);
@@ -884,7 +884,7 @@ struct npc_ulduar_hodir_shaman : public ScriptedAI
     void SpellHitTarget(Unit* target, SpellInfo const* spell) override
     {
         uint32 spellid = sSpellMgr->GetSpellIdForDifficulty(SPELL_SHAMAN_STORM_CLOUD, me);
-        if (target && spell->Id == spellid)
+        if (target && spell->ID == spellid)
             if (Aura* a = target->GetAura(spellid, me->GetGUID()))
                 a->SetStackAmount(spell->StackAmount);
     }
@@ -968,7 +968,7 @@ struct npc_ulduar_hodir_mage : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_FLASH_FREEZE_TRAPPED_NPC)
+        if (spell->ID == SPELL_FLASH_FREEZE_TRAPPED_NPC)
         {
             events.Reset();
             events.ScheduleEvent(EVENT_TRY_FREE_HELPER, 2s);

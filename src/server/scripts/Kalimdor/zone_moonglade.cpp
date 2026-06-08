@@ -576,7 +576,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_ELUNE_CANDLE)
+            if (spell->ID == SPELL_ELUNE_CANDLE)
             {
                 if (me->HasAura(SPELL_OMEN_STARFALL))
                     me->RemoveAurasDueToSpell(SPELL_OMEN_STARFALL);

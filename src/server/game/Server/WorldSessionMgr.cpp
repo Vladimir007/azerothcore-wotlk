@@ -18,7 +18,6 @@
 #include "Chat.h"
 #include "ChatPackets.h"
 #include "GameTime.h"
-#include "Metric.h"
 #include "Player.h"
 #include "World.h"
 #include "WorldSession.h"
@@ -91,10 +90,6 @@ WorldSession* WorldSessionMgr::FindOfflineSessionForCharacterGUID(ObjectGuid::Lo
 void WorldSessionMgr::UpdateSessions(uint32 const diff)
 {
     {
-        METRIC_DETAILED_NO_THRESHOLD_TIMER("world_update_time",
-            METRIC_TAG("type", "Add sessions"),
-            METRIC_TAG("parent_type", "Update sessions"));
-
         ///- Add new sessions
         WorldSession* sess = nullptr;
         while (_addSessQueue.next(sess))
@@ -133,7 +128,6 @@ void WorldSessionMgr::UpdateSessions(uint32 const diff)
         }
 
         [[maybe_unused]] uint32 currentSessionId = itr->first;
-        METRIC_DETAILED_TIMER("world_update_sessions_time", METRIC_TAG("account_id", std::to_string(currentSessionId)));
 
         if (!pSession->Update(diff, updater))
         {
@@ -181,24 +175,16 @@ bool WorldSessionMgr::KickSession(uint32 id)
 /// Kick (and save) all players
 void WorldSessionMgr::KickAll()
 {
-    _queuedPlayer.clear();                                 // prevent send queue update packet and login queued sessions
+    // Prevent send queue update packet and login queued sessions
+    _queuedPlayer.clear();
 
-    // session not removed at kick and will removed in next update tick
+    // Session not removed at kick and will be removed in next update tick
     for (SessionMap::const_iterator itr = _sessions.begin(); itr != _sessions.end(); ++itr)
         itr->second->KickPlayer("KickAll sessions");
 
-    // pussywizard: kick offline sessions
+    // Kick offline sessions
     for (SessionMap::const_iterator itr = _offlineSessions.begin(); itr != _offlineSessions.end(); ++itr)
         itr->second->KickPlayer("KickAll offline sessions");
-}
-
-/// Kick (and save) all players with security level less `sec`
-void WorldSessionMgr::KickAllLess(AccountTypes sec)
-{
-    // session not removed at kick and will removed in next update tick
-    for (SessionMap::const_iterator itr = _sessions.begin(); itr != _sessions.end(); ++itr)
-        if (itr->second->GetSecurity() < sec)
-            itr->second->KickPlayer("KickAllLess");
 }
 
 void WorldSessionMgr::AddSession(WorldSession* session)
@@ -323,7 +309,7 @@ void WorldSessionMgr::AddSession_(WorldSession* session)
     // don't count this session when checking player limit
     --Sessions;
 
-    if (pLimit > 0 && Sessions >= pLimit && AccountMgr::IsPlayerAccount(session->GetSecurity()) && !session->CanSkipQueue() && !HasRecentlyDisconnected(session))
+    if (pLimit > 0 && Sessions >= pLimit && !session->IsGameMaster() && !session->CanSkipQueue() && !HasRecentlyDisconnected(session))
     {
         AddQueuedPlayer(session);
         UpdateMaxSessionCounters();
@@ -364,7 +350,7 @@ void WorldSessionMgr::UpdateMaxSessionCounters()
 }
 
 /// Send a packet to all players (except self if mentioned)
-void WorldSessionMgr::SendGlobalMessage(WorldPacket const* packet, WorldSession* self, TeamId teamId)
+void WorldSessionMgr::SendGlobalMessage(WorldPacket const* packet, WorldSession* self, TeamID teamId)
 {
     SessionMap::const_iterator itr;
     for (itr = _sessions.begin(); itr != _sessions.end(); ++itr)
@@ -381,7 +367,7 @@ void WorldSessionMgr::SendGlobalMessage(WorldPacket const* packet, WorldSession*
 }
 
 /// Send a packet to all GMs (except self if mentioned)
-void WorldSessionMgr::SendGlobalGMMessage(WorldPacket const* packet, WorldSession* self, TeamId teamId)
+void WorldSessionMgr::SendGlobalGMMessage(WorldPacket const* packet, WorldSession* self, TeamID teamId)
 {
     SessionMap::iterator itr;
     for (itr = _sessions.begin(); itr != _sessions.end(); ++itr)
@@ -390,7 +376,7 @@ void WorldSessionMgr::SendGlobalGMMessage(WorldPacket const* packet, WorldSessio
             itr->second->GetPlayer() &&
             itr->second->GetPlayer()->IsInWorld() &&
             itr->second != self &&
-            !AccountMgr::IsPlayerAccount(itr->second->GetSecurity()) &&
+            itr->second->IsGameMaster() &&
             (teamId == TEAM_NEUTRAL || itr->second->GetPlayer()->GetTeamId() == teamId))
         {
             itr->second->SendPacket(packet);

@@ -4,7 +4,7 @@
 #include "MMapMgr.h"
 #include "ScriptMgr.h"
 #include "VMapFactory.h"
-#include "VMapMgr2.h"
+#include "VMapMgr.h"
 
 void GridTerrainLoader::LoadTerrain()
 {
@@ -101,7 +101,7 @@ bool GridTerrainLoader::ExistMap(uint32 mapid, int gx, int gy)
         return false;
     }
 
-    map_fileheader header;
+    MapFileHeader header;
     if (!fileStream.read(reinterpret_cast<char*>(&header), sizeof(header)))
     {
         LOG_DEBUG("maps", "Map file '{}': unable to read header", mapFileName);
@@ -120,25 +120,21 @@ bool GridTerrainLoader::ExistMap(uint32 mapid, int gx, int gy)
 
 bool GridTerrainLoader::ExistVMap(uint32 mapid, int gx, int gy)
 {
-    if (VMAP::IVMapMgr* vmgr = VMAP::VMapFactory::createOrGetVMapMgr())
+    if (VMAP::IVMapMgr* vMgr = VMAP::VMapFactory::createOrGetVMapMgr())
     {
-        if (vmgr->isMapLoadingEnabled())
+        VMAP::LoadResult result = vMgr->existsMap((sWorld->GetDataPath() + "vMaps").c_str(), mapid, gx, gy);
+        switch (result)
         {
-            VMAP::LoadResult result = vmgr->existsMap((sWorld->GetDataPath() + "vmaps").c_str(), mapid, gx, gy);
-            std::string name = vmgr->getDirFileName(mapid, gx, gy);
-            switch (result)
-            {
-            case VMAP::LoadResult::Success:
-                break;
-            case VMAP::LoadResult::FileNotFound:
-                LOG_DEBUG("maps", "VMap file '{}' does not exist", (sWorld->GetDataPath() + "vmaps/" + name));
-                LOG_DEBUG("maps", "Please place VMAP files (*.vmtree and *.vmtile) in the vmap directory ({}), or correct the DataDir setting in your worldserver.conf file.", (sWorld->GetDataPath() + "vmaps/"));
-                return false;
-            case VMAP::LoadResult::VersionMismatch:
-                LOG_ERROR("maps", "VMap file '{}' couldn't be loaded", (sWorld->GetDataPath() + "vmaps/" + name));
-                LOG_ERROR("maps", "This is because the version of the VMap file and the version of this module are different, please re-extract the maps with the tools compiled with this module.");
-                return false;
-            }
+        case VMAP::LoadResult::Success:
+            break;
+        case VMAP::LoadResult::FileNotFound:
+            LOG_DEBUG("maps", "VMap file for map '{}' [{}, {}] does not exist", mapid, gx, gy);
+            LOG_DEBUG("maps", "Please place VMAP files (*.vmtree and *.vmtile) in the vmap directory ({}), or correct the DataDir setting in your worldserver.conf file.", (sWorld->GetDataPath() + "vMaps/"));
+            return false;
+        case VMAP::LoadResult::VersionMismatch:
+            LOG_DEBUG("maps", "VMap file for map '{}' [{}, {}] couldn't be loaded", mapid, gx, gy);
+            LOG_ERROR("maps", "This is because the version of the VMap file and the version of this module are different, please re-extract the maps with the tools compiled with this module.");
+            return false;
         }
     }
 

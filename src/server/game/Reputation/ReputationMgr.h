@@ -61,7 +61,7 @@ public:                                                 // constructors and glob
     ~ReputationMgr() {}
 
     void SaveToDB(CharacterDatabaseTransaction trans);
-    void LoadFromDB(PreparedQueryResult result);
+    void LoadFromDB(QueryResult result);
 public:                                                 // statics
     static const int32 PointsInRank[MAX_REPUTATION_RANK];
     static const int32 Reputation_Cap;
@@ -80,7 +80,7 @@ public:                                                 // accessors
 
     FactionState const* GetState(FactionEntry const* factionEntry) const
     {
-        return factionEntry->CanHaveReputation() ? GetState(factionEntry->reputationListID) : nullptr;
+        return factionEntry->CanHaveReputation() ? GetState(factionEntry->ReputationListID) : nullptr;
     }
 
     FactionState const* GetState(RepListID id) const
@@ -105,7 +105,7 @@ public:                                                 // accessors
 
     ReputationRank const* GetForcedRankIfAny(FactionTemplateEntry const* factionTemplateEntry) const
     {
-        ForcedReactions::const_iterator forceItr = _forcedReactions.find(factionTemplateEntry->faction);
+        ForcedReactions::const_iterator forceItr = _forcedReactions.find(factionTemplateEntry->Faction);
         return forceItr != _forcedReactions.end() ? &forceItr->second : nullptr;
     }
 

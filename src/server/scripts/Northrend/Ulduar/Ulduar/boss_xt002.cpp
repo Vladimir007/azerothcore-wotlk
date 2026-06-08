@@ -452,7 +452,7 @@ struct npc_xt002_heart : public PassiveAI
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
         // spawn not-so-random robots
-        if (spellInfo->Id == SPELL_ENERGY_ORB_TRIGGER && target->GetEntry() == NPC_PILE_TRIGGER)
+        if (spellInfo->ID == SPELL_ENERGY_ORB_TRIGGER && target->GetEntry() == NPC_PILE_TRIGGER)
             switch (_spawnSelection)
             {
                 case 0:
@@ -833,7 +833,7 @@ class spell_xt002_gravity_bomb_aura : public AuraScript
                 if (xt002->HasAura(aurEff->GetAmount()))   // Heartbreak aura indicating hard mode
                     if (Creature* creature = xt002->SummonCreature(NPC_VOID_ZONE, player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), 0, TEMPSUMMON_TIMED_DESPAWN, 180000))
                     {
-                        int32 damage = GetSpellInfo()->Id ==  SPELL_GRAVITY_BOMB_TRIGGER_10 ? 5000 : 7500;
+                        int32 damage = GetSpellInfo()->ID ==  SPELL_GRAVITY_BOMB_TRIGGER_10 ? 5000 : 7500;
                         creature->CastCustomSpell(creature, SPELL_VOID_ZONE_DAMAGE, &damage, 0, 0, true);
                     }
     }

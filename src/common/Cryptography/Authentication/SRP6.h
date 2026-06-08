@@ -1,31 +1,14 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef NCORE_SRP6_H
+#define NCORE_SRP6_H
 
-#ifndef AZEROTHCORE_SRP6_H
-#define AZEROTHCORE_SRP6_H
-
+#include <optional>
 #include "AuthDefines.h"
 #include "BigNumber.h"
 #include "CryptoHash.h"
-#include <optional>
 
 namespace Acore::Crypto
 {
-    class AC_COMMON_API SRP6
+    class SRP6
     {
     public:
         static constexpr std::size_t SALT_LENGTH = 32;
@@ -41,12 +24,9 @@ namespace Acore::Crypto
         static std::array<uint8, 32> const N;
 
         // username + password must be passed through Utf8ToUpperOnlyLatin FIRST!
-        static std::pair<Salt, Verifier> MakeRegistrationData(std::string const& username, std::string const& password);
-
-        // username + password must be passed through Utf8ToUpperOnlyLatin FIRST!
         static bool CheckLogin(std::string const& username, std::string const& password, Salt const& salt, Verifier const& verifier)
         {
-            return (verifier == CalculateVerifier(username, password, salt));
+            return verifier == CalculateVerifier(username, password, salt);
         }
 
         static SHA1::Digest GetSessionVerifier(EphemeralKey const& A, SHA1::Digest const& clientM, SessionKey const& K)
@@ -63,13 +43,16 @@ namespace Acore::Crypto
         static Verifier CalculateVerifier(std::string const& username, std::string const& password, Salt const& salt);
         static SessionKey SHA1Interleave(EphemeralKey const& S);
 
-        /* global algorithm parameters */
-        static BigNumber const _g; // a [g]enerator for the ring of integers mod N, algorithm parameter
-        static BigNumber const _N; // the modulus, an algorithm parameter; all operations are mod this
+        /* Global algorithm parameters */
+        static BigNumber const _g; // A generator for the ring of integers mods N, algorithm parameter
+        static BigNumber const _N; // The modulus, an algorithm parameter; all operations are mod this
 
-        static EphemeralKey _B(BigNumber const& b, BigNumber const& v) { return ((_g.ModExp(b, _N) + (v * 3)) % N).ToByteArray<EPHEMERAL_KEY_LENGTH>(); }
+        static EphemeralKey _B(BigNumber const& b, BigNumber const& v)
+        {
+            return ((_g.ModExp(b, _N) + v * 3) % N).ToByteArray<EPHEMERAL_KEY_LENGTH>();
+        }
 
-        /* per-instantiation parameters, set on construction */
+        /* Per-instantiation parameters, set on construction */
         SHA1::Digest const _I; // H(I) - the username, all uppercase
         BigNumber const _b; // b - randomly chosen by the server, 19 bytes, never given out
         BigNumber const _v; // v - the user's password verifier, derived from s + H(USERNAME || ":" || PASSWORD)

@@ -108,7 +108,7 @@ public:
                     disableTypeStr = "battleground";
                     break;
                 }
-            case DISABLE_TYPE_OUTDOORPVP:
+            case DISABLE_TYPE_OUTDOOR_PVP:
                 {
                     if (entry > MAX_OUTDOORPVP_TYPES)
                     {
@@ -136,7 +136,7 @@ public:
         stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_DISABLES);
         stmt->SetData(0, entry);
         stmt->SetData(1, disableType);
-        PreparedQueryResult result = WorldDatabase.Query(stmt);
+        QueryResult result = WorldDatabase.Query(stmt);
         if (result)
         {
             handler->SendErrorMessage("This {} (Id: {}) is already disabled.", disableTypeStr, entry);
@@ -181,7 +181,7 @@ public:
 
     static bool HandleAddDisableOutdoorPvPCommand(ChatHandler* handler,  uint32 entry, uint8 flags, std::string disableComment)
     {
-        HandleAddDisables(handler, entry, flags, disableComment, DISABLE_TYPE_OUTDOORPVP);
+        HandleAddDisables(handler, entry, flags, disableComment, DISABLE_TYPE_OUTDOOR_PVP);
         return true;
     }
 
@@ -211,7 +211,7 @@ public:
             case DISABLE_TYPE_ACHIEVEMENT_CRITERIA:
                 disableTypeStr = "achievement criteria";
                 break;
-            case DISABLE_TYPE_OUTDOORPVP:
+            case DISABLE_TYPE_OUTDOOR_PVP:
                 disableTypeStr = "outdoorpvp";
                 break;
             case DISABLE_TYPE_VMAP:
@@ -223,7 +223,7 @@ public:
         stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_DISABLES);
         stmt->SetData(0, entry);
         stmt->SetData(1, disableType);
-        PreparedQueryResult result = WorldDatabase.Query(stmt);
+        QueryResult result = WorldDatabase.Query(stmt);
         if (!result)
         {
             handler->SendErrorMessage("This {} (Id: {}) is not disabled.", disableTypeStr, entry);
@@ -266,7 +266,7 @@ public:
 
     static bool HandleRemoveDisableOutdoorPvPCommand(ChatHandler* handler, uint32 entry)
     {
-        return HandleRemoveDisables(handler, entry, DISABLE_TYPE_OUTDOORPVP);
+        return HandleRemoveDisables(handler, entry, DISABLE_TYPE_OUTDOOR_PVP);
     }
 
     static bool HandleRemoveDisableVmapCommand(ChatHandler* handler, uint32 entry)

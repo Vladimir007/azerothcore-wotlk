@@ -19,7 +19,7 @@
 #define SCRIPT_OBJECT_GLOBAL_SCRIPT_H_
 
 #include "DatabaseEnvFwd.h"
-#include "DBCEnums.h"
+#include "DBCDefines.h"
 #include "ObjectGuid.h"
 #include "ScriptObject.h"
 #include <map>

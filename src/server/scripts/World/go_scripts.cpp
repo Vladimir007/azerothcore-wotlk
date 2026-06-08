@@ -198,7 +198,7 @@ public:
     bool OnGossipHello(Player* /*player*/, GameObject* go) override
     {
         // xinef: prevent spawning hundreds of them
-        if (go->GetGoType() == GAMEOBJECT_TYPE_GOOBER && !go->FindNearestCreature(NPC_GOGGEROC, 20.0f))
+        if (go->GetGoType() == GAME_OBJECT_TYPE_GOOBER && !go->FindNearestCreature(NPC_GOGGEROC, 20.0f))
             go->SummonCreature(NPC_GOGGEROC, 0.0f, 0.0f, 0.0f, 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 300000);
 
         return false;
@@ -865,7 +865,7 @@ public:
             if (reportUse)
                 return false;
 
-            if (me->GetGoType() == GAMEOBJECT_TYPE_GOOBER)
+            if (me->GetGoType() == GAME_OBJECT_TYPE_GOOBER)
             {
                 if (player->GetQuestStatus(QUEST_THE_FIRST_TRIAL) == QUEST_STATUS_INCOMPLETE)
                 {
@@ -930,7 +930,7 @@ public:
     //TODO: use gossip option ("Transcript the Tablet") instead, if Trinity adds support.
     bool OnGossipHello(Player* player, GameObject* go) override
     {
-        if (go->GetGoType() != GAMEOBJECT_TYPE_QUESTGIVER)
+        if (go->GetGoType() != GAME_OBJECT_TYPE_QUEST_GIVER)
             return true;
 
         if (player->GetQuestStatus(4296) == QUEST_STATUS_INCOMPLETE)
@@ -974,7 +974,7 @@ public:
 
     bool OnGossipHello(Player* player, GameObject* go) override
     {
-        if (go->GetGoType() == GAMEOBJECT_TYPE_GOOBER)
+        if (go->GetGoType() == GAME_OBJECT_TYPE_GOOBER)
             player->SummonCreature(NPC_ARIKARA, -5008.338f, -2118.894f, 83.657f, 0.874f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000);
 
         return true;
@@ -1129,7 +1129,7 @@ public:
 
     bool OnGossipHello(Player* player, GameObject* go) override
     {
-        if (go->GetGoType() == GAMEOBJECT_TYPE_QUESTGIVER) /* != GAMEOBJECT_TYPE_QUESTGIVER) */
+        if (go->GetGoType() == GAME_OBJECT_TYPE_QUEST_GIVER) /* != GAME_OBJECT_TYPE_QUESTGIVER) */
             player->PrepareQuestMenu(go->GetGUID()); /* return true*/
 
         AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_FEL_CRYSTALFORGE_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);
@@ -1188,7 +1188,7 @@ public:
 
     bool OnGossipHello(Player* player, GameObject* go) override
     {
-        if (go->GetGoType() == GAMEOBJECT_TYPE_QUESTGIVER) /* != GAMEOBJECT_TYPE_QUESTGIVER) */
+        if (go->GetGoType() == GAME_OBJECT_TYPE_QUEST_GIVER) /* != GAME_OBJECT_TYPE_QUESTGIVER) */
             player->PrepareQuestMenu(go->GetGUID()); /* return true*/
 
         AddGossipItemFor(player, GOSSIP_ICON_CHAT, GOSSIP_BASHIR_CRYSTALFORGE_ITEM_1, GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF);

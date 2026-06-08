@@ -531,7 +531,7 @@ struct npc_earthen_ring_flamecaller : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        switch (spellInfo->Id)
+        switch (spellInfo->ID)
         {
         case SPELL_SHAMANS_LOOK_FOR_OPENING:
             _events.ScheduleEvent(EVENT_LOOKFOROPENING_0, 17s);

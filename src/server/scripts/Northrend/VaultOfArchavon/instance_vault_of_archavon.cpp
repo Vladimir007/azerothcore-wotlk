@@ -217,7 +217,7 @@ public:
                 case CRITERIA_EARTH_WIND_FIRE_25:
                     if (ArchavonDeath && EmalonDeath && KoralonDeath)
                     {
-                        // instance difficulty check is already done in db (achievement_criteria_data)
+                        // instance difficulty check is already done in db (world_achievement_criteria_data)
                         // int() for Visual Studio, compile errors with std::abs(time_t)
                         return (std::abs(int(ArchavonDeath - EmalonDeath)) < MINUTE && \
                                 std::abs(int(EmalonDeath - KoralonDeath)) < MINUTE && \

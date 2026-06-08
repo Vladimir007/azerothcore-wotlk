@@ -39,7 +39,7 @@ public:
             { "switch", HandleBattlefieldSwitch, SEC_ADMINISTRATOR, Console::Yes },
             { "timer",  HandleBattlefieldTimer,  SEC_ADMINISTRATOR, Console::Yes },
             { "enable", HandleBattlefieldEnable, SEC_ADMINISTRATOR, Console::Yes },
-            { "queue",  HandleBattlefieldQueue,  SEC_GAMEMASTER,    Console::Yes }
+            { "queue",  HandleBattlefieldQueue,  SEC_GAME_MASTER,    Console::Yes }
         };
         static ChatCommandTable commandTable =
         {
@@ -187,7 +187,7 @@ public:
 
         static char const* teamNames[PVP_TEAMS_COUNT] = { "Alliance", "Horde" };
 
-        std::string offlineSuffix = handler->GetAcoreString(LANG_OFFLINE);
+        std::string offlineSuffix = handler->GetNcoreString(LANG_OFFLINE);
 
         auto nameOf = [offlineSuffix](ObjectGuid guid) -> std::string
         {
@@ -198,7 +198,7 @@ public:
 
         for (uint8 i = 0; i < PVP_TEAMS_COUNT; ++i)
         {
-            TeamId team = TeamId(i);
+            TeamID team = TeamID(i);
 
             GuidUnorderedSet const& inQueue = bf->GetPlayersQueueSet(team);
             PlayerTimerMap   const& invited = bf->GetInvitedPlayersMap(team);

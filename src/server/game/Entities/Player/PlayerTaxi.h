@@ -55,7 +55,7 @@ public:
     void AppendTaximaskTo(ByteBuffer& data, bool all);
 
     // Destinations
-    bool LoadTaxiDestinationsFromString(std::string const& values, TeamId teamId);
+    bool LoadTaxiDestinationsFromString(std::string const& values, TeamID teamId);
     std::string SaveTaxiDestinationsToString();
 
     void ClearTaxiDestinations() { m_TaxiDestinations.clear(); }

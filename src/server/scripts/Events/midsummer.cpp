@@ -59,7 +59,7 @@ enum eBonfire
 static bool BonfireStampedOutState[COUNT_GO_BONFIRE_ALLIANCE + COUNT_GO_BONFIRE_HORDE];
 
 // <mapId, zoneId, teamId>, <state>
-const std::map<std::tuple<uint32, uint32, TeamId>, bool*> BonfireStateStore = {
+const std::map<std::tuple<uint32, uint32, TeamID>, bool*> BonfireStateStore = {
     { { MAP_EASTERN_KINGDOMS, AREA_DUN_MOROGH,          TEAM_ALLIANCE }, &BonfireStampedOutState[0] },
     { { MAP_EASTERN_KINGDOMS, AREA_BADLANDS,            TEAM_HORDE    }, &BonfireStampedOutState[1] },
     { { MAP_EASTERN_KINGDOMS, AREA_BLASTED_LANDS,       TEAM_ALLIANCE }, &BonfireStampedOutState[2] },
@@ -332,7 +332,7 @@ struct npc_midsummer_bonfire : public ScriptedAI
         if (!caster->IsPlayer())
             return;
 
-        switch (spellInfo->Id)
+        switch (spellInfo->ID)
         {
             case SPELL_TOSS_FUEL_ON_BONFIRE:
             {
@@ -359,7 +359,7 @@ struct npc_midsummer_bonfire : public ScriptedAI
 
 private:
     bool* _isStampedOut;
-    TeamId _teamId;
+    TeamID _teamId;
     uint8 _type;
     GameObject* _spellFocus;
     GameObject* _bonfire;
@@ -578,7 +578,7 @@ struct npc_midsummer_ribbon_pole_target : public ScriptedAI
         if (!dancer)
             return;
 
-        switch (spell->Id)
+        switch (spell->ID)
         {
             case SPELL_TEST_RIBBON_POLE_CHANNEL_BLUE:
             case SPELL_TEST_RIBBON_POLE_CHANNEL_RED:
@@ -988,7 +988,7 @@ class spell_midsummer_fling_torch : public SpellScript
         // next target is chosen on the opposite half of the circle
         // so a minimum flight duration of the torch is guaranteed
         float angle = 0.0f;
-        if (GetSpellInfo()->Id == SPELL_FLING_TORCH_DUMMY)
+        if (GetSpellInfo()->ID == SPELL_FLING_TORCH_DUMMY)
             angle = frand(-1.0f * M_PI, 1.0f * M_PI); // full circle
         else
             angle = frand(-0.5f * M_PI, 0.5f * M_PI); // half circle
@@ -1007,7 +1007,7 @@ class spell_midsummer_fling_torch : public SpellScript
         if (!caster || !caster->ToPlayer()) // caster cant be null, but meh :p
             return;
 
-        if (GetSpellInfo()->Id != SPELL_FLING_TORCH_DUMMY)
+        if (GetSpellInfo()->ID != SPELL_FLING_TORCH_DUMMY)
         {
             if (!handled)
                 if (const WorldLocation* loc = GetExplTargetDest())

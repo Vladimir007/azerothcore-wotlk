@@ -40,12 +40,16 @@ public:
     virtual ~ChatHandler() { }
 
     // Builds chat packet and returns receiver guid position in the packet to substitute in whisper builders
-    static std::size_t BuildChatPacket(WorldPacket& data, ChatMsg chatType, Language language, ObjectGuid senderGUID, ObjectGuid receiverGUID, std::string_view message, uint8 chatTag,
-                                  std::string const& senderName = "", std::string const& receiverName = "",
-                                  uint32 achievementId = 0, bool gmMessage = false, std::string const& channelName = "");
+    static std::size_t BuildChatPacket(
+        WorldPacket& data, ChatMsg chatType, Language language, ObjectGuid senderGUID, ObjectGuid receiverGUID,
+        std::string_view message, uint8 chatTag,
+        const std::string& senderName = "", const std::string& receiverName = "",
+        uint32 achievementId = 0, bool gmMessage = false, const std::string& channelName = "");
 
     // Builds chat packet and returns receiver guid position in the packet to substitute in whisper builders
-    static std::size_t BuildChatPacket(WorldPacket& data, ChatMsg chatType, Language language, WorldObject const* sender, WorldObject const* receiver, std::string_view message, uint32 achievementId = 0, std::string const& channelName = "", LocaleConstant locale = DEFAULT_LOCALE);
+    static std::size_t BuildChatPacket(
+        WorldPacket& data, ChatMsg chatType, Language language, const WorldObject* sender, const WorldObject* receiver,
+        std::string_view message, uint32 achievementId = 0, const std::string& channelName = "");
 
     static char* LineFromMessage(char*& pos) { char* start = strtok(pos, "\n"); pos = nullptr; return start; }
 
@@ -54,7 +58,7 @@ public:
     void SendNotification(uint32 strId, Args&&... args)
     {
         if (HasSession())
-            SendNotification(Acore::StringFormat(GetAcoreString(strId), std::forward<Args>(args)...));
+            SendNotification(Acore::StringFormat(GetNcoreString(strId), std::forward<Args>(args)...));
     }
     template<typename... Args>
     void SendNotification(char const* fmt, Args&&... args)
@@ -71,7 +75,7 @@ public:
         DoForAllValidSessions([&](Player* player)
             {
                 m_session = player->GetSession();
-                SendGMText(Acore::StringFormat(GetAcoreString(strId), std::forward<Args>(args)...));
+                SendGMText(Acore::StringFormat(GetNcoreString(strId), std::forward<Args>(args)...));
             });
     }
     template<typename... Args>
@@ -93,7 +97,7 @@ public:
         DoForAllValidSessions([&](Player* player)
             {
                 m_session = player->GetSession();
-                SendWorldText(Acore::StringFormat(GetAcoreString(strId), std::forward<Args>(args)...));
+                SendWorldText(Acore::StringFormat(GetNcoreString(strId), std::forward<Args>(args)...));
             });
     }
     template<typename... Args>
@@ -115,7 +119,7 @@ public:
         DoForAllValidSessions([&](Player* player)
             {
                 m_session = player->GetSession();
-                SendWorldTextOptional(Acore::StringFormat(GetAcoreString(strId), std::forward<Args>(args)...), flag);
+                SendWorldTextOptional(Acore::StringFormat(GetNcoreString(strId), std::forward<Args>(args)...), flag);
             });
     }
     template<typename... Args>
@@ -130,7 +134,7 @@ public:
     }
 
     // function with different implementation for chat/console
-    virtual std::string GetAcoreString(uint32 entry) const;
+    virtual std::string GetNcoreString(uint32 entry) const;
     virtual void SendSysMessage(std::string_view str, bool escapeCharacters = false);
 
     void SendSysMessage(uint32 entry);
@@ -153,22 +157,7 @@ public:
     template<typename... Args>
     std::string PGetParseString(uint32 entry, Args&&... args) const
     {
-        return Acore::StringFormat(GetAcoreString(entry), std::forward<Args>(args)...);
-    }
-
-    std::string const* GetModuleString(std::string module, uint32 id) const;
-
-    template<typename... Args>
-    void PSendModuleSysMessage(std::string module, uint32 id, Args&&... args)
-    {
-        if (HasSession())
-            SendSysMessage(PGetParseModuleString(module, id, std::forward<Args>(args)...));
-    }
-
-    template<typename... Args>
-    std::string PGetParseModuleString(std::string module, uint32 id, Args&&... args) const
-    {
-        return Acore::StringFormat(GetModuleString(module, id)->c_str(), std::forward<Args>(args)...);
+        return Acore::StringFormat(GetNcoreString(entry), std::forward<Args>(args)...);
     }
 
     void SendErrorMessage(uint32 entry);
@@ -240,7 +229,7 @@ public:
     bool IsConsole() const { return (m_session == nullptr); }
     Player* GetPlayer() const;
     WorldSession* GetSession() { return m_session; }
-    bool IsAvailable(uint32 securityLevel) const;
+    bool IsAvailable(bool requireGM) const;
 protected:
     explicit ChatHandler() : m_session(nullptr), sentErrorMessage(false) {}      // for CLI subclass
 
@@ -258,7 +247,7 @@ public:
     explicit CliHandler(void* callbackArg, Print* zprint) : m_callbackArg(callbackArg), m_print(zprint) { }
 
     // overwrite functions
-    std::string GetAcoreString(uint32 entry) const override;
+    std::string GetNcoreString(uint32 entry) const override;
     void SendSysMessage(std::string_view, bool escapeCharacters) override;
     bool ParseCommands(std::string_view str) override;
     std::string GetNameLink() const override;

@@ -1902,7 +1902,7 @@ void LoadLootTemplates_Creature()
     CreatureTemplateContainer const* ctc = sObjectMgr->GetCreatureTemplates();
     for (CreatureTemplateContainer::const_iterator itr = ctc->begin(); itr != ctc->end(); ++itr)
     {
-        if (uint32 lootid = itr->second.lootid)
+        if (uint32 lootid = itr->second.LootID)
         {
             if (lootIdSet.find(lootid) == lootIdSet.end())
                 LootTemplates_Creature.ReportNonExistingId(lootid, "Creature", itr->second.Entry);
@@ -2001,7 +2001,7 @@ void LoadLootTemplates_Gameobject()
         if (uint32 lootid = itr->second.GetLootId())
         {
             if (lootIdSet.find(lootid) == lootIdSet.end())
-                LootTemplates_Gameobject.ReportNonExistingId(lootid, "Gameobject", itr->second.entry);
+                LootTemplates_Gameobject.ReportNonExistingId(lootid, "Gameobject", itr->second.Entry);
             else
                 lootIdSetUsed.insert(lootid);
         }
@@ -2091,7 +2091,7 @@ void LoadLootTemplates_Pickpocketing()
     CreatureTemplateContainer const* ctc = sObjectMgr->GetCreatureTemplates();
     for (CreatureTemplateContainer::const_iterator itr = ctc->begin(); itr != ctc->end(); ++itr)
     {
-        if (uint32 lootid = itr->second.pickpocketLootId)
+        if (uint32 lootid = itr->second.PickpocketLootID)
         {
             if (lootIdSet.find(lootid) == lootIdSet.end())
                 LootTemplates_Pickpocketing.ReportNonExistingId(lootid, "Creature", itr->second.Entry);
@@ -2184,7 +2184,7 @@ void LoadLootTemplates_Skinning()
     CreatureTemplateContainer const* ctc = sObjectMgr->GetCreatureTemplates();
     for (CreatureTemplateContainer::const_iterator itr = ctc->begin(); itr != ctc->end(); ++itr)
     {
-        if (uint32 lootid = itr->second.SkinLootId)
+        if (uint32 lootid = itr->second.SkinLootID)
         {
             if (lootIdSet.find(lootid) == lootIdSet.end())
                 LootTemplates_Skinning.ReportNonExistingId(lootid, "Creature", itr->second.Entry);
@@ -2233,7 +2233,7 @@ void LoadLootTemplates_Spell()
             // ignore 61756 (Northrend Inscription Research (FAST QA VERSION) for example
             if (!spellInfo->HasAttribute(SPELL_ATTR0_NOT_SHAPESHIFTED) || spellInfo->HasAttribute(SPELL_ATTR0_IS_TRADESKILL))
             {
-                LootTemplates_Spell.ReportNonExistingId(spell_id, "Spell", spellInfo->Id);
+                LootTemplates_Spell.ReportNonExistingId(spell_id, "Spell", spellInfo->ID);
             }
         }
         else

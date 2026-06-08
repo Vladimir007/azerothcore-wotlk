@@ -211,7 +211,7 @@ struct boss_razorscale : public BossAI
         if (!caster)
             return;
 
-        switch (spell->Id)
+        switch (spell->ID)
         {
             case SPELL_CHAIN_1:
             case SPELL_CHAIN_2:

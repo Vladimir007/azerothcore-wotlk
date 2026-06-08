@@ -61,16 +61,16 @@ struct SpawnGroupTemplateData
 struct SpawnData
 {
     SpawnObjectType const type;
-    uint16 mapid{0};
+    uint16 mapID{0};
     uint32 phaseMask{0};
     float posX{0.0f};
     float posY{0.0f};
     float posZ{0.0f};
     float orientation{0.0f};
     uint8 spawnMask{0};
-    uint32 ScriptId{0};
+    uint32 ScriptID{0};
     bool dbData{true};
-    uint32 spawnGroupId{0};
+    uint32 spawnGroupID{0};
 
 protected:
     SpawnData(SpawnObjectType t) : type(t) {}

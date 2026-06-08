@@ -209,12 +209,12 @@ struct npc_pilgrims_bounty_chair : public VehicleAI
         if (!charm || !charm->ToCreature())
             return;
 
-        charm->ToCreature()->AI()->DoAction(spellInfo->Id);
+        charm->ToCreature()->AI()->DoAction(spellInfo->ID);
     }
 
     void SpellHit(Unit*  /*target*/, SpellInfo const* spellInfo) override
     {
-        switch (spellInfo->Id)
+        switch (spellInfo->ID)
         {
             case SPELL_FEAST_ON_SWEET_POTATOES:
                 if (Aura* aur = me->GetAura(SPELL_STORE_SWEET_POTATO))
@@ -285,7 +285,7 @@ struct npc_pilgrims_bounty_plate : public NullCreatureAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spellInfo) override
     {
-        switch (spellInfo->Id)
+        switch (spellInfo->ID)
         {
             case SPELL_VISUAL_THROW_TURKEY:
             case SPELL_VISUAL_THROW_STUFFING:
@@ -294,7 +294,7 @@ struct npc_pilgrims_bounty_plate : public NullCreatureAI
             case SPELL_VISUAL_THROW_SWEET_POTATO:
                 if (TempSummon* ts = me->ToTempSummon())
                     if (Unit* owner = ts->GetSummonerUnit())
-                        owner->ToCreature()->AI()->DoAction(spellInfo->Id);
+                        owner->ToCreature()->AI()->DoAction(spellInfo->ID);
                 break;
         }
     }
@@ -351,7 +351,7 @@ class spell_pilgrims_bounty_pass_generic : public SpellScript
         if (Unit* target = GetHitUnit())
         {
             uint32 spellId = 0;
-            switch (GetSpellInfo()->Id)
+            switch (GetSpellInfo()->ID)
             {
                 case SPELL_PASS_TURKEY:
                     spellId = SPELL_STORE_TURKEY;
@@ -375,14 +375,14 @@ class spell_pilgrims_bounty_pass_generic : public SpellScript
             {
                 if (Player* player = target->GetCharmerOrOwnerPlayerOrPlayerItself())
                 {
-                    GetCaster()->CastSpell(player, GetVisualThrow(GetSpellInfo()->Id, true), true);
+                    GetCaster()->CastSpell(player, GetVisualThrow(GetSpellInfo()->ID, true), true);
                     if (AuraEffect* aur = target->GetAuraEffectDummy(spellId))
                     {
                         if (aur->GetBase()->GetStackAmount() >= 5)
                         {
                             if (Player* casterPlayer = GetCaster()->GetCharmerOrOwnerPlayerOrPlayerItself())
                             {
-                                casterPlayer->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_CAST_SPELL2, GetVisualThrow(GetSpellInfo()->Id, true));
+                                casterPlayer->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_CAST_SPELL2, GetVisualThrow(GetSpellInfo()->ID, true));
                             }
                         }
                     }
@@ -396,7 +396,7 @@ class spell_pilgrims_bounty_pass_generic : public SpellScript
                         if (owner->GetEntry() == GetCaster()->GetEntry())
                             return;
 
-                GetCaster()->CastSpell(target, GetVisualThrow(GetSpellInfo()->Id, false), true);
+                GetCaster()->CastSpell(target, GetVisualThrow(GetSpellInfo()->ID, false), true);
             }
         }
 
@@ -404,7 +404,7 @@ class spell_pilgrims_bounty_pass_generic : public SpellScript
         if (Player* player = GetCaster()->GetCharmerOrOwnerPlayerOrPlayerItself())
         {
             uint32 spellId = 0;
-            switch (GetSpellInfo()->Id)
+            switch (GetSpellInfo()->ID)
             {
                 case SPELL_PASS_TURKEY:
                     spellId = SPELL_ACHI_PASS_TURKEY;
@@ -445,7 +445,7 @@ class spell_pilgrims_bounty_feast_on_generic : public SpellScript
             return;
 
         uint32 spellId = 0;
-        switch (GetSpellInfo()->Id)
+        switch (GetSpellInfo()->ID)
         {
             case SPELL_FEAST_ON_TURKEY:
                 spellId = SPELL_PLAYER_TURKEY;
@@ -580,7 +580,7 @@ class spell_pilgrims_bounty_serve_generic : public AuraScript
     {
         Unit* target = GetTarget();
         if (target->IsCreature())
-            target->ToCreature()->AI()->DoAction(GetSpellInfo()->Id);
+            target->ToCreature()->AI()->DoAction(GetSpellInfo()->ID);
     }
 
     void Register() override

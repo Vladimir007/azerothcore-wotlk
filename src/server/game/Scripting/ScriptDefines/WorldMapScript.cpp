@@ -31,7 +31,7 @@ void WorldMapScript::checkValidity()
 
     if (GetEntry() && !GetEntry()->IsWorldMap())
     {
-        LOG_ERROR("maps.script", "WorldMapScript for map {} is invalid.", GetEntry()->MapID);
+        LOG_ERROR("maps.script", "WorldMapScript for map {} is invalid.", GetEntry()->ID);
     }
 }
 

@@ -1,33 +1,14 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "BigNumber.h"
-#include "Errors.h"
 #include <algorithm>
 #include <cstring>
 #include <memory>
 #include <openssl/bn.h>
+#include "Errors.h"
 
-BigNumber::BigNumber()
-    : _bn(BN_new())
+BigNumber::BigNumber() : _bn(BN_new())
 { }
 
-BigNumber::BigNumber(BigNumber const& bn)
-    : _bn(BN_dup(bn.BN()))
+BigNumber::BigNumber(BigNumber const& bn) : _bn(BN_dup(bn.BN()))
 { }
 
 BigNumber::~BigNumber()
@@ -35,26 +16,26 @@ BigNumber::~BigNumber()
     BN_free(_bn);
 }
 
-void BigNumber::SetDword(int32 val)
+void BigNumber::SetDword(const int32 val)
 {
-    SetDword(uint32(std::abs(val)));
+    SetDword(static_cast<uint32>(std::abs(val)));
     if (val < 0)
         BN_set_negative(_bn, 1);
 }
 
-void BigNumber::SetDword(uint32 val)
+void BigNumber::SetDword(const uint32 val)
 {
     BN_set_word(_bn, val);
 }
 
-void BigNumber::SetQword(uint64 val)
+void BigNumber::SetQword(const uint64 val)
 {
-    BN_set_word(_bn, (uint32)(val >> 32));
+    BN_set_word(_bn, static_cast<uint32>(val >> 32));
     BN_lshift(_bn, _bn, 32);
-    BN_add_word(_bn, (uint32)(val & 0xFFFFFFFF));
+    BN_add_word(_bn, static_cast<uint32>(val & 0xFFFFFFFF));
 }
 
-void BigNumber::SetBinary(uint8 const* bytes, int32 len, bool littleEndian)
+void BigNumber::SetBinary(uint8 const* bytes, const int32 len, const bool littleEndian)
 {
     if (littleEndian)
         BN_lebin2bn(bytes, len, _bn);
@@ -64,11 +45,11 @@ void BigNumber::SetBinary(uint8 const* bytes, int32 len, bool littleEndian)
 
 bool BigNumber::SetHexStr(char const* str)
 {
-    int n = BN_hex2bn(&_bn, str);
-    return (n > 0);
+    const int n = BN_hex2bn(&_bn, str);
+    return n > 0;
 }
 
-void BigNumber::SetRand(int32 numbits)
+void BigNumber::SetRand(const int32 numbits)
 {
     BN_rand(_bn, numbits, 0, 1);
 }
@@ -96,38 +77,30 @@ BigNumber& BigNumber::operator-=(BigNumber const& bn)
 
 BigNumber& BigNumber::operator*=(BigNumber const& bn)
 {
-    BN_CTX *bnctx;
-
-    bnctx = BN_CTX_new();
-    BN_mul(_bn, _bn, bn._bn, bnctx);
-    BN_CTX_free(bnctx);
-
+    BN_CTX* bnCtx = BN_CTX_new();
+    BN_mul(_bn, _bn, bn._bn, bnCtx);
+    BN_CTX_free(bnCtx);
     return *this;
 }
 
 BigNumber& BigNumber::operator/=(BigNumber const& bn)
 {
-    BN_CTX *bnctx;
-
-    bnctx = BN_CTX_new();
-    BN_div(_bn, nullptr, _bn, bn._bn, bnctx);
-    BN_CTX_free(bnctx);
+    BN_CTX* bnCtx = BN_CTX_new();
+    BN_div(_bn, nullptr, _bn, bn._bn, bnCtx);
+    BN_CTX_free(bnCtx);
 
     return *this;
 }
 
 BigNumber& BigNumber::operator%=(BigNumber const& bn)
 {
-    BN_CTX *bnctx;
-
-    bnctx = BN_CTX_new();
-    BN_mod(_bn, _bn, bn._bn, bnctx);
-    BN_CTX_free(bnctx);
-
+    BN_CTX* bnCtx = BN_CTX_new();
+    BN_mod(_bn, _bn, bn._bn, bnCtx);
+    BN_CTX_free(bnCtx);
     return *this;
 }
 
-BigNumber& BigNumber::operator<<=(int n)
+BigNumber& BigNumber::operator<<=(const int n)
 {
     BN_lshift(_bn, _bn, n);
     return *this;
@@ -141,11 +114,10 @@ int BigNumber::CompareTo(BigNumber const& bn) const
 BigNumber BigNumber::Exp(BigNumber const& bn) const
 {
     BigNumber ret;
-    BN_CTX *bnctx;
 
-    bnctx = BN_CTX_new();
-    BN_exp(ret._bn, _bn, bn._bn, bnctx);
-    BN_CTX_free(bnctx);
+    BN_CTX* bnCtx = BN_CTX_new();
+    BN_exp(ret._bn, _bn, bn._bn, bnCtx);
+    BN_CTX_free(bnCtx);
 
     return ret;
 }
@@ -153,11 +125,10 @@ BigNumber BigNumber::Exp(BigNumber const& bn) const
 BigNumber BigNumber::ModExp(BigNumber const& bn1, BigNumber const& bn2) const
 {
     BigNumber ret;
-    BN_CTX *bnctx;
 
-    bnctx = BN_CTX_new();
-    BN_mod_exp(ret._bn, _bn, bn1._bn, bn2._bn, bnctx);
-    BN_CTX_free(bnctx);
+    BN_CTX* bnCtx = BN_CTX_new();
+    BN_mod_exp(ret._bn, _bn, bn1._bn, bn2._bn, bnCtx);
+    BN_CTX_free(bnCtx);
 
     return ret;
 }
@@ -169,7 +140,7 @@ int32 BigNumber::GetNumBytes() const
 
 uint32 BigNumber::AsDword() const
 {
-    return (uint32)BN_get_word(_bn);
+    return static_cast<uint32>(BN_get_word(_bn));
 }
 
 bool BigNumber::IsZero() const
@@ -182,15 +153,15 @@ bool BigNumber::IsNegative() const
     return BN_is_negative(_bn);
 }
 
-void BigNumber::GetBytes(uint8* buf, std::size_t bufsize, bool littleEndian) const
+void BigNumber::GetBytes(uint8* buf, std::size_t bufSize, const bool littleEndian) const
 {
-    int res = littleEndian ? BN_bn2lebinpad(_bn, buf, bufsize) : BN_bn2binpad(_bn, buf, bufsize);
-    ASSERT(res > 0, "Buffer of size {} is too small to hold bignum with {} bytes.\n", bufsize, BN_num_bytes(_bn));
+    const int res = littleEndian ? BN_bn2lebinpad(_bn, buf, bufSize) : BN_bn2binpad(_bn, buf, bufSize);
+    ASSERT(res > 0, "Buffer of size {} is too small to hold bignum with {} bytes.\n", bufSize, BN_num_bytes(_bn));
 }
 
-std::vector<uint8> BigNumber::ToByteVector(int32 minSize, bool littleEndian) const
+std::vector<uint8> BigNumber::ToByteVector(const int32 minSize, const bool littleEndian) const
 {
-    std::size_t length = std::max(GetNumBytes(), minSize);
+    const std::size_t length = std::max(GetNumBytes(), minSize);
     std::vector<uint8> v;
     v.resize(length);
     GetBytes(v.data(), length, littleEndian);

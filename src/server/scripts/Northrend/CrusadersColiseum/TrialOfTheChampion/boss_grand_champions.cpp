@@ -466,10 +466,10 @@ public:
                     if (!AdditionalSpellInfo)
                         continue;
 
-                    if (me->HasAura(AdditionalSpellInfo->Id))
+                    if (me->HasAura(AdditionalSpellInfo->ID))
                         continue;
 
-                    me->AddAura(AdditionalSpellInfo->Id, me);
+                    me->AddAura(AdditionalSpellInfo->ID, me);
                 }
             }
         }
@@ -645,7 +645,7 @@ public:
 
         void SpellHit(Unit*  /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_TRAMPLE_STUN)
+            if (spell->ID == SPELL_TRAMPLE_STUN)
                 Talk(SAY_TRAMPLED, me);
         }
 

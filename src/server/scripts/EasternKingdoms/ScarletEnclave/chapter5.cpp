@@ -549,7 +549,7 @@ public:
 
             me->SetImmuneToAll(true);
             me->LoadEquipment(1, true);
-            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
             me->SetStandState(UNIT_STAND_STATE_STAND);
             me->SetVisible(true);
             me->setActive(true);
@@ -1140,7 +1140,7 @@ public:
                                 if (i->GetSource()->IsAlive() && me->IsWithinDistInMap(i->GetSource(), 100))
                                     i->GetSource()->CastSpell(i->GetSource(), SPELL_THE_LIGHT_OF_DAWN_Q, false);
                         }
-                        me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                        me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                         break;
                     }
                 case EVENT_OUTRO_SCENE_61:
@@ -1255,7 +1255,7 @@ class spell_chapter5_return_to_capital : public SpellScript
     {
         Creature* creature = GetHitUnit()->ToCreature();
         Player* player = GetCaster()->ToPlayer();
-        uint32 spellId = GetSpellInfo()->Id;
+        uint32 spellId = GetSpellInfo()->ID;
 
         if (!spellId || !creature || !player || player->IsGameMaster() || !player->IsAlive() || !creature->IsAlive() || creature->IsInCombat())
             return;

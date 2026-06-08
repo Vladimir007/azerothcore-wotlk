@@ -108,7 +108,7 @@ public:
             return false;
         }
 
-        uint8 powerType = classEntry->powerType;
+        uint8 powerType = classEntry->PowerType;
 
         // reset m_form if no aura
         if (!player->HasShapeshiftAura())
@@ -143,12 +143,10 @@ public:
         if (!HandleResetStatsOrLevelHelper(playerTarget))
             return false;
 
-        uint8 oldLevel = playerTarget->GetLevel();
+        const uint8 oldLevel = playerTarget->GetLevel();
 
-        // set starting level
-        uint32 startLevel = !playerTarget->IsClass(CLASS_DEATH_KNIGHT, CLASS_CONTEXT_INIT)
-                            ? sWorld->getIntConfig(CONFIG_START_PLAYER_LEVEL)
-                            : sWorld->getIntConfig(CONFIG_START_HEROIC_PLAYER_LEVEL);
+        // Set starting level
+        const uint32 startLevel = playerTarget->IsClass(CLASS_DEATH_KNIGHT, CLASS_CONTEXT_INIT) ? StartHeroicPlayerLevel : StartPlayerLevel;
 
         playerTarget->_ApplyAllLevelScaleItemMods(false);
         playerTarget->SetLevel(startLevel);

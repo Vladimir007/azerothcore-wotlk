@@ -5272,10 +5272,10 @@ void SpellMgr::LoadSpellInfoCorrections()
         if (AreaTableEntry* areaEntry = const_cast<AreaTableEntry*>(sAreaTableStore.LookupEntry(i)))
         {
             if (areaEntry->ID == 3479)
-                areaEntry->flags |= AREA_FLAG_NO_FLY_ZONE;
+                areaEntry->Flags |= AREA_FLAG_NO_FLY_ZONE;
             // Xinef: Dun Morogh, Kharanos tavern, missing resting flag
             else if (areaEntry->ID == 2102)
-                areaEntry->flags |= AREA_FLAG_REST_ZONE_ALLIANCE;
+                areaEntry->Flags |= AREA_FLAG_REST_ZONE_ALLIANCE;
         }
 
     // Xinef: fix for something?
@@ -5291,7 +5291,7 @@ void SpellMgr::LoadSpellInfoCorrections()
 
     // Correct Pet Size
     CreatureDisplayInfoEntry* displayEntry = const_cast<CreatureDisplayInfoEntry*>(sCreatureDisplayInfoStore.LookupEntry(17028)); // Kurken
-    displayEntry->scale = 2.5f;
+    displayEntry->Scale = 2.5f;
 
     // Oracles and Frenzyheart faction
     FactionEntry* factionEntry = const_cast<FactionEntry*>(sFactionStore.LookupEntry(1104));
@@ -5301,52 +5301,52 @@ void SpellMgr::LoadSpellInfoCorrections()
 
     // Various factions, added 14, 16 to hostile mask
     FactionTemplateEntry* factionTemplateEntry = const_cast<FactionTemplateEntry*>(sFactionTemplateStore.LookupEntry(1978)); // Warsong Offensive
-    factionTemplateEntry->hostileMask |= 8;
+    factionTemplateEntry->HostileMask |= 8;
     factionTemplateEntry = const_cast<FactionTemplateEntry*>(sFactionTemplateStore.LookupEntry(1921)); // The Taunka
-    factionTemplateEntry->hostileMask |= 8;
+    factionTemplateEntry->HostileMask |= 8;
 
     // Remove vehicles attr, making accessories selectable
     VehicleSeatEntry* vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(4689)); // Siege Engine, Accessory
-    vse->m_flags &= ~VEHICLE_SEAT_FLAG_PASSENGER_NOT_SELECTABLE;
+    vse->Flags &= ~VEHICLE_SEAT_FLAG_PASSENGER_NOT_SELECTABLE;
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(4692)); // Siege Engine, Accessory
-    vse->m_flags &= ~VEHICLE_SEAT_FLAG_PASSENGER_NOT_SELECTABLE;
+    vse->Flags &= ~VEHICLE_SEAT_FLAG_PASSENGER_NOT_SELECTABLE;
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(4693)); // Siege Engine, Accessory
-    vse->m_flags &= ~VEHICLE_SEAT_FLAG_PASSENGER_NOT_SELECTABLE;
+    vse->Flags &= ~VEHICLE_SEAT_FLAG_PASSENGER_NOT_SELECTABLE;
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(1520)); // Wyrmrest Vanquisher
-    vse->m_flags |= VEHICLE_SEAT_FLAG_PASSENGER_NOT_SELECTABLE;
+    vse->Flags |= VEHICLE_SEAT_FLAG_PASSENGER_NOT_SELECTABLE;
 
     // pussywizard: fix z offset for some vehicles:
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(6206)); // Marrowgar - Bone Spike
-    vse->m_attachmentOffsetZ = 4.0f;
+    vse->AttachmentOffsetZ = 4.0f;
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(3806)); // Mimiron - seat on VX-001 for ACU during last phase
-    vse->m_attachmentOffsetZ = 15.0f;
+    vse->AttachmentOffsetZ = 15.0f;
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(3566)); // Mimiron - Working seat
-    vse->m_attachmentOffsetX = -3.5f;
-    vse->m_attachmentOffsetY = 0.0f;
+    vse->AttachmentOffsetX = -3.5f;
+    vse->AttachmentOffsetY = 0.0f;
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(3567)); // Mimiron - Working seat
-    vse->m_attachmentOffsetX = 2.3f;
-    vse->m_attachmentOffsetY = -2.3f;
+    vse->AttachmentOffsetX = 2.3f;
+    vse->AttachmentOffsetY = -2.3f;
 
     // Pilgrim's Bounty offsets
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(2841));
-    vse->m_attachmentOffsetX += 1.65f;
-    vse->m_attachmentOffsetY += 0.75f;
+    vse->AttachmentOffsetX += 1.65f;
+    vse->AttachmentOffsetY += 0.75f;
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(2842));
-    vse->m_attachmentOffsetX += 1.6f;
-    vse->m_attachmentOffsetY += -1.0f;
+    vse->AttachmentOffsetX += 1.6f;
+    vse->AttachmentOffsetY += -1.0f;
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(2843));
-    vse->m_attachmentOffsetX += -1.2f;
-    vse->m_attachmentOffsetY += 0.2f;
+    vse->AttachmentOffsetX += -1.2f;
+    vse->AttachmentOffsetY += 0.2f;
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(2844));
-    vse->m_attachmentOffsetX += -0.1f;
-    vse->m_attachmentOffsetY += -1.6f;
+    vse->AttachmentOffsetX += -0.1f;
+    vse->AttachmentOffsetY += -1.6f;
     vse = const_cast<VehicleSeatEntry*>(sVehicleSeatStore.LookupEntry(2845));
-    vse->m_attachmentOffsetX += 0.0f;
-    vse->m_attachmentOffsetY += 1.6f;
+    vse->AttachmentOffsetX += 0.0f;
+    vse->AttachmentOffsetY += 1.6f;
 
     // Once Bitten, Twice Shy (10 player) - Icecrown Citadel
     AchievementEntry* achievement = const_cast<AchievementEntry*>(sAchievementStore.LookupEntry(4539));
-    achievement->mapID = 631;    // Correct map requirement (currently has Ulduar)
+    achievement->MapID = 631;    // Correct map requirement (currently has Ulduar)
 
     // Ring of Valor starting Locations
     GraveyardStruct const* entry = sGraveyard->GetGraveyard(1364);

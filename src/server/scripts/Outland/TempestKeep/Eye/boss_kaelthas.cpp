@@ -306,7 +306,7 @@ struct boss_kaelthas : public BossAI
 
     void SpellHit(Unit* caster, SpellInfo const* spell) override
     {
-        if (_phase == PHASE_SINGLE_ADVISOR && spell->Id == SPELL_KAEL_PHASE_TWO)
+        if (_phase == PHASE_SINGLE_ADVISOR && spell->ID == SPELL_KAEL_PHASE_TWO)
         {
             switch (caster->GetEntry())
             {
@@ -326,7 +326,7 @@ struct boss_kaelthas : public BossAI
                     break;
             }
         }
-        else if (_phase == PHASE_ALL_ADVISORS && spell->Id == SPELL_KAEL_PHASE_TWO)
+        else if (_phase == PHASE_ALL_ADVISORS && spell->ID == SPELL_KAEL_PHASE_TWO)
         {
             --_advisorsAlive;
             if (_advisorsAlive == 0)
@@ -759,7 +759,7 @@ struct advisor_baseAI : public ScriptedAI
 
     void SpellHit(Unit* caster, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_RESURRECTION && caster->GetEntry() == NPC_KAELTHAS)
+        if (spell->ID == SPELL_RESURRECTION && caster->GetEntry() == NPC_KAELTHAS)
         {
             me->RemoveAurasDueToSpell(SPELL_PERMANENT_FEIGN_DEATH);
             me->SetStandState(UNIT_STAND_STATE_STAND);

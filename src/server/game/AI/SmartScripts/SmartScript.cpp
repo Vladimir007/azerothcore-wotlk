@@ -457,11 +457,11 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
                     {
                         if (CreatureTemplate const* ci = sObjectMgr->GetCreatureTemplate(target->ToCreature()->GetEntry()))
                         {
-                            if (target->ToCreature()->GetFaction() != ci->faction)
+                            if (target->ToCreature()->GetFaction() != ci->Faction)
                             {
-                                target->ToCreature()->SetFaction(ci->faction);
+                                target->ToCreature()->SetFaction(ci->Faction);
                                 LOG_DEBUG("scripts.ai", "SmartScript::ProcessAction:: SMART_ACTION_SET_FACTION: Creature entry {}, GuidLow {} set faction to {}",
-                                          target->GetEntry(), target->GetGUID().ToString(), ci->faction);
+                                          target->GetEntry(), target->GetGUID().ToString(), ci->Faction);
                             }
                         }
                     }
@@ -883,7 +883,7 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
                     GameObject* go = target->ToGameObject();
 
                     // Activate
-                    if (go->GetGoType() != GAMEOBJECT_TYPE_DOOR)
+                    if (go->GetGoType() != GAME_OBJECT_TYPE_DOOR)
                     {
                         go->SetLootState(GO_READY);
                     }
@@ -1962,7 +1962,7 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
 
                         npc->SetCurrentEquipmentId(equipId);
 
-                        std::copy(std::begin(eInfo->ItemEntry), std::end(eInfo->ItemEntry), std::begin(slot));
+                        std::copy(std::begin(eInfo->ItemID), std::end(eInfo->ItemID), std::begin(slot));
                     }
                     else
                         std::copy(std::begin(e.action.equip.slots), std::end(e.action.equip.slots), std::begin(slot));
@@ -2725,7 +2725,7 @@ void SmartScript::ProcessAction(SmartScriptHolder& e, Unit* unit, uint32 var0, u
         }
         case SMART_ACTION_PLAYER_TALK:
         {
-            std::string text = sObjectMgr->GetAcoreString(e.action.playerTalk.textId, DEFAULT_LOCALE);
+            std::string text = sObjectMgr->GetNcoreString(e.action.playerTalk.textId);
 
             if (!targets.empty())
                 for (WorldObject* target : targets)
@@ -4220,7 +4220,7 @@ void SmartScript::ProcessEvent(SmartScriptHolder& e, Unit* unit, uint32 var0, ui
 
                 if (e.event.targetCasting.spellId > 0)
                     if (Spell* currSpell = victim->GetCurrentSpell(CURRENT_GENERIC_SPELL))
-                        if (currSpell->m_spellInfo->Id != e.event.targetCasting.spellId)
+                        if (currSpell->m_spellInfo->ID != e.event.targetCasting.spellId)
                             return;
 
                 ProcessTimedAction(e, e.event.targetCasting.repeatMin, e.event.targetCasting.repeatMax, me->GetVictim());
@@ -4398,7 +4398,7 @@ void SmartScript::ProcessEvent(SmartScriptHolder& e, Unit* unit, uint32 var0, ui
             {
                 if (!spell)
                     return;
-                if ((!e.event.spellHit.spell || spell->Id == e.event.spellHit.spell) &&
+                if ((!e.event.spellHit.spell || spell->ID == e.event.spellHit.spell) &&
                         (!e.event.spellHit.school || (spell->SchoolMask & e.event.spellHit.school)))
                 {
                     RecalcTimer(e, e.event.spellHit.cooldownMin, e.event.spellHit.cooldownMax);
@@ -5179,10 +5179,8 @@ void SmartScript::FillScript(SmartAIEventList e, WorldObject* obj, AreaTrigger c
     }
     for (SmartAIEventList::iterator i = e.begin(); i != e.end(); ++i)
     {
-#ifndef ACORE_DEBUG
         if ((*i).event.event_flags & SMART_EVENT_FLAG_DEBUG_ONLY)
             continue;
-#endif
 
         if ((*i).event.event_flags & SMART_EVENT_FLAG_DIFFICULTY_ALL)//if has instance flag add only if in it
         {

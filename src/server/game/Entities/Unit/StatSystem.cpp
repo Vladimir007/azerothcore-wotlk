@@ -495,7 +495,7 @@ void Player::UpdateAttackPowerAndDamage(bool ranged)
     //add dynamic flat mods
     if (ranged)
     {
-        if ((getClassMask() & CLASSMASK_WAND_USERS) == 0)
+        if ((getClassMask() & CLASS_MASK_WAND_USERS) == 0)
         {
             AuraEffectList const& mRAPbyStat = GetAuraEffectsByType(SPELL_AURA_MOD_RANGED_ATTACK_POWER_OF_STAT_PERCENT);
             for (AuraEffectList::const_iterator i = mRAPbyStat.begin(); i != mRAPbyStat.end(); ++i)

@@ -54,7 +54,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
         {
-            if (caster && spellInfo->Id == 44454)
+            if (caster && spellInfo->ID == 44454)
                 me->GetMotionMaster()->MovePoint(0, *caster);
         }
     };

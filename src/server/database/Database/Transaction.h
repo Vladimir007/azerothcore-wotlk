@@ -1,36 +1,19 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef TRANSACTION_H
+#define TRANSACTION_H
 
-#ifndef _TRANSACTION_H
-#define _TRANSACTION_H
-
-#include "DatabaseEnvFwd.h"
-#include "Define.h"
-#include "SQLOperation.h"
-#include "StringFormat.h"
 #include <functional>
 #include <mutex>
 #include <vector>
 
+#include "DatabaseEnvFwd.h"
+#include "SQLOperation.h"
+#include "StringFormat.h"
+
 /*! Transactions, high level class. */
-class AC_DATABASE_API TransactionBase
+class TransactionBase
 {
     friend class TransactionTask;
-    friend class MySQLConnection;
+    friend class PSQLConnection;
 
     template <typename T>
     friend class DatabaseWorkerPool;
@@ -71,7 +54,7 @@ public:
 };
 
 /*! Low level class*/
-class AC_DATABASE_API TransactionTask : public SQLOperation
+class TransactionTask : public SQLOperation
 {
     template <class T>
     friend class DatabaseWorkerPool;
@@ -80,35 +63,34 @@ class AC_DATABASE_API TransactionTask : public SQLOperation
     friend class TransactionCallback;
 
 public:
-    TransactionTask(std::shared_ptr<TransactionBase> trans) : m_trans(std::move(trans)) { }
+    explicit TransactionTask(std::shared_ptr<TransactionBase> trans) : m_trans(std::move(trans)) { }
     ~TransactionTask() override = default;
+    bool Execute() override;
 
 protected:
-    bool Execute() override;
-    int TryExecute();
-    void CleanupOnFailure();
+    PostgresResultType TryExecute() const;
+    void CleanupOnFailure() const;
 
     std::shared_ptr<TransactionBase> m_trans;
     static std::mutex _deadlockLock;
 };
 
-class AC_DATABASE_API TransactionWithResultTask : public TransactionTask
+class TransactionWithResultTask : public TransactionTask
 {
 public:
-    TransactionWithResultTask(std::shared_ptr<TransactionBase> trans) : TransactionTask(trans) { }
+    explicit TransactionWithResultTask(const std::shared_ptr<TransactionBase>& trans) : TransactionTask(trans) { }
 
     TransactionFuture GetFuture() { return m_result.get_future(); }
-
-protected:
     bool Execute() override;
 
+protected:
     TransactionPromise m_result;
 };
 
-class AC_DATABASE_API TransactionCallback
+class TransactionCallback
 {
 public:
-    TransactionCallback(TransactionFuture&& future) : m_future(std::move(future)) { }
+    explicit TransactionCallback(TransactionFuture&& future) : m_future(std::move(future)) { }
     TransactionCallback(TransactionCallback&&) = default;
 
     TransactionCallback& operator=(TransactionCallback&&) = default;

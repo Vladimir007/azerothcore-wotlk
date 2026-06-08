@@ -120,9 +120,9 @@ AC_API_EXPORT ChatNotify EnumUtils<ChatNotify>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<ChatNotify>::ToIndex(ChatNotify value)
+AC_API_EXPORT std::size_t EnumUtils<ChatNotify>::ToIndex(ChatNotify index)
 {
-    switch (value)
+    switch (index)
     {
         case CHAT_JOINED_NOTICE: return 0;
         case CHAT_LEFT_NOTICE: return 1;

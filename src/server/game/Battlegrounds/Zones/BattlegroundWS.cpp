@@ -148,7 +148,7 @@ void BattlegroundWS::AddPlayer(Player* player)
     PlayerScores.emplace(player->GetGUID().GetCounter(), new BattlegroundWGScore(player->GetGUID()));
 }
 
-void BattlegroundWS::RespawnFlagAfterDrop(TeamId teamId)
+void BattlegroundWS::RespawnFlagAfterDrop(TeamID teamId)
 {
     if (GetStatus() != STATUS_IN_PROGRESS || GetFlagState(teamId) != BG_WS_FLAG_STATE_ON_GROUND)
         return;
@@ -169,7 +169,7 @@ void BattlegroundWS::RespawnFlagAfterDrop(TeamId teamId)
     CheckFlagKeeperInArea(teamId == TEAM_ALLIANCE ? TEAM_HORDE : TEAM_ALLIANCE);
 }
 
-void BattlegroundWS::CheckFlagKeeperInArea(TeamId teamId)
+void BattlegroundWS::CheckFlagKeeperInArea(TeamID teamId)
 {
     if (GetStatus() != STATUS_IN_PROGRESS || GetFlagState(teamId) != BG_WS_FLAG_STATE_ON_PLAYER)
     {
@@ -389,7 +389,7 @@ void BattlegroundWS::RemovePlayer(Player* player)
         EventPlayerDroppedFlag(player);
 }
 
-void BattlegroundWS::UpdateFlagState(TeamId teamId, uint32 value)
+void BattlegroundWS::UpdateFlagState(TeamID teamId, uint32 value)
 {
     _flagState[teamId] = value;
     UpdateWorldState(teamId == TEAM_ALLIANCE ? WORLD_STATE_BATTLEGROUND_WS_FLAG_STATE_HORDE : WORLD_STATE_BATTLEGROUND_WS_FLAG_STATE_ALLIANCE, value);
@@ -507,7 +507,7 @@ void BattlegroundWS::Init()
         : static_cast<uint32>(BG_WS_MAX_TEAM_SCORE);
 }
 
-void BattlegroundWS::EndBattleground(TeamId winnerTeamId)
+void BattlegroundWS::EndBattleground(TeamID winnerTeamId)
 {
     // Win reward
     RewardHonorToTeam(GetBonusHonorFromKill(_honorWinKills), winnerTeamId);
@@ -568,7 +568,7 @@ void BattlegroundWS::FillInitialWorldStates(WorldPackets::WorldState::InitWorldS
     packet.Worldstates.emplace_back(WORLD_STATE_BATTLEGROUND_WS_FLAG_STATE_ALLIANCE, GetFlagState(TEAM_ALLIANCE));
 }
 
-TeamId BattlegroundWS::GetPrematureWinner()
+TeamID BattlegroundWS::GetPrematureWinner()
 {
     if (GetTeamScore(TEAM_ALLIANCE) > GetTeamScore(TEAM_HORDE))
         return TEAM_ALLIANCE;

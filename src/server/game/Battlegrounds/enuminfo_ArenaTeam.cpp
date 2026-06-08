@@ -54,9 +54,9 @@ AC_API_EXPORT ArenaTeamTypes EnumUtils<ArenaTeamTypes>::FromIndex(std::size_t in
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<ArenaTeamTypes>::ToIndex(ArenaTeamTypes value)
+AC_API_EXPORT std::size_t EnumUtils<ArenaTeamTypes>::ToIndex(ArenaTeamTypes index)
 {
-    switch (value)
+    switch (index)
     {
         case ARENA_TEAM_2v2: return 0;
         case ARENA_TEAM_3v3: return 1;

@@ -18,11 +18,12 @@
 #include "DBCStores.h"
 #include "DetourNavMeshQuery.h"
 #include "DisableMgr.h"
+#include "MapDefinitions.h"
 #include "MapCollisionData.h"
 #include "MapTree.h"
 #include "ModelInstance.h"
 #include "VMapFactory.h"
-#include "VMapMgr2.h"
+#include "VMapMgr.h"
 #include "World.h"
 #include "WorldModel.h"
 
@@ -40,8 +41,8 @@ MapCollisionData::MapCollisionData(Map const& map, Map const* parentMap) :
     else
     {
         // If we are a base map create a new static tree and mmap nav mesh
-        std::string const mapFileName = VMAP::VMapMgr2::getMapFileName(map.GetId());
-        std::shared_ptr<VMAP::StaticMapTree> newTree = std::make_shared<VMAP::StaticMapTree>(map.GetId(), (sWorld->GetDataPath() + "vmaps"));
+        std::string const mapFileName = VMAP::VMapMgr::getMapFileName(map.GetId());
+        std::shared_ptr<VMAP::StaticMapTree> newTree = std::make_shared<VMAP::StaticMapTree>(map.GetId(), (sWorld->GetDataPath() + "vMaps"));
         if (newTree->InitMap(mapFileName))
             _staticVMapData._staticTree = newTree;
 
@@ -51,7 +52,7 @@ MapCollisionData::MapCollisionData(Map const& map, Map const* parentMap) :
 
 int MapCollisionData::LoadVMapTile(uint32 tileX, uint32 tileY)
 {
-    if (!VMAP::VMapFactory::createOrGetVMapMgr()->isMapLoadingEnabled() || !_staticVMapData._staticTree)
+    if (!_staticVMapData._staticTree)
         return VMAP::VMAP_LOAD_RESULT_IGNORED;
 
     if (!_staticVMapData._staticTree->LoadMapTile(tileX, tileY))
@@ -70,16 +71,14 @@ int MapCollisionData::LoadMMapTile(uint32 tileX, uint32 tileY)
 
 bool StaticVMapCollisionData::isInLineOfSight(float x1, float y1, float z1, float x2, float y2, float z2, VMAP::ModelIgnoreFlags ignoreFlags) const
 {
-#if defined(ENABLE_VMAP_CHECKS)
-    if (!sWorld->getBoolConfig(CONFIG_VMAP_ENABLE_LOS) || DisableMgr::IsVMAPDisabledFor(_mapId, VMAP::VMAP_DISABLE_LOS))
+    if (DisableMgr::IsVMAPDisabledFor(_mapId, VMAP::VMAP_DISABLE_LOS))
         return true;
-#endif
 
     if (!_staticTree)
         return true;
 
-    G3D::Vector3 const pos1 = VMAP::VMapMgr2::convertPositionToInternalRep(x1, y1, z1);
-    G3D::Vector3 const pos2 = VMAP::VMapMgr2::convertPositionToInternalRep(x2, y2, z2);
+    G3D::Vector3 const pos1 = VMAP::VMapMgr::convertPositionToInternalRep(x1, y1, z1);
+    G3D::Vector3 const pos2 = VMAP::VMapMgr::convertPositionToInternalRep(x2, y2, z2);
     if (pos1 != pos2)
         return _staticTree->isInLineOfSight(pos1, pos2, ignoreFlags);
 
@@ -88,17 +87,15 @@ bool StaticVMapCollisionData::isInLineOfSight(float x1, float y1, float z1, floa
 
 bool StaticVMapCollisionData::GetObjectHitPos(float x1, float y1, float z1, float x2, float y2, float z2, float& rx, float& ry, float& rz, float modifyDist) const
 {
-#if defined(ENABLE_VMAP_CHECKS)
-    if (sWorld->getBoolConfig(CONFIG_VMAP_ENABLE_LOS) && !DisableMgr::IsVMAPDisabledFor(_mapId, VMAP::VMAP_DISABLE_LOS))
-#endif
+    if (!DisableMgr::IsVMAPDisabledFor(_mapId, VMAP::VMAP_DISABLE_LOS))
     {
         if (_staticTree)
         {
-            G3D::Vector3 const pos1 = VMAP::VMapMgr2::convertPositionToInternalRep(x1, y1, z1);
-            G3D::Vector3 const pos2 = VMAP::VMapMgr2::convertPositionToInternalRep(x2, y2, z2);
+            G3D::Vector3 const pos1 = VMAP::VMapMgr::convertPositionToInternalRep(x1, y1, z1);
+            G3D::Vector3 const pos2 = VMAP::VMapMgr::convertPositionToInternalRep(x2, y2, z2);
             G3D::Vector3 resultPos;
             bool result = _staticTree->GetObjectHitPos(pos1, pos2, resultPos, modifyDist);
-            resultPos = VMAP::VMapMgr2::convertPositionToInternalRep(resultPos.x, resultPos.y, resultPos.z);
+            resultPos = VMAP::VMapMgr::convertPositionToInternalRep(resultPos.x, resultPos.y, resultPos.z);
             rx = resultPos.x;
             ry = resultPos.y;
             rz = resultPos.z;
@@ -115,22 +112,20 @@ bool StaticVMapCollisionData::GetObjectHitPos(float x1, float y1, float z1, floa
 
 float StaticVMapCollisionData::getHeight(float x, float y, float z, float maxSearchDist) const
 {
-#if defined(ENABLE_VMAP_CHECKS)
-    if (sWorld->getBoolConfig(CONFIG_VMAP_ENABLE_HEIGHT) && !DisableMgr::IsVMAPDisabledFor(_mapId, VMAP::VMAP_DISABLE_HEIGHT))
-#endif
+    if (!DisableMgr::IsVMAPDisabledFor(_mapId, VMAP::VMAP_DISABLE_HEIGHT))
     {
         if (_staticTree)
         {
-            G3D::Vector3 const pos = VMAP::VMapMgr2::convertPositionToInternalRep(x, y, z);
+            G3D::Vector3 const pos = VMAP::VMapMgr::convertPositionToInternalRep(x, y, z);
             float height = _staticTree->getHeight(pos, maxSearchDist);
             if (height >= G3D::finf())
-                return VMAP_INVALID_HEIGHT_VALUE; // No height
+                return INVALID_HEIGHT_VALUE; // No height
 
             return height;
         }
     }
 
-    return VMAP_INVALID_HEIGHT_VALUE;
+    return INVALID_HEIGHT_VALUE;
 }
 
 bool StaticVMapCollisionData::GetAreaAndLiquidData(float x, float y, float z, Optional<uint8> reqLiquidType, VMAP::AreaAndLiquidData& data) const
@@ -138,11 +133,11 @@ bool StaticVMapCollisionData::GetAreaAndLiquidData(float x, float y, float z, Op
     if (_staticTree)
     {
         VMAP::LocationInfo info;
-        G3D::Vector3 const pos = VMAP::VMapMgr2::convertPositionToInternalRep(x, y, z);
+        G3D::Vector3 const pos = VMAP::VMapMgr::convertPositionToInternalRep(x, y, z);
         if (_staticTree->GetLocationInfo(pos, info))
         {
             data.floorZ = info.ground_Z;
-            if (!DisableMgr::IsVMAPDisabledFor(_mapId, VMAP::VMAP_DISABLE_LIQUIDSTATUS))
+            if (!DisableMgr::IsVMAPDisabledFor(_mapId, VMAP::VMAP_DISABLE_LIQUID_STATUS))
             {
                 uint32 liquidType = info.hitModel->GetLiquidType(); // entry from LiquidType.dbc
                 float liquidLevel;
@@ -151,7 +146,7 @@ bool StaticVMapCollisionData::GetAreaAndLiquidData(float x, float y, float z, Op
                         data.liquidInfo.emplace(liquidType, liquidLevel);
             }
 
-            if (!DisableMgr::IsVMAPDisabledFor(_mapId, VMAP::VMAP_DISABLE_AREAFLAG))
+            if (!DisableMgr::IsVMAPDisabledFor(_mapId, VMAP::VMAP_DISABLE_AREA_FLAG))
                 data.areaInfo.emplace(info.hitModel->GetWmoID(), info.hitInstance->adtId, info.rootId, info.hitModel->GetMogpFlags(), info.hitInstance->ID);
             return true;
         }

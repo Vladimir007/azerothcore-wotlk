@@ -668,7 +668,7 @@ void OpcodeTable::Initialize()
     /*0x219*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_CHAT_WRONG_FACTION,                                 STATUS_NEVER);
     /*0x21A*/ DEFINE_HANDLER(CMSG_GMTICKET_SYSTEMSTATUS,                                            STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleGMTicketSystemStatusOpcode         );
     /*0x21B*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_GMTICKET_SYSTEMSTATUS,                              STATUS_NEVER);
-    /*0x21C*/ DEFINE_HANDLER(CMSG_SPIRIT_HEALER_ACTIVATE,                                           STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleSpiritHealerActivateOpcode         ); // pussywizard: corpse on other map, GetAreaFlag, this involved vmaps, grids and more
+    /*0x21C*/ DEFINE_HANDLER(CMSG_SPIRIT_HEALER_ACTIVATE,                                           STATUS_LOGGEDIN,   PROCESS_THREADUNSAFE,   &WorldSession::HandleSpiritHealerActivateOpcode         ); // pussywizard: corpse on other map, GetAreaFlag, this involved vMaps, grids and more
     /*0x21D*/ DEFINE_HANDLER(CMSG_SET_STAT_CHEAT,                                                   STATUS_NEVER,      PROCESS_INPLACE,        &WorldSession::Handle_NULL                              );
     /*0x21E*/ DEFINE_SERVER_OPCODE_HANDLER(SMSG_QUEST_FORCE_REMOVE,                                 STATUS_NEVER);
     /*0x21F*/ DEFINE_HANDLER(CMSG_SKILL_BUY_STEP,                                                   STATUS_NEVER,      PROCESS_INPLACE,        &WorldSession::Handle_NULL                              );

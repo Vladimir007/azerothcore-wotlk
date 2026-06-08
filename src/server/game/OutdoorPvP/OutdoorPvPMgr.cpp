@@ -60,7 +60,7 @@ void OutdoorPvPMgr::InitOutdoorPvP()
     {
         typeId = fields[0].Get<uint8>();
 
-        if (sDisableMgr->IsDisabledFor(DISABLE_TYPE_OUTDOORPVP, typeId, nullptr))
+        if (sDisableMgr->IsDisabledFor(DISABLE_TYPE_OUTDOOR_PVP, typeId, nullptr))
             continue;
 
         if (typeId >= MAX_OUTDOORPVP_TYPES)
@@ -72,7 +72,7 @@ void OutdoorPvPMgr::InitOutdoorPvP()
         auto data = std::make_unique<OutdoorPvPData>();
         auto realTypeId = OutdoorPvPTypes(typeId);
         data->TypeId = realTypeId;
-        data->ScriptId = sObjectMgr->GetScriptId(fields[1].Get<std::string>());
+        data->ScriptId = sObjectMgr->GetScriptID(fields[1].Get<std::string>());
         m_OutdoorPvPDatas[realTypeId] = std::move(data);
 
         ++count;

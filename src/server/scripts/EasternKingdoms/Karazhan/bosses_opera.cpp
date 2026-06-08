@@ -1012,7 +1012,7 @@ struct boss_julianne : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* Spell) override
     {
-        if (Spell->Id == SPELL_DRINK_POISON)
+        if (Spell->ID == SPELL_DRINK_POISON)
         {
             Talk(SAY_JULIANNE_DEATH01);
             _scheduler.CancelGroup(GROUP_COMBAT);

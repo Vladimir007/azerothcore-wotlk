@@ -105,7 +105,7 @@ bool OutdoorPvPSI::HandleAreaTrigger(Player* player, uint32 trigger)
                 if (m_Gathered_A >= SI_MAX_RESOURCES)
                 {
                     TeamApplyBuff(TEAM_ALLIANCE, SI_CENARION_FAVOR, 0, player);
-                    GetMap()->SendZoneText(OutdoorPvPSIBuffZones[0], sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_SI_CAPTURE_A).c_str());
+                    GetMap()->SendZoneText(OutdoorPvPSIBuffZones[0], sObjectMgr->GetNcoreString(LANG_OPVP_SI_CAPTURE_A).c_str());
                     m_LastController = TEAM_ALLIANCE;
                     m_Gathered_A = 0;
                     m_Gathered_H = 0;
@@ -131,7 +131,7 @@ bool OutdoorPvPSI::HandleAreaTrigger(Player* player, uint32 trigger)
                 if (m_Gathered_H >= SI_MAX_RESOURCES)
                 {
                     TeamApplyBuff(TEAM_HORDE, SI_CENARION_FAVOR, 0, player);
-                    GetMap()->SendZoneText(OutdoorPvPSIBuffZones[0], sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_SI_CAPTURE_H).c_str());
+                    GetMap()->SendZoneText(OutdoorPvPSIBuffZones[0], sObjectMgr->GetNcoreString(LANG_OPVP_SI_CAPTURE_H).c_str());
                     m_LastController = TEAM_HORDE;
                     m_Gathered_A = 0;
                     m_Gathered_H = 0;
@@ -242,7 +242,7 @@ bool OutdoorPvPSI::HandleCustomSpell(Player* player, uint32 spellId, GameObject*
     if (!go || spellId != SI_SILITHYST_FLAG_GO_SPELL)
         return false;
     player->CastSpell(player, SI_SILITHYST_FLAG, true);
-    if (go->GetGOInfo()->entry == SI_SILITHYST_MOUND)
+    if (go->GetGOInfo()->Entry == SI_SILITHYST_MOUND)
     {
         // despawn go
         go->SetRespawnTime(0);

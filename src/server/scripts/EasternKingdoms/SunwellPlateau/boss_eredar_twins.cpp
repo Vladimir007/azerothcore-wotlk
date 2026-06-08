@@ -370,7 +370,7 @@ class spell_eredar_twins_handle_touch : public SpellScript
         if (GetCaster()->HasAura(SPELL_DARK_FLAME))
             return SPELL_FAILED_DONT_REPORT;
 
-        if (GetSpellInfo()->Id == SPELL_DARK_TOUCHED)
+        if (GetSpellInfo()->ID == SPELL_DARK_TOUCHED)
         {
             if (GetCaster()->HasAura(SPELL_FLAME_TOUCHED))
             {

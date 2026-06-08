@@ -159,7 +159,7 @@ public:
         me->SetReactState(REACT_AGGRESSIVE);
         me->SetCanFly(false);
         me->SetDisableGravity(false);
-        me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->speed_run, false);
+        me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->SpeedRun, false);
         instance->DoStopTimedAchievement(ACHIEVEMENT_TIMED_TYPE_EVENT, ACHIEV_TIMED_START_EVENT);
         BossAI::Reset();
     }
@@ -259,7 +259,7 @@ public:
                 case 13:
                     me->SetCanFly(false);
                     me->SetDisableGravity(false);
-                    me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->speed_run, false);
+                    me->SetSpeed(MOVE_RUN, me->GetCreatureTemplate()->SpeedRun, false);
                     events.ScheduleEvent(EVENT_PHASE_3_ATTACK, 0ms);
                     break;
             }

@@ -769,7 +769,7 @@ struct boss_mimiron : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_TELEPORT)
+        if (spellInfo->ID == SPELL_TELEPORT)
         {
             me->DespawnOrUnsummon();
             instance->SetData(EVENT_KEEPER_TELEPORTED, DONE);
@@ -866,7 +866,7 @@ struct boss_mimiron : public BossAI
                     Spell* s1 = LMK2->GetCurrentSpell(CURRENT_GENERIC_SPELL);
                     Spell* s2 = VX001->GetCurrentSpell(CURRENT_GENERIC_SPELL);
                     Spell* s3 = ACU->GetCurrentSpell(CURRENT_GENERIC_SPELL);
-                    if (s1 && s2 && s3 && s1->GetSpellInfo()->Id == SPELL_SELF_REPAIR && s2->GetSpellInfo()->Id == SPELL_SELF_REPAIR && s3->GetSpellInfo()->Id == SPELL_SELF_REPAIR)
+                    if (s1 && s2 && s3 && s1->GetSpellInfo()->ID == SPELL_SELF_REPAIR && s2->GetSpellInfo()->ID == SPELL_SELF_REPAIR && s3->GetSpellInfo()->ID == SPELL_SELF_REPAIR)
                         events.ScheduleEvent(EVENT_FINISH, 0ms);
                 }
                 break;
@@ -1147,7 +1147,7 @@ struct npc_ulduar_leviathan_mkii : public ScriptedAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_SELF_REPAIR)
+        if (spell->ID == SPELL_SELF_REPAIR)
         {
             me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             me->SetReactState(REACT_AGGRESSIVE);
@@ -1458,7 +1458,7 @@ struct npc_ulduar_vx001 : public ScriptedAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_SELF_REPAIR)
+        if (spell->ID == SPELL_SELF_REPAIR)
         {
             me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
             me->SetReactState(REACT_AGGRESSIVE);
@@ -1700,7 +1700,7 @@ struct npc_ulduar_aerial_command_unit : public ScriptedAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_SELF_REPAIR)
+        if (spell->ID == SPELL_SELF_REPAIR)
         {
             _isDefeated = false;
             me->RemoveUnitFlag(UNIT_FLAG_NON_ATTACKABLE);
@@ -2149,7 +2149,7 @@ struct npc_ulduar_flames_spread : public NullCreatureAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spell) override
     {
-        switch (spell->Id)
+        switch (spell->ID)
         {
             case SPELL_FROST_BOMB_EXPLOSION_10:
             case SPELL_FROST_BOMB_EXPLOSION_25:
@@ -2229,7 +2229,7 @@ struct npc_ulduar_rocket_strike_trigger : public NullCreatureAI
     {
         if (!target || !spell)
             return;
-        if (spell->Id == 63041)
+        if (spell->ID == 63041)
         {
             if (target->GetEntry() == NPC_ASSAULT_BOT)
                 me->CastSpell(me, 65040, true); // achievement Not-So-Friendly Fire

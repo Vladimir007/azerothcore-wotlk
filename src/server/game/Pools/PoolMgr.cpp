@@ -194,7 +194,7 @@ void PoolGroup<Creature>::Despawn1Object(ObjectGuid::LowType guid)
     {
         sObjectMgr->RemoveCreatureFromGrid(guid, data);
 
-        Map* map = sMapMgr->CreateBaseMap(data->mapid);
+        Map* map = sMapMgr->CreateBaseMap(data->mapID);
         if (!map->Instanceable())
         {
             auto creatureBounds = map->GetCreatureBySpawnIdStore().equal_range(guid);
@@ -214,9 +214,9 @@ void PoolGroup<GameObject>::Despawn1Object(ObjectGuid::LowType guid)
 {
     if (GameObjectData const* data = sObjectMgr->GetGameObjectData(guid))
     {
-        sObjectMgr->RemoveGameobjectFromGrid(guid, data);
+        sObjectMgr->RemoveGameObjectFromGrid(guid, data);
 
-        Map* map = sMapMgr->CreateBaseMap(data->mapid);
+        Map* map = sMapMgr->CreateBaseMap(data->mapID);
         if (!map->Instanceable())
         {
             auto gameobjectBounds = map->GetGameObjectBySpawnIdStore().equal_range(guid);
@@ -381,7 +381,7 @@ void PoolGroup<Creature>::Spawn1Object(PoolObject* obj)
         sObjectMgr->AddCreatureToGrid(obj->guid, data);
 
         // Spawn if necessary (loaded grids only)
-        Map* map = sMapMgr->CreateBaseMap(data->mapid);
+        Map* map = sMapMgr->CreateBaseMap(data->mapID);
         // We use spawn coords to spawn
         if (!map->Instanceable() && map->IsGridLoaded(data->posX, data->posY))
         {
@@ -402,10 +402,10 @@ void PoolGroup<GameObject>::Spawn1Object(PoolObject* obj)
 {
     if (GameObjectData const* data = sObjectMgr->GetGameObjectData(obj->guid))
     {
-        sObjectMgr->AddGameobjectToGrid(obj->guid, data);
+        sObjectMgr->AddGameObjectToGrid(obj->guid, data);
         // Spawn if necessary (loaded grids only)
         // this base map checked as non-instanced and then only existed
-        Map* map = sMapMgr->CreateBaseMap(data->mapid);
+        Map* map = sMapMgr->CreateBaseMap(data->mapID);
         // We use current coords to unspawn, not spawn coords since creature can have changed grid
         if (!map->Instanceable() && map->IsGridLoaded(data->posX, data->posY))
         {
@@ -466,7 +466,7 @@ void PoolGroup<Quest>::SpawnObject(ActivePoolData& spawns, uint32 limit, uint32 
 
         stmt->SetData(0, poolId);
 
-        PreparedQueryResult result = CharacterDatabase.Query(stmt);
+        QueryResult result = CharacterDatabase.Query(stmt);
 
         if (result)
         {
@@ -697,11 +697,11 @@ void PoolMgr::LoadFromDB()
                 }
 
                 GameObjectTemplate const* goinfo = sObjectMgr->GetGameObjectTemplate(data->id);
-                if (goinfo->type != GAMEOBJECT_TYPE_CHEST &&
-                        goinfo->type != GAMEOBJECT_TYPE_GOOBER &&
-                        goinfo->type != GAMEOBJECT_TYPE_FISHINGHOLE)
+                if (goinfo->Type != GAME_OBJECT_TYPE_CHEST &&
+                        goinfo->Type != GAME_OBJECT_TYPE_GOOBER &&
+                        goinfo->Type != GAME_OBJECT_TYPE_FISHING_HOLE)
                 {
-                    LOG_ERROR("sql.sql", "`pool_gameobject` has a not lootable gameobject spawn (GUID: {}, type: {}) defined for pool id ({}), skipped.", guid, goinfo->type, pool_id);
+                    LOG_ERROR("sql.sql", "`pool_gameobject` has a not lootable gameobject spawn (GUID: {}, type: {}) defined for pool id ({}), skipped.", guid, goinfo->Type, pool_id);
                     continue;
                 }
 
@@ -831,7 +831,7 @@ void PoolMgr::LoadFromDB()
         uint32 oldMSTime = getMSTime();
 
         WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_QUEST_POOLS);
-        PreparedQueryResult result = WorldDatabase.Query(stmt);
+        QueryResult result = WorldDatabase.Query(stmt);
 
         if (!result)
         {
@@ -972,7 +972,7 @@ void PoolMgr::SaveQuestsToDB(bool daily, bool weekly, bool other)
 {
     CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
 
-    // pussywizard: mysql thread races, change only what is meant to be changed
+    // pussywizard: PostgreSQL thread races, change only what is meant to be changed
     std::set<uint32> deletedPools;
     for (PoolGroupQuestMap::iterator itr = mPoolQuestGroups.begin(); itr != mPoolQuestGroups.end(); ++itr)
     {

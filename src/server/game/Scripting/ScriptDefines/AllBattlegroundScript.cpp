@@ -24,7 +24,7 @@ void ScriptMgr::OnBattlegroundStart(Battleground* bg)
     CALL_ENABLED_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_ON_BATTLEGROUND_START, script->OnBattlegroundStart(bg));
 }
 
-void ScriptMgr::OnBattlegroundEndReward(Battleground* bg, Player* player, TeamId winnerTeamId)
+void ScriptMgr::OnBattlegroundEndReward(Battleground* bg, Player* player, TeamID winnerTeamId)
 {
     CALL_ENABLED_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_ON_BATTLEGROUND_END_REWARD, script->OnBattlegroundEndReward(bg, player, winnerTeamId));
 }
@@ -49,12 +49,12 @@ void ScriptMgr::OnBattlegroundRemovePlayerAtLeave(Battleground* bg, Player* play
     CALL_ENABLED_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_ON_BATTLEGROUND_REMOVE_PLAYER_AT_LEAVE, script->OnBattlegroundRemovePlayerAtLeave(bg, player));
 }
 
-void ScriptMgr::OnQueueUpdate(BattlegroundQueue* queue, uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketId bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating)
+void ScriptMgr::OnQueueUpdate(BattlegroundQueue* queue, uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketID bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating)
 {
     CALL_ENABLED_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_ON_QUEUE_UPDATE, script->OnQueueUpdate(queue, diff, bgTypeId, bracket_id, arenaType, isRated, arenaRating));
 }
 
-bool ScriptMgr::OnQueueUpdateValidity(BattlegroundQueue* queue, uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketId bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating)
+bool ScriptMgr::OnQueueUpdateValidity(BattlegroundQueue* queue, uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketID bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating)
 {
     CALL_ENABLED_BOOLEAN_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_ON_QUEUE_UPDATE_VALIDITY, !script->OnQueueUpdateValidity(queue, diff, bgTypeId, bracket_id, arenaType, isRated, arenaRating));
 }
@@ -64,12 +64,12 @@ void ScriptMgr::OnAddGroup(BattlegroundQueue* queue, GroupQueueInfo* ginfo, uint
     CALL_ENABLED_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_ON_ADD_GROUP, script->OnAddGroup(queue, ginfo, index, leader, group, bgTypeId, bracketEntry, arenaType, isRated, isPremade, arenaRating, matchmakerRating, arenaTeamId, opponentsArenaTeamId));
 }
 
-bool ScriptMgr::CanFillPlayersToBG(BattlegroundQueue* queue, Battleground* bg, BattlegroundBracketId bracket_id)
+bool ScriptMgr::CanFillPlayersToBG(BattlegroundQueue* queue, Battleground* bg, BattlegroundBracketID bracket_id)
 {
     CALL_ENABLED_BOOLEAN_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_CAN_FILL_PLAYERS_TO_BG, !script->CanFillPlayersToBG(queue, bg, bracket_id));
 }
 
-bool ScriptMgr::IsCheckNormalMatch(BattlegroundQueue* queue, Battleground* bgTemplate, BattlegroundBracketId bracket_id, uint32 minPlayers, uint32 maxPlayers)
+bool ScriptMgr::IsCheckNormalMatch(BattlegroundQueue* queue, Battleground* bgTemplate, BattlegroundBracketID bracket_id, uint32 minPlayers, uint32 maxPlayers)
 {
     CALL_ENABLED_BOOLEAN_HOOKS_WITH_DEFAULT_FALSE(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_IS_CHECK_NORMAL_MATCH, script->IsCheckNormalMatch(queue, bgTemplate, bracket_id, minPlayers, maxPlayers));
 }
@@ -89,7 +89,7 @@ bool ScriptMgr::OnBeforeSendExitMessageArenaQueue(BattlegroundQueue* queue, Grou
     CALL_ENABLED_BOOLEAN_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_ON_BEFORE_SEND_EXIT_MESSAGE_ARENA_QUEUE, !script->OnBeforeSendExitMessageArenaQueue(queue, ginfo));
 }
 
-void ScriptMgr::OnBattlegroundEnd(Battleground* bg, TeamId winnerTeam)
+void ScriptMgr::OnBattlegroundEnd(Battleground* bg, TeamID winnerTeam)
 {
     CALL_ENABLED_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_ON_BATTLEGROUND_END, script->OnBattlegroundEnd(bg, winnerTeam));
 }
@@ -104,7 +104,7 @@ void ScriptMgr::OnBattlegroundCreate(Battleground* bg)
     CALL_ENABLED_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_ON_BATTLEGROUND_CREATE, script->OnBattlegroundCreate(bg));
 }
 
-bool ScriptMgr::CanAddGroupToMatchingPool(BattlegroundQueue* queue, GroupQueueInfo* group, uint32 poolPlayerCount, Battleground* bg, BattlegroundBracketId bracketId)
+bool ScriptMgr::CanAddGroupToMatchingPool(BattlegroundQueue* queue, GroupQueueInfo* group, uint32 poolPlayerCount, Battleground* bg, BattlegroundBracketID bracketId)
 {
     CALL_ENABLED_BOOLEAN_HOOKS(AllBattlegroundScript, ALLBATTLEGROUNDHOOK_CAN_ADD_GROUP_TO_MATCHING_POOL, !script->CanAddGroupToMatchingPool(queue, group, poolPlayerCount, bg, bracketId));
 }

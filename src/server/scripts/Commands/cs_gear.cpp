@@ -31,7 +31,7 @@ public:
     {
         static ChatCommandTable gearCommandTable =
         {
-            { "repair",  HandleGearRepairCommand, SEC_GAMEMASTER, Console::No },
+            { "repair",  HandleGearRepairCommand, SEC_GAME_MASTER, Console::No },
             { "stats",   HandleGearStatsCommand,  SEC_PLAYER,     Console::No }
         };
 
@@ -92,7 +92,7 @@ public:
         {
             CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_STATS);
             stmt->SetData(0, player->GetGUID().GetCounter());
-            PreparedQueryResult result = CharacterDatabase.Query(stmt);
+            QueryResult result = CharacterDatabase.Query(stmt);
 
             if (result)
             {

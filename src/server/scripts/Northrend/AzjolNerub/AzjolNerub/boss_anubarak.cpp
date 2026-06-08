@@ -22,6 +22,7 @@
 #include "SpellInfo.h"
 #include "SpellMgr.h"
 #include "SpellScript.h"
+#include "MapDefines.h"
 
 enum Spells
 {
@@ -125,7 +126,7 @@ struct boss_anub_arak : public BossAI
 
     void SpellHitTarget(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_SUBMERGE)
+        if (spellInfo->ID == SPELL_SUBMERGE)
         {
             me->SetUnitFlag(UNIT_FLAG_NON_ATTACKABLE | UNIT_FLAG_NOT_SELECTABLE);
             me->RemoveAurasDueToSpell(SPELL_LEECHING_SWARM);

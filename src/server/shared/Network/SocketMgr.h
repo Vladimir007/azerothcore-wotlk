@@ -1,29 +1,12 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef SOCKET_MGR_H
+#define SOCKET_MGR_H
 
-#ifndef SocketMgr_h__
-#define SocketMgr_h__
-
+#include <memory>
+#include <boost/asio/ip/tcp.hpp>
 #include "AsyncAcceptor.h"
 #include "Config.h"
 #include "Errors.h"
 #include "NetworkThread.h"
-#include <boost/asio/ip/tcp.hpp>
-#include <memory>
 
 using boost::asio::ip::tcp;
 
@@ -33,20 +16,17 @@ class SocketMgr
 public:
     virtual ~SocketMgr()
     {
-        ASSERT(!_threads && !_acceptor && !_threadCount, "StopNetwork must be called prior to SocketMgr destruction");
+        ASSERT(!_thread && !_acceptor, "StopNetwork must be called prior to SocketMgr destruction");
     }
 
-    virtual bool StartNetwork(Acore::Asio::IoContext& ioContext, std::string const& bindIp, uint16 port, int threadCount)
+    virtual bool StartNetwork(Acore::Asio::IoContext& ioContext, std::string const& bindIp, uint16 port)
     {
-        ASSERT(threadCount > 0);
-
         std::unique_ptr<AsyncAcceptor> acceptor;
         try
         {
-            bool supportSocketActivation = sConfigMgr->GetOption<bool>("Network.UseSocketActivation", false);
-            acceptor = std::make_unique<AsyncAcceptor>(ioContext, bindIp, port, supportSocketActivation);
+            acceptor = std::make_unique<AsyncAcceptor>(ioContext, bindIp, port);
         }
-        catch (boost::system::system_error const& err)
+        catch (const boost::system::system_error& err)
         {
             LOG_ERROR("network", "Exception caught in SocketMgr.StartNetwork ({}:{}): {}", bindIp, port, err.what());
             return false;
@@ -59,78 +39,51 @@ public:
         }
 
         _acceptor = std::move(acceptor);
-        _threadCount = threadCount;
-        _threads = std::unique_ptr<NetworkThread<SocketType>[]>(CreateThreads());
+        _thread = std::unique_ptr<NetworkThread<SocketType>>(CreateThread());
 
-        ASSERT(_threads);
+        ASSERT(_thread);
+        _thread->Start();
 
-        for (int32 i = 0; i < _threadCount; ++i)
-            _threads[i].Start();
-
-        _acceptor->SetSocketFactory([this]() { return GetSocketForAccept(); });
+        _acceptor->SetSocketFactory([this] { return this->_thread->GetSocketForAccept(); });
         return true;
     }
 
     virtual void StopNetwork()
     {
         _acceptor->Close();
-
-        for (int32 i = 0; i < _threadCount; ++i)
-            _threads[i].Stop();
+        _thread->Stop();
 
         Wait();
 
         _acceptor.reset();
-        _threads.reset();
-        _threadCount = 0;
+        _thread.reset();
     }
 
     void Wait()
     {
-        for (int32 i = 0; i < _threadCount; ++i)
-            _threads[i].Wait();
+        _thread->Wait();
     }
 
-    virtual void OnSocketOpen(IoContextTcpSocket&& sock, uint32 threadIndex)
+    virtual void OnSocketOpen(IoContextTcpSocket& sock)
     {
         try
         {
             std::shared_ptr<SocketType> newSocket = std::make_shared<SocketType>(std::move(sock));
-            _threads[threadIndex].AddSocket(newSocket);
+            _thread->AddSocket(newSocket);
         }
-        catch (boost::system::system_error const& err)
+        catch (const boost::system::system_error& err)
         {
             LOG_WARN("network", "Failed to retrieve client's remote address {}", err.what());
         }
     }
 
-    [[nodiscard]] int32 GetNetworkThreadCount() const { return _threadCount; }
-
-    [[nodiscard]] uint32 SelectThreadWithMinConnections() const
-    {
-        uint32 min = 0;
-
-        for (int32 i = 1; i < _threadCount; ++i)
-            if (_threads[i].GetConnectionCount() < _threads[min].GetConnectionCount())
-                min = i;
-
-        return min;
-    }
-
-    std::pair<IoContextTcpSocket*, uint32> GetSocketForAccept()
-    {
-        uint32 threadIndex = SelectThreadWithMinConnections();
-        return { _threads[threadIndex].GetSocketForAccept(), threadIndex };
-    }
-
 protected:
     SocketMgr() = default;
 
-    virtual NetworkThread<SocketType>* CreateThreads() const = 0;
+    virtual NetworkThread<SocketType>* CreateThread() const = 0;
 
-    std::unique_ptr<AsyncAcceptor> _acceptor;
-    std::unique_ptr<NetworkThread<SocketType>[]> _threads;
-    int32 _threadCount{};
+    std::unique_ptr<AsyncAcceptor> _acceptor{};
+    std::unique_ptr<NetworkThread<SocketType>> _thread{};
 };
 
-#endif // SocketMgr_h__
+#endif

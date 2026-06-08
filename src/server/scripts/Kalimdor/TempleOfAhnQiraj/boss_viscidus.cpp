@@ -196,7 +196,7 @@ struct boss_viscidus : public BossAI
 
     void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_REJOIN_VISCIDUS)
+        if (spellInfo->ID == SPELL_REJOIN_VISCIDUS)
         {
             me->RemoveAuraFromStack(SPELL_VISCIDUS_SHRINKS);
         }

@@ -36,9 +36,9 @@ bool OPvPCapturePoint::HandlePlayerEnter(Player* player)
 {
     if (_capturePoint)
     {
-        player->SendUpdateWorldState(_capturePoint->GetGOInfo()->capturePoint.worldState1, 1);
-        player->SendUpdateWorldState(_capturePoint->GetGOInfo()->capturePoint.worldstate2, (uint32)std::ceil((_value + _maxValue) / (2 * _maxValue) * 100.0f));
-        player->SendUpdateWorldState(_capturePoint->GetGOInfo()->capturePoint.worldstate3, _neutralValuePct);
+        player->SendUpdateWorldState(_capturePoint->GetGOInfo()->CapturePoint.worldState1, 1);
+        player->SendUpdateWorldState(_capturePoint->GetGOInfo()->CapturePoint.worldstate2, (uint32)std::ceil((_value + _maxValue) / (2 * _maxValue) * 100.0f));
+        player->SendUpdateWorldState(_capturePoint->GetGOInfo()->CapturePoint.worldstate3, _neutralValuePct);
     }
 
     return _activePlayers[player->GetTeamId()].insert(player->GetGUID()).second;
@@ -48,7 +48,7 @@ void OPvPCapturePoint::HandlePlayerLeave(Player* player)
 {
     if (_capturePoint)
     {
-        player->SendUpdateWorldState(_capturePoint->GetGOInfo()->capturePoint.worldState1, 0);
+        player->SendUpdateWorldState(_capturePoint->GetGOInfo()->CapturePoint.worldState1, 0);
     }
 
     _activePlayers[player->GetTeamId()].erase(player->GetGUID());
@@ -60,13 +60,13 @@ void OPvPCapturePoint::SendChangePhase()
         return;
 
     // send this too, sometimes the slider disappears, dunno why :(
-    SendUpdateWorldState(_capturePoint->GetGOInfo()->capturePoint.worldState1, 1);
+    SendUpdateWorldState(_capturePoint->GetGOInfo()->CapturePoint.worldState1, 1);
 
     // send these updates to only the ones in this objective
-    SendUpdateWorldState(_capturePoint->GetGOInfo()->capturePoint.worldstate2, (uint32)std::ceil((_value + _maxValue) / (2 * _maxValue) * 100.0f));
+    SendUpdateWorldState(_capturePoint->GetGOInfo()->CapturePoint.worldstate2, (uint32)std::ceil((_value + _maxValue) / (2 * _maxValue) * 100.0f));
 
     // send this too, sometimes it resets :S
-    SendUpdateWorldState(_capturePoint->GetGOInfo()->capturePoint.worldstate3, _neutralValuePct);
+    SendUpdateWorldState(_capturePoint->GetGOInfo()->CapturePoint.worldstate3, _neutralValuePct);
 }
 
 void OPvPCapturePoint::AddGO(uint32 type, ObjectGuid::LowType guid, uint32 entry)
@@ -131,7 +131,7 @@ bool OPvPCapturePoint::SetCapturePointData(uint32 entry, uint32 map, float x, fl
 
     // check info existence
     GameObjectTemplate const* goinfo = sObjectMgr->GetGameObjectTemplate(entry);
-    if (!goinfo || goinfo->type != GAMEOBJECT_TYPE_CAPTURE_POINT)
+    if (!goinfo || goinfo->Type != GAME_OBJECT_TYPE_CAPTURE_POINT)
     {
         LOG_ERROR("outdoorpvp", "OutdoorPvP: GO {} is not capture point!", entry);
         return false;
@@ -142,9 +142,9 @@ bool OPvPCapturePoint::SetCapturePointData(uint32 entry, uint32 map, float x, fl
         return false;
 
     // get the needed values from goinfo
-    _maxValue = (float)goinfo->capturePoint.maxTime;
-    _maxSpeed = _maxValue / float(goinfo->capturePoint.minTime ? goinfo->capturePoint.minTime : 60);
-    _neutralValuePct = goinfo->capturePoint.neutralPercent;
+    _maxValue = (float)goinfo->CapturePoint.maxTime;
+    _maxSpeed = _maxValue / float(goinfo->CapturePoint.minTime ? goinfo->CapturePoint.minTime : 60);
+    _neutralValuePct = goinfo->CapturePoint.neutralPercent;
     _minValue = CalculatePct(_maxValue, _neutralValuePct);
     return true;
 }
@@ -319,7 +319,7 @@ bool OPvPCapturePoint::Update(uint32 diff)
     if (!_capturePoint)
         return false;
 
-    auto radius = (float)_capturePoint->GetGOInfo()->capturePoint.radius;
+    auto radius = (float)_capturePoint->GetGOInfo()->CapturePoint.radius;
 
     for (auto const& activePlayer : _activePlayers)
     {
@@ -354,7 +354,7 @@ bool OPvPCapturePoint::Update(uint32 diff)
     if (factDiff == 0.f)
         return false;
 
-    TeamId ChallengerId = TEAM_NEUTRAL;
+    TeamID ChallengerId = TEAM_NEUTRAL;
     float maxDiff = (_maxSpeed * float(diff)) * sWorld->getFloatConfig(CONFIG_OUTDOOR_PVP_CAPTURE_RATE);
 
     if (factDiff < 0.f)
@@ -381,7 +381,7 @@ bool OPvPCapturePoint::Update(uint32 diff)
     }
 
     float oldValue = _value;
-    TeamId oldTeam = _team;
+    TeamID oldTeam = _team;
 
     _oldState = _state;
     _value += factDiff;
@@ -650,7 +650,7 @@ bool OutdoorPvP::HasPlayer(Player const* player) const
     return plSet.find(player->GetGUID()) != plSet.end();
 }
 
-void OutdoorPvP::TeamCastSpell(TeamId team, int32 spellId, Player* sameMapPlr)
+void OutdoorPvP::TeamCastSpell(TeamID team, int32 spellId, Player* sameMapPlr)
 {
     if (spellId > 0)
     {
@@ -668,7 +668,7 @@ void OutdoorPvP::TeamCastSpell(TeamId team, int32 spellId, Player* sameMapPlr)
     }
 }
 
-void OutdoorPvP::TeamApplyBuff(TeamId teamId, uint32 spellId, uint32 spellId2, Player* sameMapPlr)
+void OutdoorPvP::TeamApplyBuff(TeamID teamId, uint32 spellId, uint32 spellId2, Player* sameMapPlr)
 {
     TeamCastSpell(teamId, (int32)spellId, sameMapPlr);
     TeamCastSpell(teamId == TEAM_ALLIANCE ? TEAM_HORDE : TEAM_ALLIANCE, spellId2 ? -(int32)spellId2 : -(int32)spellId, sameMapPlr);
@@ -679,7 +679,7 @@ void OutdoorPvP::OnGameObjectCreate(GameObject* go)
     GoScriptPair sp(go->GetGUID().GetCounter(), go);
     _goScriptStore.insert(sp);
 
-    if (go->GetGoType() != GAMEOBJECT_TYPE_CAPTURE_POINT)
+    if (go->GetGoType() != GAME_OBJECT_TYPE_CAPTURE_POINT)
     {
         return;
     }
@@ -694,7 +694,7 @@ void OutdoorPvP::OnGameObjectRemove(GameObject* go)
 {
     _goScriptStore.erase(go->GetGUID().GetCounter());
 
-    if (go->GetGoType() != GAMEOBJECT_TYPE_CAPTURE_POINT)
+    if (go->GetGoType() != GAME_OBJECT_TYPE_CAPTURE_POINT)
     {
         return;
     }
@@ -721,7 +721,7 @@ void OutdoorPvP::SetMapFromZone(uint32 zone)
     AreaTableEntry const* areaTable = sAreaTableStore.LookupEntry(zone);
     ASSERT(areaTable);
 
-    Map* map = sMapMgr->CreateBaseMap(areaTable->mapid);
+    Map* map = sMapMgr->CreateBaseMap(areaTable->MapID);
     ASSERT(!map->Instanceable());
     _map = map;
 }

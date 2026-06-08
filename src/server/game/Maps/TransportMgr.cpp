@@ -73,9 +73,9 @@ void TransportMgr::LoadTransportTemplates()
             continue;
         }
 
-        if (goInfo->moTransport.taxiPathId >= sTaxiPathNodesByPath.size())
+        if (goInfo->MOTransport.taxiPathId >= sTaxiPathNodesByPath.size())
         {
-            LOG_ERROR("entities.transport", "Transport {} (name: {}) has an invalid path specified in `gameobject_template`.`data0` ({}) field, skipped.", entry, goInfo->name, goInfo->moTransport.taxiPathId);
+            LOG_ERROR("entities.transport", "Transport {} (name: {}) has an invalid path specified in `gameobject_template`.`data0` ({}) field, skipped.", entry, goInfo->name, goInfo->MOTransport.taxiPathId);
             continue;
         }
 
@@ -114,13 +114,13 @@ public:
 
 void TransportMgr::GeneratePath(GameObjectTemplate const* goInfo, TransportTemplate* transport)
 {
-    uint32 pathId = goInfo->moTransport.taxiPathId;
+    uint32 pathId = goInfo->MOTransport.taxiPathId;
     TaxiPathNodeList const& path = sTaxiPathNodesByPath[pathId];
     std::vector<KeyFrame>& keyFrames = transport->keyFrames;
     Movement::PointsArray splinePath, allPoints;
     bool mapChange = false;
     for (std::size_t i = 0; i < path.size(); ++i)
-        allPoints.push_back(G3D::Vector3(path[i]->x, path[i]->y, path[i]->z));
+        allPoints.push_back(G3D::Vector3(path[i]->X, path[i]->Y, path[i]->Z));
 
     // Add extra points to allow derivative calculations for all path nodes
     allPoints.insert(allPoints.begin(), allPoints.front().lerp(allPoints[1], -0.2f));
@@ -137,7 +137,7 @@ void TransportMgr::GeneratePath(GameObjectTemplate const* goInfo, TransportTempl
         if (!mapChange)
         {
             TaxiPathNodeEntry const* node_i = path[i];
-            if (i != path.size() - 1 && (node_i->actionFlag & 1 || node_i->mapid != path[i + 1]->mapid))
+            if (i != path.size() - 1 && (node_i->ActionFlag & 1 || node_i->MapID != path[i + 1]->MapID))
             {
                 keyFrames.back().Teleport = true;
                 mapChange = true;
@@ -150,8 +150,8 @@ void TransportMgr::GeneratePath(GameObjectTemplate const* goInfo, TransportTempl
                 k.InitialOrientation = Position::NormalizeOrientation(std::atan2(h.y, h.x) + M_PI);
 
                 keyFrames.push_back(k);
-                splinePath.push_back(G3D::Vector3(node_i->x, node_i->y, node_i->z));
-                transport->mapsUsed.insert(k.Node->mapid);
+                splinePath.push_back(G3D::Vector3(node_i->X, node_i->Y, node_i->Z));
+                transport->mapsUsed.insert(k.Node->MapID);
             }
         }
         else
@@ -178,18 +178,18 @@ void TransportMgr::GeneratePath(GameObjectTemplate const* goInfo, TransportTempl
     if (transport->mapsUsed.size() > 1)
     {
         for (std::set<uint32>::const_iterator itr = transport->mapsUsed.begin(); itr != transport->mapsUsed.end(); ++itr)
-            ASSERT(!sMapStore.LookupEntry(*itr)->Instanceable());
+            ASSERT(!sMapStore.LookupEntry(*itr)->InstanceAble());
 
         transport->inInstance = false;
     }
     else
-        transport->inInstance = sMapStore.LookupEntry(*transport->mapsUsed.begin())->Instanceable();
+        transport->inInstance = sMapStore.LookupEntry(*transport->mapsUsed.begin())->InstanceAble();
 
     // last to first is always "teleport", even for closed paths
     keyFrames.back().Teleport = true;
 
-    const float speed = float(goInfo->moTransport.moveSpeed);
-    const float accel = float(goInfo->moTransport.accelRate);
+    const float speed = float(goInfo->MOTransport.moveSpeed);
+    const float accel = float(goInfo->MOTransport.accelRate);
     const float accel_dist = 0.5f * speed * speed / accel;
 
     transport->accelTime = speed / accel;
@@ -319,7 +319,7 @@ void TransportMgr::GeneratePath(GameObjectTemplate const* goInfo, TransportTempl
     float curPathTime = 0.0f;
     if (keyFrames[0].IsStopFrame())
     {
-        curPathTime = float(keyFrames[0].Node->delay);
+        curPathTime = float(keyFrames[0].Node->Delay);
         keyFrames[0].DepartureTime = uint32(curPathTime * IN_MILLISECONDS);
     }
 
@@ -330,7 +330,7 @@ void TransportMgr::GeneratePath(GameObjectTemplate const* goInfo, TransportTempl
         {
             keyFrames[i].ArriveTime = uint32(curPathTime * IN_MILLISECONDS);
             keyFrames[i - 1].NextArriveTime = keyFrames[i].ArriveTime;
-            curPathTime += float(keyFrames[i].Node->delay);
+            curPathTime += float(keyFrames[i].Node->Delay);
             keyFrames[i].DepartureTime = uint32(curPathTime * IN_MILLISECONDS);
         }
         else
@@ -378,37 +378,37 @@ MotionTransport* TransportMgr::CreateTransport(uint32 entry, ObjectGuid::LowType
     }
 
     // create transport...
-    MotionTransport* trans = new MotionTransport();
+    const auto trans = new MotionTransport();
 
     // ...at first waypoint
     TaxiPathNodeEntry const* startNode = tInfo->keyFrames.begin()->Node;
-    uint32 mapId = startNode->mapid;
-    float x = startNode->x;
-    float y = startNode->y;
-    float z = startNode->z;
-    float o = tInfo->keyFrames.begin()->InitialOrientation;
+    uint32 mapID = startNode->MapID;
+    const float x = startNode->X;
+    const float y = startNode->Y;
+    const float z = startNode->Z;
+    const float o = tInfo->keyFrames.begin()->InitialOrientation;
 
     // initialize the gameobject base
     ObjectGuid::LowType guidLow = guid ? guid : sObjectMgr->GetGenerator<HighGuid::Mo_Transport>().Generate();
 
-    if (!trans->CreateMoTrans(guidLow, entry, mapId, x, y, z, o, 255))
+    if (!trans->CreateMoTrans(guidLow, entry, mapID, x, y, z, o, 255))
     {
         delete trans;
         return nullptr;
     }
 
-    if (MapEntry const* mapEntry = sMapStore.LookupEntry(mapId))
+    if (MapEntry const* mapEntry = sMapStore.LookupEntry(mapID))
     {
-        if (mapEntry->Instanceable() != tInfo->inInstance)
+        if (mapEntry->InstanceAble() != tInfo->inInstance)
         {
-            LOG_ERROR("entities.transport", "Transport {} (name: {}) attempted creation in instance map (id: {}) but it is not an instanced transport!", entry, trans->GetName(), mapId);
+            LOG_ERROR("entities.transport", "Transport {} (name: {}) attempted creation in instance map (id: {}) but it is not an instanced transport!", entry, trans->GetName(), mapID);
             delete trans;
             return nullptr;
         }
     }
 
     // use preset map for instances (need to know which instance)
-    trans->SetMap(map ? map : sMapMgr->CreateMap(mapId, nullptr));
+    trans->SetMap(map ? map : sMapMgr->CreateMap(mapID, nullptr));
     if (map && map->IsDungeon())
         trans->m_zoneScript = map->ToInstanceMap()->GetInstanceScript();
 
@@ -477,7 +477,7 @@ void TransportMgr::PreloadGridsFromQuery(std::string const& query, uint32& count
 
             if (MapEntry const* mapEntry = sMapStore.LookupEntry(mapId))
             {
-                if (!mapEntry->Instanceable())
+                if (!mapEntry->InstanceAble())
                 {
                     if (Map* map = sMapMgr->CreateBaseMap(mapId))
                     {

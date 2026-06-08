@@ -74,9 +74,9 @@ AC_API_EXPORT QuestFailedReason EnumUtils<QuestFailedReason>::FromIndex(std::siz
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<QuestFailedReason>::ToIndex(QuestFailedReason value)
+AC_API_EXPORT std::size_t EnumUtils<QuestFailedReason>::ToIndex(QuestFailedReason index)
 {
-    switch (value)
+    switch (index)
     {
         case INVALIDREASON_DONT_HAVE_REQ: return 0;
         case INVALIDREASON_QUEST_FAILED_LOW_LEVEL: return 1;
@@ -142,9 +142,9 @@ AC_API_EXPORT QuestShareMessages EnumUtils<QuestShareMessages>::FromIndex(std::s
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<QuestShareMessages>::ToIndex(QuestShareMessages value)
+AC_API_EXPORT std::size_t EnumUtils<QuestShareMessages>::ToIndex(QuestShareMessages index)
 {
-    switch (value)
+    switch (index)
     {
         case QUEST_PARTY_MSG_SHARING_QUEST: return 0;
         case QUEST_PARTY_MSG_CANT_TAKE_QUEST: return 1;

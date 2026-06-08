@@ -1,38 +1,20 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "QueryCallback.h"
-#include "Duration.h"
 #include "Errors.h"
 
 template<typename T, typename... Args>
-inline void Construct(T& t, Args&&... args)
+void Construct(T& t, Args&&... args)
 {
     new (&t) T(std::forward<Args>(args)...);
 }
 
 template<typename T>
-inline void Destroy(T& t)
+void Destroy(T& t)
 {
     t.~T();
 }
 
 template<typename T>
-inline void ConstructActiveMember(T* obj)
+void ConstructActiveMember(T* obj)
 {
     if (!obj->_isPrepared)
         Construct(obj->_string);
@@ -41,7 +23,7 @@ inline void ConstructActiveMember(T* obj)
 }
 
 template<typename T>
-inline void DestroyActiveMember(T* obj)
+void DestroyActiveMember(T* obj)
 {
     if (!obj->_isPrepared)
         Destroy(obj->_string);
@@ -50,7 +32,7 @@ inline void DestroyActiveMember(T* obj)
 }
 
 template<typename T>
-inline void MoveFrom(T* to, T&& from)
+void MoveFrom(T* to, T&& from)
 {
     ASSERT(to->_isPrepared == from._isPrepared);
 
@@ -62,11 +44,15 @@ inline void MoveFrom(T* to, T&& from)
 
 struct QueryCallback::QueryCallbackData
 {
-public:
     friend class QueryCallback;
 
-    QueryCallbackData(std::function<void(QueryCallback&, QueryResult)>&& callback) : _string(std::move(callback)), _isPrepared(false) { }
-    QueryCallbackData(std::function<void(QueryCallback&, PreparedQueryResult)>&& callback) : _prepared(std::move(callback)), _isPrepared(true) { }
+    QueryCallbackData(std::function<void(QueryCallback&, QueryResult)>&& callback, const bool prepared): _isPrepared(prepared)
+    {
+        if (_isPrepared)
+            _prepared = std::move(callback);
+        else
+            _string = std::move(callback);
+    }
 
     QueryCallbackData(QueryCallbackData&& right) noexcept
     {
@@ -105,22 +91,14 @@ private:
     union
     {
         std::function<void(QueryCallback&, QueryResult)> _string;
-        std::function<void(QueryCallback&, PreparedQueryResult)> _prepared;
+        std::function<void(QueryCallback&, QueryResult)> _prepared;
     };
     bool _isPrepared;
 };
 
-// Not using initialization lists to work around segmentation faults when compiling with clang without precompiled headers
-QueryCallback::QueryCallback(QueryResultFuture&& result)
+QueryCallback::QueryCallback(QueryResultFuture&& result, const bool prepared): _isPrepared(prepared)
 {
-    _isPrepared = false;
-    Construct(_string, std::move(result));
-}
-
-QueryCallback::QueryCallback(PreparedQueryResultFuture&& result)
-{
-    _isPrepared = true;
-    Construct(_prepared, std::move(result));
+    Construct(_isPrepared ? _prepared : _string, std::move(result));
 }
 
 QueryCallback::QueryCallback(QueryCallback&& right) noexcept
@@ -159,22 +137,22 @@ QueryCallback&& QueryCallback::WithCallback(std::function<void(QueryResult)>&& c
     return WithChainingCallback([callback](QueryCallback& /*this*/, QueryResult result) { callback(std::move(result)); });
 }
 
-QueryCallback&& QueryCallback::WithPreparedCallback(std::function<void(PreparedQueryResult)>&& callback)
+QueryCallback&& QueryCallback::WithPreparedCallback(std::function<void(QueryResult)>&& callback)
 {
-    return WithChainingPreparedCallback([callback](QueryCallback& /*this*/, PreparedQueryResult result) { callback(std::move(result)); });
+    return WithChainingPreparedCallback([callback](QueryCallback& /*this*/, QueryResult result) { callback(std::move(result)); });
 }
 
 QueryCallback&& QueryCallback::WithChainingCallback(std::function<void(QueryCallback&, QueryResult)>&& callback)
 {
     ASSERT(!_callbacks.empty() || !_isPrepared, "Attempted to set callback function for string query on a prepared async query");
-    _callbacks.emplace(std::move(callback));
+    _callbacks.emplace(std::move(callback), false);
     return std::move(*this);
 }
 
-QueryCallback&& QueryCallback::WithChainingPreparedCallback(std::function<void(QueryCallback&, PreparedQueryResult)>&& callback)
+QueryCallback&& QueryCallback::WithChainingPreparedCallback(std::function<void(QueryCallback&, QueryResult)>&& callback)
 {
     ASSERT(!_callbacks.empty() || _isPrepared, "Attempted to set callback function for prepared query on a string async query");
-    _callbacks.emplace(std::move(callback));
+    _callbacks.emplace(std::move(callback), true);
     return std::move(*this);
 }
 
@@ -189,14 +167,14 @@ bool QueryCallback::InvokeIfReady()
     auto checkStateAndReturnCompletion = [this]()
     {
         _callbacks.pop();
-        bool hasNext = !_isPrepared ? _string.valid() : _prepared.valid();
+        const bool hasNext = !_isPrepared ? _string.valid() : _prepared.valid();
         if (_callbacks.empty())
         {
             ASSERT(!hasNext);
             return true;
         }
 
-        // abort chain
+        // Abort chain
         if (!hasNext)
             return true;
 
@@ -209,7 +187,7 @@ bool QueryCallback::InvokeIfReady()
         if (_string.valid() && _string.wait_for(0s) == std::future_status::ready)
         {
             QueryResultFuture f(std::move(_string));
-            std::function<void(QueryCallback&, QueryResult)> cb(std::move(callback._string));
+            const std::function cb(std::move(callback._string));
             cb(*this, f.get());
             return checkStateAndReturnCompletion();
         }
@@ -218,8 +196,8 @@ bool QueryCallback::InvokeIfReady()
     {
         if (_prepared.valid() && _prepared.wait_for(0s) == std::future_status::ready)
         {
-            PreparedQueryResultFuture f(std::move(_prepared));
-            std::function<void(QueryCallback&, PreparedQueryResult)> cb(std::move(callback._prepared));
+            QueryResultFuture f(std::move(_prepared));
+            const std::function cb(std::move(callback._prepared));
             cb(*this, f.get());
             return checkStateAndReturnCompletion();
         }

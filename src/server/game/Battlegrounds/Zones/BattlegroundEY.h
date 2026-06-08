@@ -358,7 +358,7 @@ public:
     void StartingEventOpenDoors() override;
 
     /* BG Flags */
-    ObjectGuid GetFlagPickerGUID(TeamId /*teamId*/ = TEAM_NEUTRAL) const override    { return _flagKeeperGUID; }
+    ObjectGuid GetFlagPickerGUID(TeamID /*teamId*/ = TEAM_NEUTRAL) const override    { return _flagKeeperGUID; }
     void SetFlagPicker(ObjectGuid guid)     { _flagKeeperGUID = guid; }
     uint8 GetFlagState() const          { return _flagState; }
     void RespawnFlag();
@@ -371,10 +371,10 @@ public:
     GraveyardStruct const* GetClosestGraveyard(Player* player) override;
     bool SetupBattleground() override;
     void Init() override;
-    void EndBattleground(TeamId winnerTeamId) override;
+    void EndBattleground(TeamID winnerTeamId) override;
     bool UpdatePlayerScore(Player* player, uint32 type, uint32 value, bool doAddHonor = true) override;
     void FillInitialWorldStates(WorldPackets::WorldState::InitWorldStates& packet) override;
-    void SetDroppedFlagGUID(ObjectGuid guid, TeamId /*teamId*/ = TEAM_NEUTRAL) override  { _droppedFlagGUID = guid; }
+    void SetDroppedFlagGUID(ObjectGuid guid, TeamID /*teamId*/ = TEAM_NEUTRAL) override  { _droppedFlagGUID = guid; }
     ObjectGuid GetDroppedFlagGUID() const { return _droppedFlagGUID; }
 
     /* Battleground Events */
@@ -382,15 +382,15 @@ public:
     void EventPlayerDroppedFlag(Player* player) override;
 
     /* achievement req. */
-    bool AllNodesConrolledByTeam(TeamId teamId) const override;
-    TeamId GetPrematureWinner() override;
+    bool AllNodesConrolledByTeam(TeamID teamId) const override;
+    TeamID GetPrematureWinner() override;
 
 private:
     void PostUpdateImpl(uint32 diff) override;
 
     void EventPlayerCapturedFlag(Player* Source, uint32 BgObjectType);
     void EventTeamLostPoint(Player* player, uint32 point);
-    void EventTeamCapturedPoint(Player* player, TeamId teamId, uint32 point);
+    void EventTeamCapturedPoint(Player* player, TeamID teamId, uint32 point);
     void UpdatePointsCount();
     void UpdatePointsIcons(uint32 point);
 
@@ -398,7 +398,7 @@ private:
     void UpdatePointsState();
 
     /* Scorekeeping */
-    void AddPoints(TeamId teamId, uint32 points);
+    void AddPoints(TeamID teamId, uint32 points);
 
     struct CapturePointInfo
     {
@@ -408,13 +408,13 @@ private:
             _playersCount[TEAM_HORDE] = 0;
         }
 
-        TeamId _ownerTeamId;
+        TeamID _ownerTeamId;
         int8 _barStatus;
         uint32 _areaTrigger;
         int8 _playersCount[PVP_TEAMS_COUNT];
         Player* player = nullptr;
 
-        bool IsUnderControl(TeamId teamId) const { return _ownerTeamId == teamId; }
+        bool IsUnderControl(TeamID teamId) const { return _ownerTeamId == teamId; }
         bool IsUnderControl() const { return _ownerTeamId != TEAM_NEUTRAL; }
         bool IsUncontrolled() const { return _ownerTeamId == TEAM_NEUTRAL; }
     };

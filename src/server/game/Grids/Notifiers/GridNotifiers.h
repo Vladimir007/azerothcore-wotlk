@@ -102,7 +102,7 @@ namespace Acore
         WorldPacket const* i_message;
         uint32 i_phaseMask;
         float i_distSq;
-        TeamId teamId;
+        TeamID teamId;
         Player const* skipped_receiver;
         bool required3dDist;
         MessageDistDeliverer(WorldObject const* src, WorldPacket const* msg, float dist, bool own_team_only = false, Player const* skipped = nullptr, bool req3dDist = false)
@@ -650,16 +650,16 @@ namespace Acore
         GameObjectFocusCheck(Unit const* unit, uint32 focusId) : i_unit(unit), i_focusId(focusId) {}
         bool operator()(GameObject* go) const
         {
-            if (go->GetGOInfo()->type != GAMEOBJECT_TYPE_SPELL_FOCUS)
+            if (go->GetGOInfo()->Type != GAME_OBJECT_TYPE_SPELL_FOCUS)
                 return false;
 
             if (!go->isSpawned()) // xinef: dont allow to count deactivated objects
                 return false;
 
-            if (go->GetGOInfo()->spellFocus.focusId != i_focusId)
+            if (go->GetGOInfo()->SpellFocus.focusId != i_focusId)
                 return false;
 
-            float dist = (float)((go->GetGOInfo()->spellFocus.dist) / 2);
+            float dist = (float)((go->GetGOInfo()->SpellFocus.dist) / 2);
 
             return go->IsWithinDistInMap(i_unit, dist);
         }
@@ -675,7 +675,7 @@ namespace Acore
         NearestGameObjectFishingHole(WorldObject const& obj, float range) : i_obj(obj), i_range(range) {}
         bool operator()(GameObject* go)
         {
-            if (go->GetGOInfo()->type == GAMEOBJECT_TYPE_FISHINGHOLE && go->isSpawned() && i_obj.IsWithinDistInMap(go, i_range) && i_obj.IsWithinDistInMap(go, (float)go->GetGOInfo()->fishinghole.radius))
+            if (go->GetGOInfo()->Type == GAME_OBJECT_TYPE_FISHING_HOLE && go->isSpawned() && i_obj.IsWithinDistInMap(go, i_range) && i_obj.IsWithinDistInMap(go, (float)go->GetGOInfo()->FishingHole.radius))
             {
                 i_range = i_obj.GetDistance(go);
                 return true;
@@ -741,7 +741,7 @@ namespace Acore
     class NearestGameObjectTypeInObjectRangeCheck
     {
     public:
-        NearestGameObjectTypeInObjectRangeCheck(WorldObject const& obj, GameobjectTypes type, float range) : i_obj(obj), i_type(type), i_range(range) {}
+        NearestGameObjectTypeInObjectRangeCheck(WorldObject const& obj, GameObjectTypes type, float range) : i_obj(obj), i_type(type), i_range(range) {}
         bool operator()(GameObject* go)
         {
             if (go->GetGoType() == i_type && i_obj.IsWithinDistInMap(go, i_range))
@@ -753,7 +753,7 @@ namespace Acore
         }
     private:
         WorldObject const& i_obj;
-        GameobjectTypes i_type;
+        GameObjectTypes i_type;
         float  i_range;
 
         // prevent clone this object
@@ -831,7 +831,7 @@ namespace Acore
             i_spell = spellid;
             if (SpellInfo const* spell = sSpellMgr->GetSpellInfo(spellid))
                 if (SpellInfo const* newSpell = sSpellMgr->GetSpellForDifficultyFromSpell(spell, const_cast<Unit*>(obj)))
-                    i_spell = newSpell->Id;
+                    i_spell = newSpell->ID;
         }
         bool operator()(Unit* u)
         {
@@ -1603,7 +1603,7 @@ namespace Acore
             x(_x), y(_y), z(_z), range(_range), entry(_entry) {}
         bool operator() (GameObject* go)
         {
-            if (!entry || (go->GetGOInfo() && go->GetGOInfo()->entry == entry))
+            if (!entry || (go->GetGOInfo() && go->GetGOInfo()->Entry == entry))
                 return go->IsInRange3d(x, y, z, range);
             else return false;
         }

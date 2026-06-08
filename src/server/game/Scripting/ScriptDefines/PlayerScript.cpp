@@ -224,11 +224,6 @@ void ScriptMgr::OnPlayerLogout(Player* player)
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_LOGOUT, script->OnPlayerLogout(player));
 }
 
-void ScriptMgr::OnPlayerCreate(Player* player)
-{
-    CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_CREATE, script->OnPlayerCreate(player));
-}
-
 void ScriptMgr::OnPlayerSave(Player* player)
 {
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_SAVE, script->OnPlayerSave(player));
@@ -799,7 +794,7 @@ void ScriptMgr::OnPlayerResurrect(Player* player, float restore_percent, bool ap
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_PLAYER_RESURRECT, script->OnPlayerResurrect(player, restore_percent, applySickness));
 }
 
-void ScriptMgr::OnPlayerBeforeChooseGraveyard(Player* player, TeamId teamId, bool nearCorpse, uint32& graveyardOverride)
+void ScriptMgr::OnPlayerBeforeChooseGraveyard(Player* player, TeamID teamId, bool nearCorpse, uint32& graveyardOverride)
 {
     CALL_ENABLED_HOOKS(PlayerScript, PLAYERHOOK_ON_BEFORE_CHOOSE_GRAVEYARD, script->OnPlayerBeforeChooseGraveyard(player, teamId, nearCorpse, graveyardOverride));
 }

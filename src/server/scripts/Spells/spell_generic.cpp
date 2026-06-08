@@ -34,6 +34,7 @@
 #include "SpellScriptLoader.h"
 #include "Unit.h"
 #include "Vehicle.h"
+#include "MapDefines.h"
 #include <array>
 #include <cmath>
 /*
@@ -82,7 +83,7 @@ class spell_gen_arena_drink : public AuraScript
     {
         if (spellInfo->Effects[EFFECT_0].ApplyAuraName != SPELL_AURA_MOD_POWER_REGEN)
         {
-            LOG_ERROR("spells", "Aura {} structure has been changed - first aura is no longer SPELL_AURA_MOD_POWER_REGEN", spellInfo->Id);
+            LOG_ERROR("spells", "Aura {} structure has been changed - first aura is no longer SPELL_AURA_MOD_POWER_REGEN", spellInfo->ID);
             return false;
         }
 
@@ -228,7 +229,7 @@ class spell_the_flag_of_ownership : public SpellScript
 
         LocaleConstant loc_idx = caster->ToPlayer()->GetSession()->GetSessionDbLocaleIndex();
         BroadcastText const* bct = sObjectMgr->GetBroadcastText(TEXT_FLAG_OF_OWNERSHIP);
-        std::string bctMsg = Acore::StringFormat(bct->GetText(loc_idx, caster->getGender()), caster->GetName(), target->GetName());
+        std::string bctMsg = Acore::StringFormat(bct->GetText(caster->getGender()), caster->GetName(), target->GetName());
         caster->Talk(bctMsg, CHAT_MSG_MONSTER_EMOTE, LANG_UNIVERSAL, sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE), target);
 
         haveTarget = true;
@@ -256,7 +257,7 @@ class spell_the_flag_of_ownership : public SpellScript
 
         if (!haveTarget)
         {
-            caster->ToPlayer()->RemoveSpellCooldown(GetSpellInfo()->Id, true);
+            caster->ToPlayer()->RemoveSpellCooldown(GetSpellInfo()->ID, true);
             Spell::SendCastResult(caster->ToPlayer(), GetSpellInfo(), 0, SPELL_FAILED_BAD_TARGETS);
         }
     }
@@ -283,7 +284,7 @@ class spell_gen_have_item_auras : public AuraScript
         if (target && target->ToPlayer())
         {
             uint32 entry = 0;
-            switch (GetSpellInfo()->Id)
+            switch (GetSpellInfo()->ID)
             {
                 case 51060: // Have Withered Batwing
                     entry = 28294;
@@ -341,7 +342,7 @@ class spell_gen_mine_sweeper : public SpellScript
     void HandleScriptEffect(SpellEffIndex  /*effIndex*/)
     {
         if (Unit* target = GetHitPlayer())
-            if (Aura* aur = target->GetAura(GetSpellInfo()->Id))
+            if (Aura* aur = target->GetAura(GetSpellInfo()->ID))
                 if (aur->GetStackAmount() >= 10)
                     target->CastSpell(target, SPELL_LANDMINE_KNOCKBACK_ACHIEVEMENT, true);
     }
@@ -2048,7 +2049,7 @@ class spell_pvp_trinket_wotf_shared_cd : public SpellScript
 
         if (player->GetTeamId(true) == TEAM_HORDE)
         {
-            if (GetSpellInfo()->Id == SPELL_WILL_OF_THE_FORSAKEN_COOLDOWN_TRIGGER)
+            if (GetSpellInfo()->ID == SPELL_WILL_OF_THE_FORSAKEN_COOLDOWN_TRIGGER)
             {
                 WorldPacket data;
                 player->BuildCooldownPacket(data, SPELL_COOLDOWN_FLAG_INCLUDE_GCD, 7744, GetSpellInfo()->CategoryRecoveryTime); // Will of the forsaken
@@ -2190,7 +2191,7 @@ class spell_gen_profession_research : public SpellScript
 
     SpellCastResult CheckRequirement()
     {
-        if (HasDiscoveredAllSpells(GetSpellInfo()->Id, GetCaster()->ToPlayer()))
+        if (HasDiscoveredAllSpells(GetSpellInfo()->ID, GetCaster()->ToPlayer()))
         {
             SetCustomCastResultMessage(SPELL_CUSTOM_ERROR_NOTHING_TO_DISCOVER);
             return SPELL_FAILED_CUSTOM_ERROR;
@@ -2202,7 +2203,7 @@ class spell_gen_profession_research : public SpellScript
     void HandleScript(SpellEffIndex /*effIndex*/)
     {
         Player* caster = GetCaster()->ToPlayer();
-        uint32 spellId = GetSpellInfo()->Id;
+        uint32 spellId = GetSpellInfo()->ID;
 
         // learn random explicit discovery recipe (if any)
         if (uint32 discoveredSpellId = GetExplicitDiscoverySpell(spellId, caster))
@@ -2315,7 +2316,7 @@ class spell_gen_clone_weapon_aura : public AuraScript
         if (!caster)
             return;
 
-        switch (GetSpellInfo()->Id)
+        switch (GetSpellInfo()->ID)
         {
             case SPELL_COPY_WEAPON_AURA:
             case SPELL_COPY_WEAPON_2_AURA:
@@ -2368,7 +2369,7 @@ class spell_gen_clone_weapon_aura : public AuraScript
     {
         Unit* target = GetTarget();
 
-        switch (GetSpellInfo()->Id)
+        switch (GetSpellInfo()->ID)
         {
             case SPELL_COPY_WEAPON_AURA:
             case SPELL_COPY_WEAPON_2_AURA:
@@ -2423,7 +2424,7 @@ class spell_gen_seaforium_blast : public SpellScript
         // but in effect handling OriginalCaster can become nullptr
         if (Unit* originalCaster = GetOriginalCaster())
             if (GameObject* go = GetHitGObj())
-                if (go->GetGOValue()->Building.Health > 0 && go->GetGOInfo()->type == GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING)
+                if (go->GetGOValue()->Building.Health > 0 && go->GetGOInfo()->Type == GAME_OBJECT_TYPE_DESTRUCTIBLE_BUILDING)
                     originalCaster->CastSpell(originalCaster, SPELL_PLANT_CHARGES_CREDIT_ACHIEVEMENT, true);
     }
 
@@ -2540,7 +2541,7 @@ class spell_gen_vehicle_scaling : public SpellScript
     {
         if (Vehicle* veh = GetCaster()->GetVehicle())
             if (const VehicleSeatEntry* seatEntry = veh->GetSeatForPassenger(GetCaster()))
-                if (seatEntry->m_flags & VEHICLE_SEAT_FLAG_CAN_CONTROL)
+                if (seatEntry->Flags & VEHICLE_SEAT_FLAG_CAN_CONTROL)
                     return SPELL_CAST_OK;
 
         return SPELL_FAILED_DONT_REPORT;
@@ -2707,7 +2708,7 @@ class spell_gen_dummy_trigger : public SpellScript
         Unit* caster = GetCaster();
         if (Unit* target = GetHitUnit())
             if (SpellInfo const* triggeredByAuraSpell = GetTriggeringSpell())
-                if (triggeredByAuraSpell->Id == SPELL_PERSISTANT_SHIELD_TRIGGERED)
+                if (triggeredByAuraSpell->ID == SPELL_PERSISTANT_SHIELD_TRIGGERED)
                     caster->CastCustomSpell(target, SPELL_PERSISTANT_SHIELD_TRIGGERED, &damage, nullptr, nullptr, true);
     }
 
@@ -2871,7 +2872,7 @@ class spell_gen_dalaran_disguise : public SpellScript
         {
             uint8 gender = player->getGender();
 
-            uint32 spellId = GetSpellInfo()->Id;
+            uint32 spellId = GetSpellInfo()->ID;
 
             switch (spellId)
             {
@@ -2960,7 +2961,7 @@ class spell_gen_break_shield : public SpellScript
                 {
                     uint32 spellId;
 
-                    switch (GetSpellInfo()->Id)
+                    switch (GetSpellInfo()->ID)
                     {
                         case SPELL_BREAK_SHIELD_TRIGGER_UNK:
                         case SPELL_BREAK_SHIELD_TRIGGER_CAMPAING_WARHORSE:
@@ -3095,7 +3096,7 @@ class spell_gen_mounted_charge : public SpellScript
                 {
                     uint32 spellId;
 
-                    switch (GetSpellInfo()->Id)
+                    switch (GetSpellInfo()->ID)
                     {
                         case SPELL_CHARGE_TRIGGER_TRIAL_CHAMPION:
                             spellId = SPELL_CHARGE_CHARGING_EFFECT_20K_1;
@@ -3146,7 +3147,7 @@ class spell_gen_mounted_charge : public SpellScript
     {
         uint32 spellId;
 
-        switch (GetSpellInfo()->Id)
+        switch (GetSpellInfo()->ID)
         {
             case SPELL_CHARGE_CHARGING_EFFECT_8K5:
                 spellId = SPELL_CHARGE_DAMAGE_8K5;
@@ -4135,7 +4136,7 @@ public:
             AreaTableEntry const* area = sAreaTableStore.LookupEntry(target->GetAreaId());
             // Xinef: add battlefield check
             Battlefield* Bf = sBattlefieldMgr->GetBattlefieldToZoneId(target->GetZoneId());
-            if ((area && canFly && (area->flags & AREA_FLAG_NO_FLY_ZONE)) || (Bf && !Bf->CanFlyIn()))
+            if ((area && canFly && (area->Flags & AREA_FLAG_NO_FLY_ZONE)) || (Bf && !Bf->CanFlyIn()))
                 canFly = false;
 
             uint32 mount = 0;
@@ -4378,7 +4379,7 @@ class spell_gen_replenishment_aura : public AuraScript
 
     void CalculateAmount(AuraEffect const* /*aurEff*/, int32& amount, bool& /*canBeRecalculated*/)
     {
-        switch (GetSpellInfo()->Id)
+        switch (GetSpellInfo()->ID)
         {
             case SPELL_REPLENISHMENT:
                 amount = GetUnitOwner()->GetMaxPower(POWER_MANA) * 0.002f;
@@ -4569,7 +4570,7 @@ class spell_gen_charmed_unit_spell_cooldown : public SpellScript
         if (Player* owner = caster->GetCharmerOrOwnerPlayerOrPlayerItself())
         {
             WorldPacket data;
-            caster->BuildCooldownPacket(data, SPELL_COOLDOWN_FLAG_NONE, GetSpellInfo()->Id, GetSpellInfo()->RecoveryTime);
+            caster->BuildCooldownPacket(data, SPELL_COOLDOWN_FLAG_NONE, GetSpellInfo()->ID, GetSpellInfo()->RecoveryTime);
             owner->SendDirectMessage(&data);
         }
     }
@@ -4727,7 +4728,7 @@ public:
         {
             if (!caster->IsAlive())
             {
-                GetUnitOwner()->RemoveAurasDueToSpell(GetSpellInfo()->Id);
+                GetUnitOwner()->RemoveAurasDueToSpell(GetSpellInfo()->ID);
                 return;
             }
 
@@ -5280,7 +5281,7 @@ class spell_gen_sober_up : public AuraScript
         SpellEffIndex InebriateEffIndex = EFFECT_0;
         if (Player* player = target->ToPlayer())
         {
-            switch (GetSpellInfo()->Id)
+            switch (GetSpellInfo()->ID)
             {
                 case SPELL_DRUNKEN_HAZE:
                     InebriateEffIndex = EFFECT_1;
@@ -5353,7 +5354,7 @@ class spell_gen_steal_weapon : public AuraScript
                 int8 mainhand = 1;
                 if (EquipmentInfo const* eInfo = sObjectMgr->GetEquipmentInfo(creature->GetEntry(), mainhand))
                 {
-                    stealer->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, eInfo->ItemEntry[0]);
+                    stealer->SetUInt32Value(UNIT_VIRTUAL_ITEM_SLOT_ID, eInfo->ItemID[0]);
                     stealer->CastSpell(stealer, SPELL_STEAL_WEAPON, true);
                 }
             }

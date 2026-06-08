@@ -409,7 +409,7 @@ public:
 
             if (!InNormalForm())
             {
-                bool applyAura = std::find(std::begin(serpentStings), std::end(serpentStings), Spell->Id) != std::end(serpentStings);
+                bool applyAura = std::find(std::begin(serpentStings), std::end(serpentStings), Spell->ID) != std::end(serpentStings);
 
                 if (applyAura)
                 {
@@ -790,7 +790,7 @@ public:
         {
             if (!InNormalForm())
             {
-                if (Spell->Id == SIMONE_SPELL_WEAKNESS_VIPER_STING)
+                if (Spell->ID == SIMONE_SPELL_WEAKNESS_VIPER_STING)
                 {
                     me->AddAura(SIMONE_SPELL_SILENCE, me);
                     me->TextEmote(SIMONE_WEAKNESS_EMOTE);
@@ -1005,7 +1005,7 @@ public:
             if (me->HasAllAuras(NELSON_SPELL_SOUL_FLAME, NELSON_WEAKNESS_FROST_TRAP))
                 me->RemoveAura(NELSON_SPELL_SOUL_FLAME);
 
-            if (!me->HasAura(NELSON_SPELL_CRIPPLING_CLIP) && Spell->Id == NELSON_WEAKNESS_WING_CLIP)
+            if (!me->HasAura(NELSON_SPELL_CRIPPLING_CLIP) && Spell->ID == NELSON_WEAKNESS_WING_CLIP)
             {
                 me->AddAura(NELSON_SPELL_CRIPPLING_CLIP, me);
                 me->TextEmote(NELSON_WEAKNESS_EMOTE);
@@ -1172,7 +1172,7 @@ public:
                 return;
             }
 
-            if (Spell->Id == FRANKLIN_WEAKNESS_SCORPID_STING)
+            if (Spell->ID == FRANKLIN_WEAKNESS_SCORPID_STING)
             {
                 me->CastSpell(me, FRANKLIN_SPELL_ENTROPIC_STING, false);
             }

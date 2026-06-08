@@ -18,7 +18,7 @@
 #ifndef ACORE_MAP_INSTANCED_H
 #define ACORE_MAP_INSTANCED_H
 
-#include "DBCEnums.h"
+#include "DBCDefines.h"
 #include "InstanceSaveMgr.h"
 #include "Map.h"
 

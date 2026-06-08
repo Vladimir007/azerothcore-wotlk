@@ -192,7 +192,7 @@ struct boss_felmyst : public BossAI
 
     void SpellHitTarget(Unit* target, const SpellInfo* spell) override
     {
-        if (spell->Id == SPELL_STRAFE_TOP || spell->Id == SPELL_STRAFE_MIDDLE || spell->Id == SPELL_STRAFE_BOTTOM)
+        if (spell->ID == SPELL_STRAFE_TOP || spell->ID == SPELL_STRAFE_MIDDLE || spell->ID == SPELL_STRAFE_BOTTOM)
             target->CastSpell(target, SPELL_FOG_OF_CORRUPTION, true);
     }
 
@@ -431,7 +431,7 @@ struct npc_demonic_vapor_trail : public NullCreatureAI
 
     void SpellHitTarget(Unit* /*unit*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_DEMONIC_VAPOR && !_timer)
+        if (spellInfo->ID == SPELL_DEMONIC_VAPOR && !_timer)
             _timer = 1;
     }
 

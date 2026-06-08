@@ -87,7 +87,7 @@ InstanceSave* InstanceSaveMgr::AddInstanceSave(uint32 mapId, uint32 instanceId, 
     }
 
     time_t resetTime, extendedResetTime;
-    if (entry->map_type == MAP_RAID || difficulty > DUNGEON_DIFFICULTY_NORMAL)
+    if (entry->MapType == MAP_RAID || difficulty > DUNGEON_DIFFICULTY_NORMAL)
     {
         resetTime = GetResetTimeFor(mapId, difficulty);
         extendedResetTime = GetExtendedResetTimeFor(mapId, difficulty);
@@ -198,7 +198,7 @@ time_t InstanceSave::GetResetTimeForDB()
 {
     // only save the reset time for normal instances
     MapEntry const* entry = sMapStore.LookupEntry(GetMapId());
-    if (!entry || entry->map_type == MAP_RAID || GetDifficulty() == DUNGEON_DIFFICULTY_HEROIC)
+    if (!entry || entry->MapType == MAP_RAID || GetDifficulty() == DUNGEON_DIFFICULTY_HEROIC)
         return 0;
     else
         return GetResetTime();
@@ -333,11 +333,11 @@ void InstanceSaveMgr::LoadResetTimes()
         uint32 mapid = PAIR32_LOPART(map_diff_pair);
         Difficulty difficulty = Difficulty(PAIR32_HIPART(map_diff_pair));
         MapDifficulty const* mapDiff = &itr->second;
-        if (!mapDiff->resetTime)
+        if (!mapDiff->ResetTime)
             continue;
 
         // the reset_delay must be at least one day
-        uint32 period = uint32(((mapDiff->resetTime * sWorld->getRate(RATE_INSTANCE_RESET_TIME)) / DAY) * DAY);
+        uint32 period = uint32(((mapDiff->ResetTime * sWorld->getRate(RATE_INSTANCE_RESET_TIME)) / DAY) * DAY);
         if (period < DAY)
             period = DAY;
 
@@ -422,7 +422,7 @@ void InstanceSaveMgr::LoadCharacterBinds()
             {
                 PlayerCreateBoundInstancesMaps(guid);
                 InstancePlayerBind& bind = playerBindStorage[guid]->m[save->GetDifficulty()][save->GetMapId()];
-                if (bind.save) // pussywizard: another bind for the same map and difficulty! may happen because of mysql thread races
+                if (bind.save) // pussywizard: another bind for the same map and difficulty! may happen because of PostgreSQL thread races
                 {
                     if (bind.perm) // already loaded perm -> delete currently checked one from db
                     {
@@ -540,7 +540,7 @@ void InstanceSaveMgr::_ResetSave(InstanceSaveHashMap::iterator& itr)
     }
     else
     {
-        // delete character_instance per id where extended = 0, transtaction with set extended = 0, transaction is used to avoid mysql thread races
+        // delete character_instance per id where extended = 0, transtaction with set extended = 0, transaction is used to avoid PostgreSQL thread races
         CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
         CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_CHAR_INSTANCE_BY_INSTANCE_NOT_EXTENDED);
         stmt->SetData(0, itr->second->GetInstanceId());
@@ -562,7 +562,7 @@ void InstanceSaveMgr::_ResetOrWarnAll(uint32 mapid, Difficulty difficulty, bool 
 {
     // global reset for all instances of the given map
     MapEntry const* mapEntry = sMapStore.LookupEntry(mapid);
-    if (!mapEntry->Instanceable())
+    if (!mapEntry->InstanceAble())
         return;
 
     time_t now = GameTime::GetGameTime().count();
@@ -570,7 +570,7 @@ void InstanceSaveMgr::_ResetOrWarnAll(uint32 mapid, Difficulty difficulty, bool 
     if (!warn)
     {
         MapDifficulty const* mapDiff = GetMapDifficultyData(mapid, difficulty);
-        if (!mapDiff || !mapDiff->resetTime)
+        if (!mapDiff || !mapDiff->ResetTime)
         {
             LOG_ERROR("instance.save", "InstanceSaveMgr::ResetOrWarnAll: not valid difficulty or no reset delay for map {}", mapid);
             return;
@@ -579,7 +579,7 @@ void InstanceSaveMgr::_ResetOrWarnAll(uint32 mapid, Difficulty difficulty, bool 
         // calculate the next reset time
         uint32 diff = sWorld->getIntConfig(CONFIG_INSTANCE_RESET_TIME_HOUR) * HOUR;
 
-        uint32 period = uint32(((mapDiff->resetTime * sWorld->getRate(RATE_INSTANCE_RESET_TIME)) / DAY) * DAY);
+        uint32 period = uint32(((mapDiff->ResetTime * sWorld->getRate(RATE_INSTANCE_RESET_TIME)) / DAY) * DAY);
         if (period < DAY)
             period = DAY;
 
@@ -655,7 +655,7 @@ InstancePlayerBind* InstanceSaveMgr::PlayerBindToInstance(ObjectGuid guid, Insta
     }
     else
     {
-        // pussywizard: protect against mysql thread races!
+        // pussywizard: protect against PostgreSQL thread races!
         // pussywizard: CHANGED MY MIND! DON'T SLOW DOWN THIS QUERY! HANDLE ONLY DURING LOADING FROM DB!
         // example: enter instance -> bind -> update old id to new id -> exit -> delete new id
         // if delete by new id is executed before update, then we end up with in db

@@ -38,20 +38,15 @@ Player* ChatHandler::GetPlayer() const
     return m_session ? m_session->GetPlayer() : nullptr;
 }
 
-std::string ChatHandler::GetAcoreString(uint32 entry) const
+std::string ChatHandler::GetNcoreString(uint32 entry) const
 {
-    return m_session->GetAcoreString(entry);
+    return m_session->GetNcoreString(entry);
 }
 
-std::string const* ChatHandler::GetModuleString(std::string module, uint32 id) const
+bool ChatHandler::IsAvailable(bool requireGM) const
 {
-    return m_session->GetModuleString(module, id);
-}
-
-bool ChatHandler::IsAvailable(uint32 securityLevel) const
-{
-    // check security level only for simple  command (without child commands)
-    return IsConsole() ? true : m_session->GetSecurity() >= AccountTypes(securityLevel);
+    // Check security level only for simple  command (without child commands)
+    return IsConsole() ? true : (!requireGM || m_session->IsGameMaster());
 }
 
 bool ChatHandler::HasLowerSecurity(Player* target, ObjectGuid guid, bool strong)
@@ -75,25 +70,24 @@ bool ChatHandler::HasLowerSecurity(Player* target, ObjectGuid guid, bool strong)
 
 bool ChatHandler::HasLowerSecurityAccount(WorldSession* target, uint32 target_account, bool strong)
 {
-    uint32 target_sec;
+    bool target_gm;
 
     // allow everything from console and RA console
     if (!m_session)
         return false;
 
     // ignore only for non-players for non strong checks (when allow apply command at least to same sec level)
-    if (!AccountMgr::IsPlayerAccount(m_session->GetSecurity()) && !strong && sWorld->getBoolConfig(CONFIG_GM_LOWER_SECURITY))
+    if (m_session->IsGameMaster() && !strong && sWorld->getBoolConfig(CONFIG_GM_LOWER_SECURITY))
         return false;
 
     if (target)
-        target_sec = target->GetSecurity();
+        target_gm = target->IsGameMaster();
     else if (target_account)
-        target_sec = AccountMgr::GetSecurity(target_account, realm.Id.Realm);
+        target_gm = AccountMgr::IsGameMaster(target_account);
     else
-        return true;                                        // caller must report error for (target == nullptr && target_account == 0)
+        return true; // Caller must report error for (target == nullptr && target_account == 0)
 
-    AccountTypes target_ac_sec = AccountTypes(target_sec);
-    if (m_session->GetSecurity() < target_ac_sec || (strong && m_session->GetSecurity() <= target_ac_sec))
+    if ((!m_session->IsGameMaster() && target_gm ) || (strong && (!m_session->IsGameMaster() || target_gm)))
     {
         SendErrorMessage(LANG_YOURS_SECURITY_IS_LOW);
         return true;
@@ -117,7 +111,7 @@ void ChatHandler::SendGMText(std::string_view str)
 {
     std::vector<std::string_view> lines = Acore::Tokenize(str, '\n', true);
     // Session should have permissions to receive global gm messages
-    if (AccountMgr::IsPlayerAccount(m_session->GetSecurity()))
+    if (!m_session->IsGameMaster())
         return;
 
     for (std::string_view line : lines)
@@ -205,7 +199,7 @@ void ChatHandler::SendGlobalGMSysMessage(const char* str)
 
 void ChatHandler::SendSysMessage(uint32 entry)
 {
-    SendSysMessage(GetAcoreString(entry));
+    SendSysMessage(GetNcoreString(entry));
 }
 
 void ChatHandler::PSendSysMessage(std::string_view str, bool escapeCharacters)
@@ -231,7 +225,7 @@ bool ChatHandler::_ParseCommands(std::string_view text)
         return true;
 
     // Pretend commands don't exist for regular players
-    if (m_session && AccountMgr::IsPlayerAccount(m_session->GetSecurity()) && !sWorld->getBoolConfig(CONFIG_ALLOW_PLAYER_COMMANDS))
+    if (m_session && !m_session->IsGameMaster() && !sWorld->getBoolConfig(CONFIG_ALLOW_PLAYER_COMMANDS))
         return false;
 
     // Send error message for GMs
@@ -342,8 +336,9 @@ std::size_t ChatHandler::BuildChatPacket(WorldPacket& data, ChatMsg chatType, La
     return receiverGUIDPos;
 }
 
-std::size_t ChatHandler::BuildChatPacket(WorldPacket& data, ChatMsg chatType, Language language, WorldObject const* sender, WorldObject const* receiver, std::string_view message,
-                                    uint32 achievementId /*= 0*/, std::string const& channelName /*= ""*/, LocaleConstant locale /*= DEFAULT_LOCALE*/)
+std::size_t ChatHandler::BuildChatPacket(WorldPacket& data, const ChatMsg chatType, const Language language,
+    const WorldObject* sender, const WorldObject* receiver, const std::string_view message,
+    const uint32 achievementID /*= 0*/, const std::string& channelName /*= ""*/)
 {
     ObjectGuid senderGUID;
     std::string senderName = "";
@@ -354,7 +349,7 @@ std::size_t ChatHandler::BuildChatPacket(WorldPacket& data, ChatMsg chatType, La
     if (sender)
     {
         senderGUID = sender->GetGUID();
-        senderName = sender->GetNameForLocaleIdx(locale);
+        senderName = sender->GetName();
         if (Player const* playerSender = sender->ToPlayer())
         {
             chatTag = playerSender->GetChatTag();
@@ -365,10 +360,10 @@ std::size_t ChatHandler::BuildChatPacket(WorldPacket& data, ChatMsg chatType, La
     if (receiver)
     {
         receiverGUID = receiver->GetGUID();
-        receiverName = receiver->GetNameForLocaleIdx(locale);
+        receiverName = receiver->GetName();
     }
 
-    return BuildChatPacket(data, chatType, language, senderGUID, receiverGUID, message, chatTag, senderName, receiverName, achievementId, gmMessage, channelName);
+    return BuildChatPacket(data, chatType, language, senderGUID, receiverGUID, message, chatTag, senderName, receiverName, achievementID, gmMessage, channelName);
 }
 
 Player* ChatHandler::getSelectedPlayer() const
@@ -671,7 +666,7 @@ uint32 ChatHandler::extractSpellIdFromLink(char* text)
                 if (!glyphPropEntry)
                     return 0;
 
-                return glyphPropEntry->SpellId;
+                return glyphPropEntry->SpellID;
             }
     }
 
@@ -882,9 +877,9 @@ std::string ChatHandler::GetNameLink(Player* chr) const
     return playerLink(chr->GetName());
 }
 
-std::string CliHandler::GetAcoreString(uint32 entry) const
+std::string CliHandler::GetNcoreString(const uint32 entry) const
 {
-    return sObjectMgr->GetAcoreStringForDBCLocale(entry);
+    return sObjectMgr->GetNcoreString(entry);
 }
 
 void CliHandler::SendSysMessage(std::string_view str, bool /*escapeCharacters*/)
@@ -907,7 +902,7 @@ bool CliHandler::ParseCommands(std::string_view str)
 
 std::string CliHandler::GetNameLink() const
 {
-    return GetAcoreString(LANG_CONSOLE_COMMAND);
+    return GetNcoreString(LANG_CONSOLE_COMMAND);
 }
 
 bool CliHandler::needReportToTarget(Player* /*chr*/) const
@@ -1019,7 +1014,7 @@ bool AddonChannelCommandHandler::ParseCommands(std::string_view str)
 void AddonChannelCommandHandler::Send(std::string const& msg)
 {
     WorldPacket data;
-    ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER, LANG_ADDON, GetSession()->GetPlayer(), GetSession()->GetPlayer(), msg);
+    BuildChatPacket(data, CHAT_MSG_WHISPER, LANG_ADDON, GetSession()->GetPlayer(), GetSession()->GetPlayer(), msg);
     GetSession()->SendPacket(&data);
 }
 

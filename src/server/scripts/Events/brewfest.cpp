@@ -343,7 +343,7 @@ struct npc_dark_iron_attack_generator : public ScriptedAI
 
     void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_REPORT_DEATH)
+        if (spellInfo->ID == SPELL_REPORT_DEATH)
         {
             if (caster->GetEntry() == NPC_DARK_IRON_GUZZLER)
                 guzzlerCounter++;
@@ -733,7 +733,7 @@ struct npc_dark_iron_guzzler : public ScriptedAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (me->IsAlive() && spellInfo->Id == SPELL_PLAYER_MUG)
+        if (me->IsAlive() && spellInfo->ID == SPELL_PLAYER_MUG)
         {
             me->CastSpell(me, SPELL_MUG_BOUNCE_BACK, true);
             me->KillSelf();

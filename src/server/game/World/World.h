@@ -1,24 +1,3 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-/// \addtogroup world The World
-/// @{
-/// \file
-
 #ifndef __WORLD_H
 #define __WORLD_H
 
@@ -40,7 +19,7 @@ class SystemMgr;
 
 struct Realm;
 
-AC_GAME_API extern Realm realm;
+extern Realm realm;
 
 enum ShutdownMask : uint8
 {
@@ -58,15 +37,14 @@ enum ShutdownExitCode : uint8
 /// Timers for different object refresh rates
 enum WorldTimers
 {
-    WUPDATE_UPTIME,
-    WUPDATE_EVENTS,
-    WUPDATE_CLEANDB,
-    WUPDATE_AUTOBROADCAST,
-    WUPDATE_MAILBOXQUEUE,
-    WUPDATE_PINGDB,
-    WUPDATE_5_SECS,
-    WUPDATE_WHO_LIST,
-    WUPDATE_COUNT
+    WORLD_UPDATE_UPTIME,
+    WORLD_UPDATE_EVENTS,
+    WORLD_UPDATE_CLEANDB,
+    WORLD_UPDATE_MAILBOX_QUEUE,
+    WORLD_UPDATE_PING_DB,
+    WORLD_UPDATE_5_SECS,
+    WORLD_UPDATE_WHO_LIST,
+    WORLD_UPDATE_COUNT
 };
 
 /// Can be used in SMSG_AUTH_RESPONSE packet
@@ -147,11 +125,6 @@ public:
     /// Close world
     void SetClosed(bool val) override;
 
-    /// Security level limitations
-    [[nodiscard]] AccountTypes GetPlayerSecurityLimit() const override { return _allowedSecurityLevel; }
-    void SetPlayerSecurityLimit(AccountTypes sec) override;
-    void LoadDBAllowedSecurityLevel() override;
-
     /// \todo Actions on m_allowMovement still to be implemented
     /// Is movement allowed?
     [[nodiscard]] bool getAllowMovement() const override { return _allowMovement; }
@@ -176,7 +149,7 @@ public:
     }
 
     void SetInitialWorldSettings() override;
-    void LoadConfigSettings(bool reload = false) override;
+    void LoadConfigSettings() override;
 
     /// Are we in the middle of a shutdown?
     [[nodiscard]] bool IsShuttingDown() const override { return _shutdownTimer > 0; }
@@ -205,10 +178,6 @@ public:
     void setStringConfig(ServerConfigs index, std::string const& value) override;
     std::string_view getStringConfig(ServerConfigs index) const override;
 
-    /// Are we on a "Player versus Player" server?
-    [[nodiscard]] bool IsPvPRealm() const override;
-    [[nodiscard]] bool IsFFAPvPRealm() const override;
-
     // for max speed access
     static float GetMaxVisibleDistanceOnContinents()    { return _maxVisibleDistanceOnContinents; }
     static float GetMaxVisibleDistanceInInstances()     { return _maxVisibleDistanceInInstances;  }
@@ -217,18 +186,16 @@ public:
     // our: needed for arena spectator subscriptions
     uint32 GetNextWhoListUpdateDelaySecs() override;
 
-    void ProcessCliCommands() override;
-    void QueueCliCommand(CliCommandHolder* commandHolder) override { _cliCmdQueue.add(commandHolder); }
-
     void ForceGameEventUpdate() override;
 
     void UpdateRealmCharCount(uint32 accid) override;
 
-    [[nodiscard]] LocaleConstant GetAvailableDbcLocale(LocaleConstant locale) const override { if (_availableDbcLocaleMask & (1 << locale)) return locale; else return _defaultDbcLocale; }
-
-    // used World DB version
-    void LoadDBVersion() override;
-    [[nodiscard]] char const* GetDBVersion() const override { return _dbVersion.c_str(); }
+    [[nodiscard]] LocaleConstant GetAvailableDbcLocale(LocaleConstant locale) const override
+    {
+        if (_availableDbcLocaleMask & (1 << locale))
+            return locale;
+        return _defaultDbcLocale;
+    }
 
     void UpdateAreaDependentAuras() override;
 
@@ -242,7 +209,7 @@ public:
 protected:
     void _UpdateGameTime();
     // callback for UpdateRealmCharacters
-    void _UpdateRealmCharCount(PreparedQueryResult resultCharCount,uint32 accountId);
+    void _UpdateRealmCharCount(QueryResult resultCharCount,uint32 accountId);
 
     void InitDailyQuestResetTime();
     void InitWeeklyQuestResetTime();
@@ -269,10 +236,9 @@ private:
 
     bool _isClosed;
 
-    IntervalTimer _timers[WUPDATE_COUNT];
+    IntervalTimer _timers[WORLD_UPDATE_COUNT];
     Seconds _mail_expire_check_timer;
 
-    AccountTypes _allowedSecurityLevel;
     LocaleConstant _defaultDbcLocale;                     // from config for one from loaded DBC locales
     uint32 _availableDbcLocaleMask;                       // by loaded DBC
     void DetectDBCLang();
@@ -286,9 +252,6 @@ private:
 
     std::string _realmName;
 
-    // CLI command holder to be thread safe
-    LockedQueue<CliCommandHolder*> _cliCmdQueue;
-
     // next daily quests and random bg reset time
     Seconds _nextDailyQuestReset;
     Seconds _nextWeeklyQuestReset;
@@ -297,23 +260,11 @@ private:
     Seconds _nextCalendarOldEventsDeletionTime;
     Seconds _nextGuildReset;
 
-    // used versions
-    std::string _dbVersion;
-    uint32 _dbClientCacheVersion;
-
     void ProcessQueryCallbacks();
     QueryCallbackProcessor _queryProcessor;
-
-    /**
-     * @brief Executed when a World Session is being finalized. Be it from a normal login or via queue popping.
-     *
-     * @param session The World Session that we are finalizing.
-     */
-    inline void FinalizePlayerWorldSession(WorldSession* session);
 };
 
 std::unique_ptr<IWorld>& getWorldInstance();
 #define sWorld getWorldInstance()
 
 #endif
-/// @}

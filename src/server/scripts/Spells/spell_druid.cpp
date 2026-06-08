@@ -1012,7 +1012,7 @@ class spell_dru_starfall_dummy : public SpellScript
         if (caster->GetCreatureType() == CREATURE_TYPE_BEAST || caster->IsMounted())
         {
             if (SpellInfo const* spellInfo = GetTriggeringSpell())
-                caster->RemoveAurasDueToSpell(spellInfo->Id);
+                caster->RemoveAurasDueToSpell(spellInfo->ID);
             return;
         }
 
@@ -1856,7 +1856,7 @@ class spell_dru_t10_restoration_4p_bonus_dummy : public AuraScript
     bool CheckProc(ProcEventInfo& eventInfo)
     {
         SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
-        if (!spellInfo || spellInfo->Id == SPELL_DRUID_REJUVENATION_T10_PROC)
+        if (!spellInfo || spellInfo->ID == SPELL_DRUID_REJUVENATION_T10_PROC)
             return false;
 
         HealInfo* healInfo = eventInfo.GetHealInfo();

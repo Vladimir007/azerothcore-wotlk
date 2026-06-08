@@ -308,7 +308,7 @@ class spell_novos_crystal_handler_death_aura : public AuraScript
     void HandleEffectApply(AuraEffect const*  /*aurEff*/, AuraEffectHandleModes /*mode*/)
     {
         GetUnitOwner()->InterruptNonMeleeSpells(false);
-        if (GameObject* crystal = GetUnitOwner()->FindNearestGameObjectOfType(GAMEOBJECT_TYPE_DOOR, 5.0f))
+        if (GameObject* crystal = GetUnitOwner()->FindNearestGameObjectOfType(GAME_OBJECT_TYPE_DOOR, 5.0f))
             crystal->SetGoState(GO_STATE_READY);
     }
 

@@ -1,36 +1,20 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "Transaction.h"
-#include "Errors.h"
-#include "Log.h"
-#include "MySQLConnection.h"
-#include "PreparedStatement.h"
-#include "Timer.h"
-#include <mysqld_error.h>
+
 #include <sstream>
 #include <thread>
+
+#include "Errors.h"
+#include "Log.h"
+#include "PSQLConnection.h"
+#include "PreparedStatement.h"
+#include "Timer.h"
 
 std::mutex TransactionTask::_deadlockLock;
 
 constexpr Milliseconds DEADLOCK_MAX_RETRY_TIME_MS = 1min;
 
 //- Append a raw ad-hoc query to the transaction
-void TransactionBase::Append(std::string_view sql)
+void TransactionBase::Append(const std::string_view sql)
 {
     SQLElementData data = {};
     data.type = SQL_ELEMENT_RAW;
@@ -39,31 +23,30 @@ void TransactionBase::Append(std::string_view sql)
 }
 
 //- Append a prepared statement to the transaction
-void TransactionBase::AppendPreparedStatement(PreparedStatementBase* stmt)
+void TransactionBase::AppendPreparedStatement(PreparedStatementBase* statement)
 {
     SQLElementData data = {};
     data.type = SQL_ELEMENT_PREPARED;
-    data.element = stmt;
+    data.element = statement;
     m_queries.emplace_back(data);
 }
 
 void TransactionBase::Cleanup()
 {
-    // This might be called by explicit calls to Cleanup or by the auto-destructor
+    // This might be called by explicit calls to clean up or by the auto-destructor
     if (_cleanedUp)
         return;
 
-    for (SQLElementData& data : m_queries)
+    for (auto& [stmtVar, type] : m_queries)
     {
-        switch (data.type)
+        switch (type)
         {
             case SQL_ELEMENT_PREPARED:
             {
                 try
                 {
-                    PreparedStatementBase* stmt = std::get<PreparedStatementBase*>(data.element);
+                    const PreparedStatementBase* stmt = std::get<PreparedStatementBase*>(stmtVar);
                     ASSERT(stmt);
-
                     delete stmt;
                 }
                 catch (const std::bad_variant_access& ex)
@@ -77,7 +60,7 @@ void TransactionBase::Cleanup()
             {
                 try
                 {
-                    std::get<std::string>(data.element).clear();
+                    std::get<std::string>(stmtVar).clear();
                 }
                 catch (const std::bad_variant_access& ex)
                 {
@@ -95,20 +78,20 @@ void TransactionBase::Cleanup()
 
 bool TransactionTask::Execute()
 {
-    int errorCode = TryExecute();
+    const PostgresResultType errorCode = TryExecute();
 
     if (!errorCode)
         return true;
 
-    if (errorCode == ER_LOCK_DEADLOCK)
+    if (errorCode == PG_RESULT_ROLLBACK)
     {
         std::ostringstream threadIdStream;
         threadIdStream << std::this_thread::get_id();
         std::string threadId = threadIdStream.str();
 
         {
-            // Make sure only 1 async thread retries a transaction so they don't keep dead-locking each other
-            std::lock_guard<std::mutex> lock(_deadlockLock);
+            // Make sure only 1 async thread retries a transaction so they don't keep deadlocking each other
+            std::lock_guard lock(_deadlockLock);
 
             for (Milliseconds loopDuration{}, startMSTime = GetTimeMS(); loopDuration <= DEADLOCK_MAX_RETRY_TIME_MS; loopDuration = GetMSTimeDiffToNow(startMSTime))
             {
@@ -128,34 +111,34 @@ bool TransactionTask::Execute()
     return false;
 }
 
-int TransactionTask::TryExecute()
+PostgresResultType TransactionTask::TryExecute() const
 {
     return m_conn->ExecuteTransaction(m_trans);
 }
 
-void TransactionTask::CleanupOnFailure()
+void TransactionTask::CleanupOnFailure() const
 {
     m_trans->Cleanup();
 }
 
 bool TransactionWithResultTask::Execute()
 {
-    int errorCode = TryExecute();
+    const PostgresResultType errorCode = TryExecute();
     if (!errorCode)
     {
         m_result.set_value(true);
         return true;
     }
 
-    if (errorCode == ER_LOCK_DEADLOCK)
+    if (errorCode == PG_RESULT_ROLLBACK)
     {
         std::ostringstream threadIdStream;
         threadIdStream << std::this_thread::get_id();
         std::string threadId = threadIdStream.str();
 
         {
-            // Make sure only 1 async thread retries a transaction so they don't keep dead-locking each other
-            std::lock_guard<std::mutex> lock(_deadlockLock);
+            // Make sure only 1 async thread retries a transaction so they don't keep deadlocking each other
+            std::lock_guard lock(_deadlockLock);
 
             for (Milliseconds loopDuration{}, startMSTime = GetTimeMS(); loopDuration <= DEADLOCK_MAX_RETRY_TIME_MS; loopDuration = GetMSTimeDiffToNow(startMSTime))
             {

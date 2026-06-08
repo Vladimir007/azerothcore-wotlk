@@ -1,37 +1,17 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef SOCKET_H
+#define SOCKET_H
 
-#ifndef __SOCKET_H__
-#define __SOCKET_H__
-
-#include "Log.h"
-#include "MessageBuffer.h"
 #include <atomic>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/ip/tcp.hpp>
 #include <memory>
 #include <queue>
-#include <type_traits>
-
-using boost::asio::ip::tcp;
+#include <boost/asio/io_context.hpp>
+#include <boost/asio/ip/tcp.hpp>
+#include "Log.h"
+#include "MessageBuffer.h"
 
 #define READ_BLOCK_SIZE 4096
 #ifdef BOOST_ASIO_HAS_IOCP
-#define AC_SOCKET_USE_IOCP
+#define NC_SOCKET_USE_IOCP
 #endif
 
 // Specialize boost socket for io_context executor instead of type-erased any_io_executor
@@ -51,13 +31,6 @@ enum class SocketState : uint8
     Closed = 2
 };
 
-enum ProxyHeaderReadingState {
-    PROXY_HEADER_READING_STATE_NOT_STARTED,
-    PROXY_HEADER_READING_STATE_STARTED,
-    PROXY_HEADER_READING_STATE_FINISHED,
-    PROXY_HEADER_READING_STATE_FAILED,
-};
-
 enum ProxyHeaderAddressFamilyAndProtocol {
     PROXY_HEADER_ADDRESS_FAMILY_AND_PROTOCOL_TCP_V4 = 0x11,
     PROXY_HEADER_ADDRESS_FAMILY_AND_PROTOCOL_TCP_V6 = 0x21,
@@ -68,8 +41,7 @@ class Socket : public std::enable_shared_from_this<T>
 {
 public:
     explicit Socket(IoContextTcpSocket&& socket) : _socket(std::move(socket)), _remoteAddress(_socket.remote_endpoint().address()),
-        _remotePort(_socket.remote_endpoint().port()), _readBuffer(), _state(SocketState::Open), _isWritingAsync(false),
-        _proxyHeaderReadingState(PROXY_HEADER_READING_STATE_NOT_STARTED)
+        _remotePort(_socket.remote_endpoint().port()), _state(SocketState::Open), _isWritingAsync(false)
     {
         _readBuffer.Resize(READ_BLOCK_SIZE);
     }
@@ -85,20 +57,15 @@ public:
 
     virtual bool Update()
     {
-        SocketState state = _state.load();
+        const SocketState state = _state.load();
         if (state == SocketState::Closed)
-        {
             return false;
-        }
 
-#ifndef AC_SOCKET_USE_IOCP
+#ifndef NC_SOCKET_USE_IOCP
         if (_isWritingAsync || (_writeQueue.empty() && state != SocketState::Closing))
-        {
             return true;
-        }
 
-        for (; HandleQueue();)
-            ;
+        while (HandleQueue()) {}
 #endif
 
         return true;
@@ -117,9 +84,7 @@ public:
     void AsyncRead()
     {
         if (!IsOpen())
-        {
             return;
-        }
 
         _readBuffer.Normalize();
         _readBuffer.EnsureFreeSpace();
@@ -130,24 +95,18 @@ public:
     void AsyncReadProxyHeader()
     {
         if (!IsOpen())
-        {
             return;
-        }
-
-        _proxyHeaderReadingState = PROXY_HEADER_READING_STATE_STARTED;
 
         _readBuffer.Normalize();
         _readBuffer.EnsureFreeSpace();
         _socket.async_read_some(boost::asio::buffer(_readBuffer.GetWritePointer(), _readBuffer.GetRemainingSpace()),
-            std::bind(&Socket<T>::ProxyReadHeaderHandler, this->shared_from_this(), std::placeholders::_1, std::placeholders::_2));
+            std::bind(&Socket::ProxyReadHeaderHandler, this->shared_from_this(), std::placeholders::_1, std::placeholders::_2));
     }
 
     void AsyncReadWithCallback(void (T::*callback)(boost::system::error_code, std::size_t))
     {
         if (!IsOpen())
-        {
             return;
-        }
 
         _readBuffer.Normalize();
         _readBuffer.EnsureFreeSpace();
@@ -160,18 +119,16 @@ public:
     {
         _writeQueue.push(std::move(buffer));
 
-#ifdef AC_SOCKET_USE_IOCP
+#ifdef NC_SOCKET_USE_IOCP
         AsyncProcessQueue();
 #endif
     }
-
-    [[nodiscard]] ProxyHeaderReadingState GetProxyHeaderReadingState() const { return _proxyHeaderReadingState; }
 
     [[nodiscard]] bool IsOpen() const { return _state.load() == SocketState::Open; }
 
     void CloseSocket()
     {
-        SocketState expected = SocketState::Open;
+        auto expected = SocketState::Open;
         if (!_state.compare_exchange_strong(expected, SocketState::Closed))
         {
             // If it was Closing, try to transition to Closed
@@ -193,7 +150,7 @@ public:
     /// Marks the socket for closing after write buffer becomes empty
     void DelayedCloseSocket()
     {
-        SocketState expected = SocketState::Open;
+        auto expected = SocketState::Open;
         _state.compare_exchange_strong(expected, SocketState::Closing);
     }
 
@@ -203,14 +160,15 @@ protected:
     virtual void OnClose() { }
     virtual SocketReadCallbackResult ReadHandler() = 0;
 
-    bool AsyncProcessQueue()
+private:
+    void AsyncProcessQueue()
     {
         if (_isWritingAsync)
-            return false;
+            return;
 
         _isWritingAsync = true;
 
-#ifdef AC_SOCKET_USE_IOCP
+#ifdef NC_SOCKET_USE_IOCP
         MessageBuffer& buffer = _writeQueue.front();
         _socket.async_write_some(boost::asio::buffer(buffer.GetReadPointer(), buffer.GetActiveSize()), std::bind(&Socket<T>::WriteHandler,
             this->shared_from_this(), std::placeholders::_1, std::placeholders::_2));
@@ -220,21 +178,9 @@ protected:
             self->WriteHandlerWrapper(error, 0);
         });
 #endif
-        return false;
     }
 
-    void SetNoDelay(bool enable)
-    {
-        boost::system::error_code err;
-        _socket.set_option(tcp::no_delay(enable), err);
-
-        if (err)
-            LOG_DEBUG("network", "Socket::SetNoDelay: failed to set_option(boost::asio::ip::tcp::no_delay) for {} - {} ({})",
-                GetRemoteIpAddress().to_string(), err.value(), err.message());
-    }
-
-private:
-    void ReadHandlerInternal(boost::system::error_code error, std::size_t transferredBytes)
+    void ReadHandlerInternal(const boost::system::error_code& error, const std::size_t transferredBytes)
     {
         if (error)
         {
@@ -247,9 +193,7 @@ private:
             AsyncRead();
     }
 
-    // ProxyReadHeaderHandler reads Proxy Protocol v2 header (v1 is not supported).
-    // See https://www.haproxy.org/download/1.8/doc/proxy-protocol.txt (2.2. Binary header format (version 2)) for more details.
-    void ProxyReadHeaderHandler(boost::system::error_code error, std::size_t transferredBytes)
+    void ProxyReadHeaderHandler(const boost::system::error_code& error, const std::size_t transferredBytes)
     {
         if (error)
         {
@@ -261,8 +205,8 @@ private:
 
         MessageBuffer& packet = GetReadBuffer();
 
-        const int minimumProxyProtocolV2Size = 28;
-        if (packet.GetActiveSize() < minimumProxyProtocolV2Size)
+        // minimumProxyProtocolV2Size = 28
+        if (packet.GetActiveSize() < 28)
         {
             AsyncReadProxyHeader();
             return;
@@ -270,11 +214,10 @@ private:
 
         uint8* readPointer = packet.GetReadPointer();
 
-        const uint8 signatureSize = 12;
+        constexpr uint8 signatureSize = 12;
         const uint8 expectedSignature[signatureSize] = {0x0D, 0x0A, 0x0D, 0x0A, 0x00, 0x0D, 0x0A, 0x51, 0x55, 0x49, 0x54, 0x0A};
         if (memcmp(packet.GetReadPointer(), expectedSignature, signatureSize) != 0)
         {
-            _proxyHeaderReadingState = PROXY_HEADER_READING_STATE_FAILED;
             LOG_ERROR("network", "Socket::ProxyReadHeaderHandler: received bad PROXY Protocol v2 signature for {}", GetRemoteIpAddress().to_string());
             return;
         }
@@ -284,7 +227,6 @@ private:
 
         if (version != 2)
         {
-            _proxyHeaderReadingState = PROXY_HEADER_READING_STATE_FAILED;
             LOG_ERROR("network", "Socket::ProxyReadHeaderHandler: received bad PROXY Protocol v2 signature for {}", GetRemoteIpAddress().to_string());
             return;
         }
@@ -301,11 +243,10 @@ private:
         if (command == 0)
         {
             packet.ReadCompleted(len+16);
-            _proxyHeaderReadingState = PROXY_HEADER_READING_STATE_FINISHED;
             return;
         }
 
-        auto remainingLen = packet.GetActiveSize() - 16;
+        const auto remainingLen = packet.GetActiveSize() - 16;
         readPointer += 16; // Skip strait to address.
 
         switch (addressFamily) {
@@ -318,9 +259,9 @@ private:
                 }
 
                 boost::asio::ip::address_v4::bytes_type b;
-                auto addressSize = sizeof(b);
+                constexpr auto addressSize = sizeof(b);
 
-                std::copy(readPointer, readPointer+addressSize, b.begin());
+                std::copy_n(readPointer, addressSize, b.begin());
                 _remoteAddress = boost::asio::ip::address_v4(b);
 
                 readPointer += 2 * addressSize; // Skip server address.
@@ -338,9 +279,9 @@ private:
                 }
 
                 boost::asio::ip::address_v6::bytes_type b;
-                auto addressSize = sizeof(b);
+                constexpr auto addressSize = sizeof(b);
 
-                std::copy(readPointer, readPointer+addressSize, b.begin());
+                std::copy_n(readPointer, addressSize, b.begin());
                 _remoteAddress = boost::asio::ip::address_v6(b);
 
                 readPointer += 2 * addressSize; // Skip server address.
@@ -350,22 +291,20 @@ private:
             }
 
             default:
-                _proxyHeaderReadingState = PROXY_HEADER_READING_STATE_FAILED;
                 LOG_ERROR("network", "Socket::ProxyReadHeaderHandler: unsupported address family type {}", GetRemoteIpAddress().to_string());
                 return;
         }
 
         packet.ReadCompleted(len+16);
-        _proxyHeaderReadingState = PROXY_HEADER_READING_STATE_FINISHED;
     }
 
-#ifdef AC_SOCKET_USE_IOCP
-    void WriteHandler(boost::system::error_code error, std::size_t transferedBytes)
+#ifdef NC_SOCKET_USE_IOCP
+    void WriteHandler(const boost::system::error_code& error, const std::size_t transferredBytes)
     {
         if (!error)
         {
             _isWritingAsync = false;
-            _writeQueue.front().ReadCompleted(transferedBytes);
+            _writeQueue.front().ReadCompleted(transferredBytes);
 
             if (!_writeQueue.front().GetActiveSize())
                 _writeQueue.pop();
@@ -378,10 +317,9 @@ private:
         else
             CloseSocket();
     }
-
 #else
 
-    void WriteHandlerWrapper(boost::system::error_code /*error*/, std::size_t /*transferedBytes*/)
+    void WriteHandlerWrapper(const boost::system::error_code& /*error*/, const std::size_t /*transferredBytes*/)
     {
         _isWritingAsync = false;
         HandleQueue();
@@ -394,50 +332,46 @@ private:
 
         MessageBuffer& queuedMessage = _writeQueue.front();
 
-        std::size_t bytesToSend = queuedMessage.GetActiveSize();
+        const std::size_t bytesToSend = queuedMessage.GetActiveSize();
 
         boost::system::error_code error;
-        std::size_t bytesSent = _socket.write_some(boost::asio::buffer(queuedMessage.GetReadPointer(), bytesToSend), error);
+        const std::size_t bytesSent = _socket.write_some(boost::asio::buffer(queuedMessage.GetReadPointer(), bytesToSend), error);
 
         if (error)
         {
             if (error == boost::asio::error::would_block || error == boost::asio::error::try_again)
             {
-                return AsyncProcessQueue();
+                AsyncProcessQueue();
+                return false;
             }
 
             _writeQueue.pop();
 
             if (_state.load() == SocketState::Closing && _writeQueue.empty())
-            {
                 CloseSocket();
-            }
 
             return false;
         }
-        else if (bytesSent == 0)
+        if (bytesSent == 0)
         {
             _writeQueue.pop();
 
             if (_state.load() == SocketState::Closing && _writeQueue.empty())
-            {
                 CloseSocket();
-            }
 
             return false;
         }
-        else if (bytesSent < bytesToSend) // now n > 0
+        if (bytesSent < bytesToSend) // now n > 0
         {
             queuedMessage.ReadCompleted(bytesSent);
-            return AsyncProcessQueue();
+            AsyncProcessQueue();
+            return false;
         }
 
         _writeQueue.pop();
 
         if (_state.load() == SocketState::Closing && _writeQueue.empty())
-        {
             CloseSocket();
-        }
 
         return !_writeQueue.empty();
     }
@@ -454,8 +388,6 @@ private:
     std::atomic<SocketState> _state;
 
     bool _isWritingAsync;
-
-    ProxyHeaderReadingState _proxyHeaderReadingState;
 };
 
-#endif // __SOCKET_H__
+#endif

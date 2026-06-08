@@ -19,23 +19,17 @@
 #include "CommandScript.h"
 #include "Common.h"
 #include "GameTime.h"
-#include "GitRevision.h"
-#include "Log.h"
 #include "MapMgr.h"
 #include "ModuleMgr.h"
 #include "MotdMgr.h"
-#include "MySQLThreading.h"
 #include "Realm.h"
 #include "StringConvert.h"
 #include "UpdateTime.h"
 #include "VMapFactory.h"
-#include "VMapMgr2.h"
+#include "VMapMgr.h"
 #include "WorldSessionMgr.h"
-#include <boost/version.hpp>
 #include <filesystem>
 #include <numeric>
-#include <openssl/crypto.h>
-#include <openssl/opensslv.h>
 
 using namespace Acore::ChatCommands;
 
@@ -70,16 +64,9 @@ public:
             { "",             HandleServerShutDownCommand,       SEC_ADMINISTRATOR, Console::Yes }
         };
 
-        static ChatCommandTable serverSetCommandTable =
-        {
-            { "loglevel",     HandleServerSetLogLevelCommand,    SEC_CONSOLE,       Console::Yes },
-            { "motd",         HandleServerSetMotdCommand,        SEC_ADMINISTRATOR, Console::Yes },
-            { "closed",       HandleServerSetClosedCommand,      SEC_CONSOLE,       Console::Yes },
-        };
-
         static ChatCommandTable serverCommandTable =
         {
-            { "corpses",      HandleServerCorpsesCommand,        SEC_GAMEMASTER,    Console::Yes },
+            { "corpses",      HandleServerCorpsesCommand,        SEC_GAME_MASTER,    Console::Yes },
             { "debug",        HandleServerDebugCommand,          SEC_ADMINISTRATOR, Console::Yes },
             { "exit",         HandleServerExitCommand,           SEC_CONSOLE,       Console::Yes },
             { "idlerestart",  serverIdleRestartCommandTable },
@@ -88,7 +75,6 @@ public:
             { "motd",         HandleServerMotdCommand,           SEC_PLAYER,        Console::Yes },
             { "restart",      serverRestartCommandTable },
             { "shutdown",     serverShutdownCommandTable },
-            { "set",          serverSetCommandTable }
         };
 
         static ChatCommandTable commandTable =
@@ -116,53 +102,25 @@ public:
 
         {
             uint16 dbPort = 0;
-            if (QueryResult res = LoginDatabase.Query("SELECT port FROM realmlist WHERE id = {}", realm.Id.Realm))
+            if (QueryResult res = LoginDatabase.Query("SELECT port FROM realm WHERE id=$1", realm.ID))
                 dbPort = (*res)[0].Get<uint16>();
 
             if (dbPort)
-                dbPortOutput = Acore::StringFormat("Realmlist (Realm Id: {}) configured in port {}", realm.Id.Realm, dbPort);
+                dbPortOutput = Acore::StringFormat("Realmlist (Realm Id: {}) configured in port {}", realm.ID, dbPort);
             else
-                dbPortOutput = Acore::StringFormat("Realm Id: {} not found in `realmlist` table. Please check your setup", realm.Id.Realm);
+                dbPortOutput = Acore::StringFormat("RealmID: {} not found in `realm` table. Please check your setup", realm.ID);
         }
 
         HandleServerInfoCommand(handler);
 
-        handler->PSendSysMessage("Using SSL version: {} (library: {})", OPENSSL_VERSION_TEXT, OpenSSL_version(OPENSSL_VERSION));
-        handler->PSendSysMessage("Using Boost version: {}.{}.{}", BOOST_VERSION / 100000, BOOST_VERSION / 100 % 1000, BOOST_VERSION % 100);
-        handler->PSendSysMessage("Using CMake version: {}", GitRevision::GetCMakeVersion());
-
-        handler->PSendSysMessage("Using MySQL version: {}", MySQL::GetLibraryVersion());
-        handler->PSendSysMessage("Found MySQL Executable: {}", GitRevision::GetMySQLExecutable());
-
-        handler->PSendSysMessage("Compiled on: {}", GitRevision::GetHostOSVersion());
-
         handler->PSendSysMessage("Worldserver listening connections on port {}", worldPort);
         handler->PSendSysMessage("{}", dbPortOutput);
 
-        bool vmapIndoorCheck = sWorld->getBoolConfig(CONFIG_VMAP_INDOOR_CHECK);
-        bool vmapLOSCheck = VMAP::VMapFactory::createOrGetVMapMgr()->isLineOfSightCalcEnabled();
-        bool vmapHeightCheck = VMAP::VMapFactory::createOrGetVMapMgr()->isHeightCalcEnabled();
-
-        bool mmapEnabled = sWorld->getBoolConfig(CONFIG_ENABLE_MMAPS);
-
         std::string dataDir = sWorld->GetDataPath();
         std::vector<std::string> subDirs;
-        subDirs.emplace_back("maps");
-        if (vmapIndoorCheck || vmapLOSCheck || vmapHeightCheck)
-        {
-            handler->PSendSysMessage("VMAPs status: Enabled. LineOfSight: {}, getHeight: {}, indoorCheck: {}", vmapLOSCheck, vmapHeightCheck, vmapIndoorCheck);
-            subDirs.emplace_back("vmaps");
-        }
-        else
-            handler->SendSysMessage("VMAPs status: Disabled");
-
-        if (mmapEnabled)
-        {
-            handler->SendSysMessage("MMAPs status: Enabled");
-            subDirs.emplace_back("mmaps");
-        }
-        else
-            handler->SendSysMessage("MMAPs status: Disabled");
+        subDirs.emplace_back("Maps");
+        subDirs.emplace_back("vMaps");
+        subDirs.emplace_back("mMaps");
 
         for (std::string const& subDir : subDirs)
         {
@@ -211,32 +169,6 @@ public:
         }
 
         handler->PSendSysMessage("Default DBC locale: {}.\nAll available DBC locales: {}", localeNames[defaultLocale], availableLocales);
-
-        handler->PSendSysMessage("Using World DB: {}", sWorld->GetDBVersion());
-
-        std::string lldb = "No updates found!";
-        if (QueryResult resL = LoginDatabase.Query("SELECT name FROM updates ORDER BY name DESC LIMIT 1"))
-        {
-            Field* fields = resL->Fetch();
-            lldb = fields[0].Get<std::string>();
-        }
-        std::string lcdb = "No updates found!";
-        if (QueryResult resC = CharacterDatabase.Query("SELECT name FROM updates ORDER BY name DESC LIMIT 1"))
-        {
-            Field* fields = resC->Fetch();
-            lcdb = fields[0].Get<std::string>();
-        }
-        std::string lwdb = "No updates found!";
-        if (QueryResult resW = WorldDatabase.Query("SELECT name FROM updates ORDER BY name DESC LIMIT 1"))
-        {
-            Field* fields = resW->Fetch();
-            lwdb = fields[0].Get<std::string>();
-        }
-
-        handler->PSendSysMessage("Latest LoginDatabase update: {}", lldb);
-        handler->PSendSysMessage("Latest CharacterDatabase update: {}", lcdb);
-        handler->PSendSysMessage("Latest WorldDatabase update: {}", lwdb);
-
         handler->PSendSysMessage("LoginDatabase queue size: {}", LoginDatabase.QueueSize());
         handler->PSendSysMessage("CharacterDatabase queue size: {}", CharacterDatabase.QueueSize());
         handler->PSendSysMessage("WorldDatabase queue size: {}", WorldDatabase.QueueSize());
@@ -262,7 +194,6 @@ public:
         uint32 queuedSessionCount = sWorldSessionMgr->GetQueuedSessionCount();
         uint32 connPeak = sWorldSessionMgr->GetMaxActiveSessionCount();
 
-        handler->PSendSysMessage("{}", GitRevision::GetFullVersion());
         if (!queuedSessionCount)
             handler->PSendSysMessage("Connected players: {}. Characters in world: {}.", activeSessionCount, playerCount);
         else
@@ -284,6 +215,7 @@ public:
 
         return true;
     }
+
     // Display the 'Message of the day' for the realm
     static bool HandleServerMotdCommand(ChatHandler* handler)
     {
@@ -517,92 +449,6 @@ public:
     {
         handler->SendSysMessage(LANG_COMMAND_EXIT);
         World::StopNow(SHUTDOWN_EXIT_CODE);
-        return true;
-    }
-
-    // Define the 'Message of the day' for the realm
-    static bool HandleServerSetMotdCommand(ChatHandler* handler, Optional<int32> realmId, std::string locale, Tail motd)
-    {
-        std::wstring wMotd = std::wstring();
-        std::string strMotd = std::string();
-
-        // Default realmId to the current realm if not provided
-        if (!realmId)
-            realmId = static_cast<int32>(realm.Id.Realm);
-
-        // Determine the locale; default to "enUS" if not provided
-        LocaleConstant localeConstant;
-        if (IsLocaleValid(locale))
-            localeConstant = GetLocaleByName(locale);
-        else
-        {
-            handler->SendErrorMessage("locale ({}) is not valid. Valid locales: enUS, koKR, frFR, deDE, zhCN, zhWE, esES, esMX, ruRU.", locale);
-            return false;
-        }
-
-        if (motd.empty())
-            return false;
-
-        // Convert the concatenated motdString to UTF-8 and ensure encoding consistency
-        if (!Utf8toWStr(motd, wMotd))
-            return false;
-
-        if (!WStrToUtf8(wMotd, strMotd))
-            return false;
-
-        // Start a transaction for the database operations
-        LoginDatabaseTransaction trans = LoginDatabase.BeginTransaction();
-
-        if (localeConstant == LOCALE_enUS)
-        {
-            // Insert or update in the main motd table for enUS
-            LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_REP_MOTD);
-            stmt->SetData(0, realmId.value());  // realmId for insertion
-            stmt->SetData(1, strMotd);          // motd text for insertion
-            trans->Append(stmt);
-        }
-        else
-        {
-            // Insert or update in the motd_localized table for other locales
-            LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_REP_MOTD_LOCALE);
-            stmt->SetData(0, realmId.value());  // realmId for insertion
-            stmt->SetData(1, locale);           // locale for insertion
-            stmt->SetData(2, strMotd);          // motd text for insertion
-            trans->Append(stmt);
-        }
-
-        // Commit the transaction & update db
-        LoginDatabase.CommitTransaction(trans);
-
-        sMotdMgr->SetMotd(strMotd, localeConstant);
-        handler->PSendSysMessage(LANG_MOTD_NEW, realmId.value(), locale, strMotd);
-        return true;
-    }
-
-    // Set whether we accept new clients
-    static bool HandleServerSetClosedCommand(ChatHandler* handler, Optional<std::string> args)
-    {
-        if (StringStartsWith("on", *args))
-        {
-            handler->SendSysMessage(LANG_WORLD_CLOSED);
-            sWorld->SetClosed(true);
-            return true;
-        }
-        else if (StringStartsWith("off", *args))
-        {
-            handler->SendSysMessage(LANG_WORLD_OPENED);
-            sWorld->SetClosed(false);
-            return true;
-        }
-
-        handler->SendErrorMessage(LANG_USE_BOL);
-        return false;
-    }
-
-    // Set the level of logging
-    static bool HandleServerSetLogLevelCommand(ChatHandler* /*handler*/, bool isLogger, std::string const& name, int32 level)
-    {
-        sLog->SetLogLevel(name, level, isLogger);
         return true;
     }
 };

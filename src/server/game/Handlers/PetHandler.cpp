@@ -28,6 +28,7 @@
 #include "Pet.h"
 #include "PetPackets.h"
 #include "Player.h"
+#include "Realm.h"
 #include "Spell.h"
 #include "SpellInfo.h"
 #include "SpellMgr.h"
@@ -621,18 +622,11 @@ void WorldSession::SendPetNameQuery(ObjectGuid petguid, uint32 petnumber)
 
     std::string name;
     if (pet->GetEntry() == NPC_WATER_ELEMENTAL_PERM)
-    {
-        // Use localized creature name for the mage pet
-        LocaleConstant loc_idx = GetSessionDbLocaleIndex();
-        if (loc_idx != DEFAULT_LOCALE)
-            name = pet->GetNameForLocaleIdx(loc_idx);
-        else
-            name = pet->GetCreatureTemplate()->Name;
-    }
+        name = pet->GetCreatureTemplate()->Name;
     else
         name = pet->GetName();
 
-    WorldPacket data(SMSG_PET_NAME_QUERY_RESPONSE, (4 + 4 + name.size() + 1));
+    WorldPacket data(SMSG_PET_NAME_QUERY_RESPONSE, 4 + 4 + name.size() + 1);
     data << uint32(petnumber);
     data << name.c_str();
     data << uint32(pet->GetUInt32Value(UNIT_FIELD_PET_NAME_TIMESTAMP));
@@ -880,7 +874,7 @@ void WorldSession::HandlePetRename(WorldPacket& recvData)
     CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
     if (isdeclined)
     {
-        if (sWorld->getBoolConfig(CONFIG_DECLINED_NAMES_USED))
+        if (realm.Timezone == REALM_ZONE_RUSSIAN)
         {
             CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_CHAR_PET_DECLINEDNAME);
             stmt->SetData(0, pet->GetCharmInfo()->GetPetNumber());
@@ -1140,5 +1134,5 @@ void WorldSession::HandleLearnPreviewTalentsPet(WorldPacket& recvData)
 
     _player->SendTalentsInfoData(true);
 
-    recvData.rfinish();
+    recvData.rFinish();
 }

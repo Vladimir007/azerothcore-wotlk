@@ -75,7 +75,7 @@ bool npc_escortAI::AssistPlayerInCombatAgainst(Unit* who)
     }
 
     //experimental (unknown) flag not present
-    if (!(me->GetCreatureTemplate()->type_flags & CREATURE_TYPE_FLAG_CAN_ASSIST))
+    if (!(me->GetCreatureTemplate()->TypeFlags & CREATURE_TYPE_FLAG_CAN_ASSIST))
     {
         return false;
     }
@@ -176,7 +176,7 @@ void npc_escortAI::JustRespawned()
     //add a small delay before going to first waypoint, normal in near all cases
     m_uiWPWaitTimer = 1000;
 
-    if (me->GetFaction() != me->GetCreatureTemplate()->faction)
+    if (me->GetFaction() != me->GetCreatureTemplate()->Faction)
         me->RestoreFaction();
 
     Reset();

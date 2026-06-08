@@ -240,7 +240,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_SUMMON_MENAGERIE_1:
                     {

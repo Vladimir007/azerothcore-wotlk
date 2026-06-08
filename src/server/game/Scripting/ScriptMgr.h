@@ -164,8 +164,8 @@ public: /* ServerScript */
 public: /* WorldScript */
     void OnLoadCustomDatabaseTable();
     void OnOpenStateChange(bool open);
-    void OnBeforeConfigLoad(bool reload);
-    void OnAfterConfigLoad(bool reload);
+    void OnBeforeConfigLoad();
+    void OnAfterConfigLoad();
     void OnBeforeFinalizePlayerWorldSession(uint32& cacheVersion);
     void OnMotdChange(std::string& newMotd, LocaleConstant& locale);
     void OnShutdownInitiate(ShutdownExitCode code, ShutdownMask mask);
@@ -329,7 +329,6 @@ public: /* PlayerScript */
     void OnPlayerLoadFromDB(Player* player);
     void OnPlayerBeforeLogout(Player* player);
     void OnPlayerLogout(Player* player);
-    void OnPlayerCreate(Player* player);
     void OnPlayerSave(Player* player);
     void OnPlayerDelete(ObjectGuid guid, uint32 accountId);
     void OnPlayerFailedDelete(ObjectGuid guid, uint32 accountId);
@@ -444,7 +443,7 @@ public: /* PlayerScript */
     void OnPlayerSetServerSideVisibility(Player* player, ServerSideVisibilityType& type, AccountTypes& sec);
     void OnPlayerSetServerSideVisibilityDetect(Player* player, ServerSideVisibilityType& type, AccountTypes& sec);
     void OnPlayerResurrect(Player* player, float restore_percent, bool applySickness);
-    void OnPlayerBeforeChooseGraveyard(Player* player, TeamId teamId, bool nearCorpse, uint32& graveyardOverride);
+    void OnPlayerBeforeChooseGraveyard(Player* player, TeamID teamId, bool nearCorpse, uint32& graveyardOverride);
     bool OnPlayerCanUseChat(Player* player, uint32 type, uint32 language, std::string& msg);
     bool OnPlayerCanUseChat(Player* player, uint32 type, uint32 language, std::string& msg, Player* receiver);
     bool OnPlayerCanUseChat(Player* player, uint32 type, uint32 language, std::string& msg, Group* group);
@@ -478,14 +477,7 @@ public: /* PlayerScript */
     bool AnticheatCheckMovementInfo(Player* player, MovementInfo const& movementInfo, Unit* mover, bool jump);
 
 public: /* AccountScript */
-    void OnAccountLogin(uint32 accountId);
     void OnBeforeAccountDelete(uint32 accountId);
-    void OnLastIpUpdate(uint32 accountId, std::string ip);
-    void OnFailedAccountLogin(uint32 accountId);
-    void OnEmailChange(uint32 accountId);
-    void OnFailedEmailChange(uint32 accountId);
-    void OnPasswordChange(uint32 accountId);
-    void OnFailedPasswordChange(uint32 accountId);
     bool CanAccountCreateCharacter(uint32 accountId, uint8 charRace, uint8 charClass);
 
 public: /* GuildScript */
@@ -589,24 +581,24 @@ public: /* BattlefieldScript */
 
 public: /* BGScript */
     void OnBattlegroundStart(Battleground* bg);
-    void OnBattlegroundEndReward(Battleground* bg, Player* player, TeamId winnerTeamId);
+    void OnBattlegroundEndReward(Battleground* bg, Player* player, TeamID winnerTeamId);
     void OnBattlegroundUpdate(Battleground* bg, uint32 diff);
     void OnBattlegroundAddPlayer(Battleground* bg, Player* player);
     void OnBattlegroundBeforeAddPlayer(Battleground* bg, Player* player);
     void OnBattlegroundRemovePlayerAtLeave(Battleground* bg, Player* player);
-    void OnQueueUpdate(BattlegroundQueue* queue, uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketId bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating);
-    bool OnQueueUpdateValidity(BattlegroundQueue* queue, uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketId bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating);
+    void OnQueueUpdate(BattlegroundQueue* queue, uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketID bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating);
+    bool OnQueueUpdateValidity(BattlegroundQueue* queue, uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketID bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating);
     void OnAddGroup(BattlegroundQueue* queue, GroupQueueInfo* ginfo, uint32& index, Player* leader, Group* group, BattlegroundTypeId bgTypeId, PvPDifficultyEntry const* bracketEntry,
         uint8 arenaType, bool isRated, bool isPremade, uint32 arenaRating, uint32 matchmakerRating, uint32 arenaTeamId, uint32 opponentsArenaTeamId);
-    bool CanFillPlayersToBG(BattlegroundQueue* queue, Battleground* bg, BattlegroundBracketId bracket_id);
-    bool IsCheckNormalMatch(BattlegroundQueue* queue, Battleground* bgTemplate, BattlegroundBracketId bracket_id, uint32 minPlayers, uint32 maxPlayers);
+    bool CanFillPlayersToBG(BattlegroundQueue* queue, Battleground* bg, BattlegroundBracketID bracket_id);
+    bool IsCheckNormalMatch(BattlegroundQueue* queue, Battleground* bgTemplate, BattlegroundBracketID bracket_id, uint32 minPlayers, uint32 maxPlayers);
     bool CanSendMessageBGQueue(BattlegroundQueue* queue, Player* leader, Battleground* bg, PvPDifficultyEntry const* bracketEntry);
     bool OnBeforeSendJoinMessageArenaQueue(BattlegroundQueue* queue, Player* leader, GroupQueueInfo* ginfo, PvPDifficultyEntry const* bracketEntry, bool isRated);
     bool OnBeforeSendExitMessageArenaQueue(BattlegroundQueue* queue, GroupQueueInfo* ginfo);
-    void OnBattlegroundEnd(Battleground* bg, TeamId winnerTeamId);
+    void OnBattlegroundEnd(Battleground* bg, TeamID winnerTeamId);
     void OnBattlegroundDestroy(Battleground* bg);
     void OnBattlegroundCreate(Battleground* bg);
-    bool CanAddGroupToMatchingPool(BattlegroundQueue* queue, GroupQueueInfo* group, uint32 poolPlayerCount, Battleground* bg, BattlegroundBracketId bracketId);
+    bool CanAddGroupToMatchingPool(BattlegroundQueue* queue, GroupQueueInfo* group, uint32 poolPlayerCount, Battleground* bg, BattlegroundBracketID bracketId);
     bool GetPlayerMatchmakingRating(ObjectGuid playerGuid, BattlegroundTypeId bgTypeId, float& outRating);
 
 public: /* Arena Team Script */
@@ -695,7 +687,7 @@ public: /* CommandSC */
 
 public: /* DatabaseScript */
 
-    void OnAfterDatabasesLoaded(uint32 updateFlags);
+    void OnAfterDatabasesLoaded();
     void OnAfterDatabaseLoadCreatureTemplates(std::vector<CreatureTemplate*> creatureTemplateStore);
 
 public: /* WorldObjectScript */
@@ -805,7 +797,7 @@ public:
 
                 // Get an ID for the script. An ID only exists if it's a script that is assigned in the database
                 // through a script name (or similar).
-                uint32 id = sObjectMgr->GetScriptId(script->GetName().c_str());
+                uint32 id = sObjectMgr->GetScriptID(script->GetName().c_str());
                 if (id)
                 {
                     // Try to find an existing script.

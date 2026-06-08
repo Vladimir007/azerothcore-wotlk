@@ -692,12 +692,12 @@ class spell_hun_readiness : public SpellScript
             SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(spellId);
             if (spellInfo
             && spellInfo->SpellFamilyName == SPELLFAMILY_HUNTER
-            && spellInfo->Id != SPELL_HUNTER_READINESS
-            && spellInfo->Id != SPELL_HUNTER_BESTIAL_WRATH
-            && spellInfo->Id != SPELL_DRAENEI_GIFT_OF_THE_NAARU)
+            && spellInfo->ID != SPELL_HUNTER_READINESS
+            && spellInfo->ID != SPELL_HUNTER_BESTIAL_WRATH
+            && spellInfo->ID != SPELL_DRAENEI_GIFT_OF_THE_NAARU)
             {
                 if (spellInfo->RecoveryTime > 0)
-                    spellsToRemove.insert(std::make_pair(spellInfo->Id, cooldown.needSendToClient));
+                    spellsToRemove.insert(std::make_pair(spellInfo->ID, cooldown.needSendToClient));
 
                 if (spellInfo->CategoryRecoveryTime > 0)
                     categoriesToRemove.insert(spellInfo->GetCategory());
@@ -953,7 +953,7 @@ class spell_hun_cobra_strikes : public AuraScript
         if (!triggeredSpellInfo)
             return;
 
-        GetTarget()->CastCustomSpell(triggeredSpellInfo->Id, SPELLVALUE_AURA_STACK, triggeredSpellInfo->StackAmount, GetTarget(), true);
+        GetTarget()->CastCustomSpell(triggeredSpellInfo->ID, SPELLVALUE_AURA_STACK, triggeredSpellInfo->StackAmount, GetTarget(), true);
     }
 
     void Register() override

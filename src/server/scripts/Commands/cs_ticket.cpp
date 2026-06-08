@@ -34,30 +34,30 @@ public:
     {
         static ChatCommandTable ticketResponseCommandTable =
         {
-            { "append",         HandleGMTicketResponseAppendCommand,    SEC_GAMEMASTER,     Console::Yes },
-            { "appendln",       HandleGMTicketResponseAppendLnCommand,  SEC_GAMEMASTER,     Console::Yes },
-            { "delete",         HandleGMTicketResponseDeleteCommand,    SEC_GAMEMASTER,     Console::Yes },
-            { "show",           HandleGMTicketResponseShowCommand,      SEC_GAMEMASTER,     Console::Yes }
+            { "append",         HandleGMTicketResponseAppendCommand,    SEC_GAME_MASTER,     Console::Yes },
+            { "appendln",       HandleGMTicketResponseAppendLnCommand,  SEC_GAME_MASTER,     Console::Yes },
+            { "delete",         HandleGMTicketResponseDeleteCommand,    SEC_GAME_MASTER,     Console::Yes },
+            { "show",           HandleGMTicketResponseShowCommand,      SEC_GAME_MASTER,     Console::Yes }
         };
         static ChatCommandTable ticketCommandTable =
         {
-            { "assign",         HandleGMTicketAssignToCommand,          SEC_GAMEMASTER,     Console::Yes },
-            { "close",          HandleGMTicketCloseByIdCommand,         SEC_GAMEMASTER,     Console::Yes },
-            { "closedlist",     HandleGMTicketListClosedCommand,        SEC_GAMEMASTER,     Console::Yes },
-            { "comment",        HandleGMTicketCommentCommand,           SEC_GAMEMASTER,     Console::Yes },
-            { "complete",       HandleGMTicketCompleteCommand,          SEC_GAMEMASTER,     Console::Yes },
+            { "assign",         HandleGMTicketAssignToCommand,          SEC_GAME_MASTER,     Console::Yes },
+            { "close",          HandleGMTicketCloseByIdCommand,         SEC_GAME_MASTER,     Console::Yes },
+            { "closedlist",     HandleGMTicketListClosedCommand,        SEC_GAME_MASTER,     Console::Yes },
+            { "comment",        HandleGMTicketCommentCommand,           SEC_GAME_MASTER,     Console::Yes },
+            { "complete",       HandleGMTicketCompleteCommand,          SEC_GAME_MASTER,     Console::Yes },
             { "delete",         HandleGMTicketDeleteByIdCommand,        SEC_ADMINISTRATOR,  Console::Yes },
-            { "escalate",       HandleGMTicketEscalateCommand,          SEC_GAMEMASTER,     Console::Yes },
-            { "escalatedlist",  HandleGMTicketListEscalatedCommand,     SEC_GAMEMASTER,     Console::Yes },
-            { "list",           HandleGMTicketListCommand,              SEC_GAMEMASTER,     Console::Yes },
-            { "onlinelist",     HandleGMTicketListOnlineCommand,        SEC_GAMEMASTER,     Console::Yes },
+            { "escalate",       HandleGMTicketEscalateCommand,          SEC_GAME_MASTER,     Console::Yes },
+            { "escalatedlist",  HandleGMTicketListEscalatedCommand,     SEC_GAME_MASTER,     Console::Yes },
+            { "list",           HandleGMTicketListCommand,              SEC_GAME_MASTER,     Console::Yes },
+            { "onlinelist",     HandleGMTicketListOnlineCommand,        SEC_GAME_MASTER,     Console::Yes },
             { "reset",          HandleGMTicketResetCommand,             SEC_CONSOLE,        Console::Yes },
 
             { "response",       ticketResponseCommandTable },
             { "togglesystem",   HandleToggleGMTicketSystem,             SEC_ADMINISTRATOR,  Console::Yes },
-            { "unassign",       HandleGMTicketUnAssignCommand,          SEC_GAMEMASTER,     Console::Yes },
-            { "viewid",         HandleGMTicketGetByIdCommand,           SEC_GAMEMASTER,     Console::Yes },
-            { "viewname",       HandleGMTicketGetByNameCommand,         SEC_GAMEMASTER,     Console::Yes }
+            { "unassign",       HandleGMTicketUnAssignCommand,          SEC_GAME_MASTER,     Console::Yes },
+            { "viewid",         HandleGMTicketGetByIdCommand,           SEC_GAME_MASTER,     Console::Yes },
+            { "viewname",       HandleGMTicketGetByNameCommand,         SEC_GAME_MASTER,     Console::Yes }
         };
         static ChatCommandTable commandTable =
         {
@@ -81,10 +81,10 @@ public:
         // Get target information
         ObjectGuid targetGuid = sCharacterCache->GetCharacterGuidByName(target);
         uint32 targetAccountId = sCharacterCache->GetCharacterAccountIdByGuid(targetGuid);
-        uint32 targetGmLevel = AccountMgr::GetSecurity(targetAccountId, realm.Id.Realm);
+        bool targetGm = AccountMgr::IsGameMaster(targetAccountId);
 
         // Target must exist and have administrative rights
-        if (!targetGuid || AccountMgr::IsPlayerAccount(targetGmLevel))
+        if (!targetGuid || !targetGm)
         {
             handler->SendSysMessage(LANG_COMMAND_TICKETASSIGNERROR_A);
             return true;
@@ -108,7 +108,7 @@ public:
 
         // Assign ticket
         CharacterDatabaseTransaction trans = CharacterDatabaseTransaction(nullptr);
-        ticket->SetAssignedTo(targetGuid, AccountMgr::IsAdminAccount(targetGmLevel));
+        ticket->SetAssignedTo(targetGuid, targetGm);
         ticket->SaveToDB(trans);
         sTicketMgr->UpdateLastChange(ticket);
 
@@ -341,21 +341,19 @@ public:
         }
 
         // Get security level of player, whom this ticket is assigned to
-        uint32 security = SEC_PLAYER;
+        uint32 isGM = false;
         Player* assignedPlayer = ticket->GetAssignedPlayer();
         if (assignedPlayer)
-            security = assignedPlayer->GetSession()->GetSecurity();
+            isGM = assignedPlayer->GetSession()->IsGameMaster();
         else
         {
-            ObjectGuid guid = ticket->GetAssignedToGUID();
-            uint32 accountId = sCharacterCache->GetCharacterAccountIdByGuid(guid);
-            security = AccountMgr::GetSecurity(accountId, realm.Id.Realm);
+            const ObjectGuid guid = ticket->GetAssignedToGUID();
+            const uint32 accountId = sCharacterCache->GetCharacterAccountIdByGuid(guid);
+            isGM = AccountMgr::IsGameMaster(accountId);
         }
 
         // Check security
-        //! If no m_session present it means we're issuing this command from the console
-        uint32 mySecurity = handler->GetSession() ? handler->GetSession()->GetSecurity() : SEC_CONSOLE;
-        if (security > mySecurity)
+        if (isGM && handler->GetSession() && handler->GetSession()->IsGameMaster())
         {
             handler->SendSysMessage(LANG_COMMAND_TICKETUNASSIGNSECURITY);
             return true;

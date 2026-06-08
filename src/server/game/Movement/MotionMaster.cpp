@@ -26,6 +26,7 @@
 #include "HomeMovementGenerator.h"
 #include "IdleMovementGenerator.h"
 #include "Log.h"
+#include "MapDefines.h"
 #include "MoveSpline.h"
 #include "MoveSplineInit.h"
 #include "PointMovementGenerator.h"

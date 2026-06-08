@@ -255,18 +255,15 @@ void ServerMailMgr::LoadMailServerTemplatesConditions()
             }
             break;
         case ServerMailConditionType::Class:
-            if (conditionValue & ~CLASSMASK_ALL_PLAYABLE)
+            if (conditionValue & ~CLASS_MASK_ALL_PLAYABLE)
             {
                 LOG_ERROR("sql.sql", "Table `mail_server_template_conditions` has conditionType 'Class' with invalid conditionValue ({}) for templateID {}, skipped.", conditionValue, templateID);
                 continue;
             }
             break;
         case ServerMailConditionType::AccountFlags:
-            if ((conditionValue & ~ACCOUNT_FLAGS_ALL) != 0)
-            {
-                LOG_ERROR("sql.sql", "Table `mail_server_template_conditions` has conditionType 'AccountFlags' with invalid conditionValue ({}) for templateID {}, skipped.", conditionValue, templateID);
-                continue;
-            }
+            if (conditionValue > 1)
+                conditionValue = 1;
             break;
         default:
             break;
@@ -355,7 +352,7 @@ bool ServerMailCondition::CheckCondition(Player* player) const
     case ServerMailConditionType::Class:
         return (player->getClassMask() & value) != 0;
     case ServerMailConditionType::AccountFlags:
-        return player->GetSession()->HasAccountFlag(value);
+        return !value || player->GetSession()->IsGameMaster();
     default:
         [[unlikely]] LOG_ERROR("server.mail", "Unknown server mail condition type '{}'", static_cast<uint32>(type));
         return false;

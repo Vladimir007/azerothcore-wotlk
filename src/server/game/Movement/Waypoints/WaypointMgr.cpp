@@ -149,17 +149,16 @@ void WaypointMgr::LoadWaypointAddons()
     LOG_INFO("server.loading", " ");
 }
 
-void WaypointMgr::ReloadPath(uint32 id)
+void WaypointMgr::ReloadPath(const uint32 id)
 {
-    auto itr = _waypointStore.find(id);
-    if (itr != _waypointStore.end())
+    if (const auto itr = _waypointStore.find(id); itr != _waypointStore.end())
         _waypointStore.erase(itr);
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_WAYPOINT_DATA_BY_ID);
 
     stmt->SetData(0, id);
 
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    const QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
         return;
@@ -167,15 +166,16 @@ void WaypointMgr::ReloadPath(uint32 id)
     std::vector<WaypointNode> values;
     do
     {
-        Field* fields = result->Fetch();
-        float x = fields[1].Get<float>();
-        float y = fields[2].Get<float>();
-        float z = fields[3].Get<float>();
+        const Field* fields = result->Fetch();
+        const auto position = fields[1].GetArray<float, 3>();
+        float x = position[0];
+        float y = position[1];
+        const float z = position[2];
         std::optional<float> o;
-        if (!fields[4].IsNull())
-            o = fields[4].Get<float>();
+        if (!fields[2].IsNull())
+            o = fields[2].Get<float>();
 
-        float velocity = fields[5].Get<float>();
+        const float velocity = fields[3].Get<float>();
 
         Acore::NormalizeMapCoord(x);
         Acore::NormalizeMapCoord(y);
@@ -188,9 +188,9 @@ void WaypointMgr::ReloadPath(uint32 id)
         if (o.has_value())
             waypoint.Orientation = o;
         waypoint.Velocity = velocity;
-        waypoint.Delay = fields[6].Get<uint32>();
-        waypoint.SmoothTransition = fields[7].Get<bool>();
-        waypoint.MoveType = fields[8].Get<uint32>();
+        waypoint.Delay = fields[4].Get<uint32>();
+        waypoint.SmoothTransition = fields[5].Get<bool>();
+        waypoint.MoveType = fields[6].Get<uint32>();
 
         if (waypoint.MoveType >= WAYPOINT_MOVE_TYPE_MAX)
         {
@@ -198,8 +198,8 @@ void WaypointMgr::ReloadPath(uint32 id)
             continue;
         }
 
-        waypoint.EventId = fields[9].Get<uint32>();
-        waypoint.EventChance = fields[10].Get<uint8>();
+        waypoint.EventId = fields[7].Get<uint32>();
+        waypoint.EventChance = fields[8].Get<uint8>();
 
         values.push_back(std::move(waypoint));
     } while (result->NextRow());

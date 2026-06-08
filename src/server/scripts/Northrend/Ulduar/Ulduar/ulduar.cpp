@@ -134,7 +134,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_TELEPORT)
+            if (spellInfo->ID == SPELL_TELEPORT)
             {
                 me->DespawnOrUnsummon();
                 InstanceScript* instance = me->GetInstanceScript();
@@ -422,7 +422,7 @@ struct npc_ulduar_arachnopod_destroyer : public ScriptedAI
             me->SetReactState(REACT_PASSIVE);
             me->SetRegeneratingHealth(false);
             me->SetFaction(FACTION_PREY);
-            me->SetNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
+            me->SetNpcFlag(UNIT_NPC_FLAG_SPELL_CLICK);
             me->CastSpell(me, 64770, true);
         }
     }

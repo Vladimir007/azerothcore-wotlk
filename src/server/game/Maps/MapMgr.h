@@ -41,7 +41,7 @@ public:
     Map* CreateMap(uint32 mapId, Player* player);
     Map* FindMap(uint32 mapId, uint32 instanceId) const;
 
-    Map* FindBaseMap(uint32 mapId) const // pussywizard: need this public for movemaps (mmaps)
+    Map* FindBaseMap(uint32 mapId) const // pussywizard: need this public for movemaps (mMaps)
     {
         MapMapType::const_iterator iter = i_maps.find(mapId);
         return (iter == i_maps.end() ? nullptr : iter->second);

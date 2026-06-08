@@ -173,7 +173,7 @@ struct npc_necropolis : public ScriptedAI
         if (me->HasAura(SPELL_COMMUNIQUE_TIMER_NECROPOLIS))
             return;
 
-        if (spell->Id == SPELL_COMMUNIQUE_PROXY_TO_NECROPOLIS)
+        if (spell->ID == SPELL_COMMUNIQUE_PROXY_TO_NECROPOLIS)
             DoCastSelf(SPELL_COMMUNIQUE_TIMER_NECROPOLIS, true);
     }
 };
@@ -187,11 +187,11 @@ struct npc_necropolis_health : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_COMMUNIQUE_CAMP_TO_RELAY_DEATH)
+        if (spell->ID == SPELL_COMMUNIQUE_CAMP_TO_RELAY_DEATH)
             DoCastSelf(SPELL_ZAP_NECROPOLIS, true); // deals damage to self
 
         // Just to make sure it finally dies!
-        if (spell->Id == SPELL_ZAP_NECROPOLIS)
+        if (spell->ID == SPELL_ZAP_NECROPOLIS)
             if (++_zapCount >= 3)
                 me->KillSelf();
     }
@@ -235,7 +235,7 @@ struct npc_necropolis_health : public ScriptedAI
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
         // Make sure necropoli despawn after SPELL_DESPAWNER_OTHER is triggered.
-        if (spellInfo->Id == SPELL_DESPAWNER_OTHER && target->GetEntry() == NPC_NECROPOLIS)
+        if (spellInfo->ID == SPELL_DESPAWNER_OTHER && target->GetEntry() == NPC_NECROPOLIS)
         {
             DespawnNecropolis();
             if (Creature* creature = target->ToCreature())
@@ -269,7 +269,7 @@ struct npc_necropolis_proxy : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        switch (spellInfo->Id)
+        switch (spellInfo->ID)
         {
             case SPELL_COMMUNIQUE_NECROPOLIS_TO_PROXIES:
                 DoCastSelf(SPELL_COMMUNIQUE_PROXY_TO_RELAY, true);
@@ -289,7 +289,7 @@ struct npc_necropolis_proxy : public ScriptedAI
     void SpellHitTarget(Unit* /*target*/, SpellInfo const* spellInfo) override
     {
         // Make sure me despawn after SPELL_COMMUNIQUE_CAMP_TO_RELAY_DEATH hits the target to avoid getting hit by Purple bolt again.
-        if (spellInfo->Id == SPELL_COMMUNIQUE_CAMP_TO_RELAY_DEATH)
+        if (spellInfo->ID == SPELL_COMMUNIQUE_CAMP_TO_RELAY_DEATH)
             me->DespawnOrUnsummon();
     }
 };
@@ -303,7 +303,7 @@ struct npc_necropolis_relay : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        switch (spell->Id)
+        switch (spell->ID)
         {
             case SPELL_COMMUNIQUE_PROXY_TO_RELAY:
                 DoCastSelf(SPELL_COMMUNIQUE_RELAY_TO_CAMP, true);
@@ -323,7 +323,7 @@ struct npc_necropolis_relay : public ScriptedAI
     void SpellHitTarget(Unit* /*target*/, SpellInfo const* spell) override
     {
         // Make sure `me` despawns after SPELL_COMMUNIQUE_CAMP_TO_RELAY_DEATH hits the target to avoid getting hit by Purple bolt again.
-        if (spell->Id == SPELL_COMMUNIQUE_CAMP_TO_RELAY_DEATH)
+        if (spell->ID == SPELL_COMMUNIQUE_CAMP_TO_RELAY_DEATH)
             me->DespawnOrUnsummon();
     }
 };
@@ -426,7 +426,7 @@ struct npc_necrotic_shard : public ScriptedAI
 
     void SpellHit(Unit* caster, SpellInfo const* spell) override
     {
-        switch (spell->Id)
+        switch (spell->ID)
         {
             case SPELL_ZAP_CRYSTAL_CORPSE:
             {
@@ -487,7 +487,7 @@ struct npc_necrotic_shard : public ScriptedAI
         if (me->GetEntry() != NPC_DAMAGED_NECROTIC_SHARD)
             return;
 
-        if (spellInfo->Id == SPELL_COMMUNIQUE_CAMP_TO_RELAY_DEATH)
+        if (spellInfo->ID == SPELL_COMMUNIQUE_CAMP_TO_RELAY_DEATH)
             me->DespawnOrUnsummon();
     }
 

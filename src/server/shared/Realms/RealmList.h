@@ -1,30 +1,11 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef REALMLIST_H
+#define REALMLIST_H
 
-#ifndef _REALMLIST_H
-#define _REALMLIST_H
+#include <memory> // NOTE: this import is NEEDED (even though some IDEs report it as unused)
+#include <boost/asio/steady_timer.hpp>
 
 #include "Define.h"
 #include "Realm.h"
-#include <boost/asio/steady_timer.hpp>
-#include <array>
-#include <map>
-#include <memory> // NOTE: this import is NEEDED (even though some IDEs report it as unused)
-#include <vector>
 
 namespace Acore::Asio
 {
@@ -36,45 +17,26 @@ namespace boost::system
     class error_code;
 }
 
-struct RealmBuildInfo
-{
-    uint32 Build;
-    uint32 MajorVersion;
-    uint32 MinorVersion;
-    uint32 BugfixVersion;
-    std::array<char, 4> HotfixVersion;
-    std::array<uint8, 20> WindowsHash;
-    std::array<uint8, 20> MacHash;
-};
-
-/// Storage object for the list of realms on the server
-class AC_SHARED_API RealmList
+class RealmList
 {
 public:
-    typedef std::map<RealmHandle, Realm> RealmMap;
-
     static RealmList* Instance();
 
     void Initialize(Acore::Asio::IoContext& ioContext, uint32 updateInterval);
-    void Close();
+    void Close() const;
 
-    [[nodiscard]] RealmMap const& GetRealms() const { return _realms; }
-    [[nodiscard]] Realm const* GetRealm(RealmHandle const& id) const;
-
-    [[nodiscard]] RealmBuildInfo const* GetBuildInfo(uint32 build) const;
+    [[nodiscard]] const Realm* GetRealm() const { return _realm.get(); }
 
 private:
     RealmList();
     ~RealmList() = default;
 
-    void LoadBuildInfo();
-    void UpdateRealms(boost::system::error_code const& error);
-    void UpdateRealm(RealmHandle const& id, uint32 build, std::string const& name,
-        boost::asio::ip::address&& address, boost::asio::ip::address&& localAddr, boost::asio::ip::address&& localSubmask,
-        uint16 port, uint8 icon, RealmFlags flag, uint8 realmTimezone, AccountTypes allowedSecurityLevel, float population);
+    void UpdateRealmLoop(boost::system::error_code const& error);
+    bool UpdateRealm(const uint32& realmID, std::string const& name,
+        const std::string& externalAddrStr, const std::string& localAddrStr, const std::string& localSubMaskStr,
+        uint16 port, RealmFlags flag, uint8 realmTimezone);
 
-    std::vector<RealmBuildInfo> _builds;
-    RealmMap _realms;
+    std::unique_ptr<Realm> _realm{nullptr};
     uint32 _updateInterval{0};
     std::unique_ptr<boost::asio::steady_timer> _updateTimer;
     std::unique_ptr<Acore::Asio::Resolver> _resolver;

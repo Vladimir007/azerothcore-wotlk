@@ -1,35 +1,12 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef WORLD_DATABASE_H
+#define WORLD_DATABASE_H
 
-#ifndef _WORLDDATABASE_H
-#define _WORLDDATABASE_H
-
-#include "MySQLConnection.h"
+#include "PSQLConnection.h"
 
 enum WorldDatabaseStatements : uint32
 {
-    /*  Naming standard for defines:
-        {DB}_{SEL/INS/UPD/DEL/REP}_{Summary of data changed}
-        When updating more than one field, consider looking at the calling function
-        name for a suiting suffix.
-    */
-
     WORLD_SEL_QUEST_POOLS,
-    WORLD_DEL_CRELINKED_RESPAWN,
+    WORLD_DEL_CREATURE_LINKED_RESPAWN,
     WORLD_REP_CREATURE_LINKED_RESPAWN,
     WORLD_SEL_CREATURE_TEXT,
     WORLD_SEL_SMART_SCRIPTS,
@@ -45,7 +22,7 @@ enum WorldDatabaseStatements : uint32
     WORLD_SEL_NPC_VENDOR_REF,
     WORLD_UPD_CREATURE_MOVEMENT_TYPE,
     WORLD_UPD_CREATURE_FACTION,
-    WORLD_UPD_CREATURE_NPCFLAG,
+    WORLD_UPD_CREATURE_NPC_FLAG,
     WORLD_UPD_CREATURE_POSITION,
     WORLD_UPD_CREATURE_WANDER_DISTANCE,
     WORLD_UPD_CREATURE_SPAWN_TIME_SECS,
@@ -54,18 +31,18 @@ enum WorldDatabaseStatements : uint32
     WORLD_DEL_WAYPOINT_DATA,
     WORLD_UPD_WAYPOINT_DATA_POINT,
     WORLD_UPD_WAYPOINT_DATA_POSITION,
-    WORLD_UPD_WAYPOINT_DATA_WPGUID,
-    WORLD_UPD_WAYPOINT_DATA_ALL_WPGUID,
+    WORLD_UPD_WAYPOINT_DATA_WP_GUID,
+    WORLD_UPD_WAYPOINT_DATA_ALL_WP_GUID,
     WORLD_SEL_WAYPOINT_DATA_MAX_ID,
     WORLD_SEL_WAYPOINT_DATA_BY_ID,
     WORLD_SEL_WAYPOINT_DATA_POS_BY_ID,
     WORLD_SEL_WAYPOINT_DATA_POS_FIRST_BY_ID,
     WORLD_SEL_WAYPOINT_DATA_POS_LAST_BY_ID,
-    WORLD_SEL_WAYPOINT_DATA_BY_WPGUID,
-    WORLD_SEL_WAYPOINT_DATA_ALL_BY_WPGUID,
+    WORLD_SEL_WAYPOINT_DATA_BY_WP_GUID,
+    WORLD_SEL_WAYPOINT_DATA_ALL_BY_WP_GUID,
     WORLD_SEL_WAYPOINT_DATA_MAX_POINT,
     WORLD_SEL_WAYPOINT_DATA_BY_POS,
-    WORLD_SEL_WAYPOINT_DATA_WPGUID_BY_ID,
+    WORLD_SEL_WAYPOINT_DATA_WP_GUID_BY_ID,
     WORLD_SEL_WAYPOINT_DATA_ACTION,
     WORLD_SEL_WAYPOINT_SCRIPTS_MAX_ID,
     WORLD_UPD_CREATURE_ADDON_PATH,
@@ -115,21 +92,21 @@ enum WorldDatabaseStatements : uint32
     WORLD_UPD_GAMEOBJECT_ZONE_AREA_DATA,
     WORLD_SEL_REQ_XP,
     WORLD_INS_GAMEOBJECT_ADDON,
-    WORLD_UPD_VERSION,
 
-    MAX_WORLDDATABASE_STATEMENTS
+    MAX_WORLD_DATABASE_STATEMENTS
 };
 
-class AC_DATABASE_API WorldDatabaseConnection : public MySQLConnection
+class WorldDatabaseConnection : public PSQLConnection
 {
 public:
     typedef WorldDatabaseStatements Statements;
 
     //- Constructors for sync and async connections
-    WorldDatabaseConnection(MySQLConnectionInfo& connInfo);
-    WorldDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* q, MySQLConnectionInfo& connInfo);
+    explicit WorldDatabaseConnection(const std::string& connectionStr);
+    WorldDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* queue, const std::string& connectionStr);
     ~WorldDatabaseConnection() override;
 
+protected:
     //- Loads database type specific prepared statements
     void DoPrepareStatements() override;
 };

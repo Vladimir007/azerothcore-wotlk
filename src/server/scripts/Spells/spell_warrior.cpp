@@ -157,7 +157,7 @@ class spell_warr_improved_spell_reflection : public AuraScript
 
     bool CheckProc(ProcEventInfo& eventInfo)
     {
-        return eventInfo.GetSpellInfo() && eventInfo.GetActor() && eventInfo.GetSpellInfo()->Id == SPELL_WARRIOR_SPELL_REFLECTION;
+        return eventInfo.GetSpellInfo() && eventInfo.GetActor() && eventInfo.GetSpellInfo()->ID == SPELL_WARRIOR_SPELL_REFLECTION;
     }
 
     void OnProc(AuraEffect const* aurEff, ProcEventInfo& eventInfo)
@@ -647,7 +647,7 @@ class spell_warr_sweeping_strikes : public AuraScript
 
         if (SpellInfo const* spellInfo = eventInfo.GetSpellInfo())
         {
-            switch (spellInfo->Id)
+            switch (spellInfo->ID)
             {
                 case SPELL_WARRIOR_SWEEPING_STRIKES_EXTRA_ATTACK_1:
                 case SPELL_WARRIOR_SWEEPING_STRIKES_EXTRA_ATTACK_2:
@@ -674,14 +674,14 @@ class spell_warr_sweeping_strikes : public AuraScript
         if (DamageInfo* damageInfo = eventInfo.GetDamageInfo())
         {
             SpellInfo const* spellInfo = damageInfo->GetSpellInfo();
-            if (spellInfo && spellInfo->Id == SPELL_WARRIOR_EXECUTE && !_procTarget->HasAuraState(AURA_STATE_HEALTHLESS_20_PERCENT))
+            if (spellInfo && spellInfo->ID == SPELL_WARRIOR_EXECUTE && !_procTarget->HasAuraState(AURA_STATE_HEALTHLESS_20_PERCENT))
             {
                 // If triggered by Execute (while target is not under 20% hp) deals normalized weapon damage
                 GetTarget()->CastSpell(_procTarget, SPELL_WARRIOR_SWEEPING_STRIKES_EXTRA_ATTACK_2, aurEff);
             }
             else
             {
-                if (spellInfo && spellInfo->Id == SPELL_WARRIOR_WHIRLWIND_MAIN)
+                if (spellInfo && spellInfo->ID == SPELL_WARRIOR_WHIRLWIND_MAIN)
                 {
                     eventInfo.GetActor()->AddSpellCooldown(SPELL_WARRIOR_SWEEPING_STRIKES_EXTRA_ATTACK_1, 0, 500);
                 }
@@ -949,7 +949,7 @@ class spell_warr_heroic_strike : public SpellScript
                 break;
             }
 
-            if ((spellInfo->Id == SPELL_GENERIC_AFTERMATH)
+            if ((spellInfo->ID == SPELL_GENERIC_AFTERMATH)
                 || (spellInfo->SpellFamilyName == SPELLFAMILY_MAGE && (spellInfo->SpellFamilyFlags[1] & 0x40)) // Blast Wave
                 || (spellInfo->SpellFamilyName == SPELLFAMILY_PALADIN && (spellInfo->SpellFamilyFlags[2] & 0x4000)) // Avenger's Shield
             )
@@ -981,7 +981,7 @@ class spell_war_sudden_death_aura : public AuraScript
         if (eventInfo.GetSpellPhaseMask() != PROC_SPELL_PHASE_FINISH)
             return isTriggeredAtSpellProcEvent;
         if (Spell const* procSpell = eventInfo.GetProcSpell())
-            if (procSpell->GetSpellInfo()->GetFirstRankSpell()->Id == SPELL_WARRIOR_EXECUTE_R1)
+            if (procSpell->GetSpellInfo()->GetFirstRankSpell()->ID == SPELL_WARRIOR_EXECUTE_R1)
                 return isTriggeredAtSpellProcEvent;
         return false;
     }

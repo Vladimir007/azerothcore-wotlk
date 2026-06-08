@@ -387,7 +387,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_DREAM_SLIP)
+            if (spell->ID == SPELL_DREAM_SLIP)
             {
                 me->CastSpell(me, SPELL_CLEAR_ALL, true);
                 me->CastSpell(me, SPELL_AWARD_REPUTATION_BOSS_KILL, true);
@@ -1105,7 +1105,7 @@ class spell_dreamwalker_summon_portal : public SpellScript
         if (!target)
             return;
 
-        uint32 spellId = (GetSpellInfo()->Id == 72224 ? 71301 : 71977); // spell implicit target replaced to TARGET_DEST_DEST
+        uint32 spellId = (GetSpellInfo()->ID == 72224 ? 71301 : 71977); // spell implicit target replaced to TARGET_DEST_DEST
         float minDist = 20.0f;
         float maxDist = 30.0f;
         float dist = (maxDist - minDist) * rand_norm() + minDist;
@@ -1333,8 +1333,8 @@ class spell_valithria_suppression_aura : public AuraScript
 
         Unit* target = GetTarget();
         Unit::AuraApplicationMap& aam = target->GetAppliedAuras();
-        Unit::AuraApplicationMapBounds range = aam.equal_range(GetSpellInfo()->Id);
-        uint32 count = target->GetAuraCount(GetSpellInfo()->Id);
+        Unit::AuraApplicationMapBounds range = aam.equal_range(GetSpellInfo()->ID);
+        uint32 count = target->GetAuraCount(GetSpellInfo()->ID);
 
         if (range.first == range.second)
             return;
@@ -1351,8 +1351,8 @@ class spell_valithria_suppression_aura : public AuraScript
     {
         Unit* target = GetTarget();
         Unit::AuraApplicationMap& aam = target->GetAppliedAuras();
-        Unit::AuraApplicationMapBounds range = aam.equal_range(GetSpellInfo()->Id);
-        uint32 count = target->GetAuraCount(GetSpellInfo()->Id);
+        Unit::AuraApplicationMapBounds range = aam.equal_range(GetSpellInfo()->ID);
+        uint32 count = target->GetAuraCount(GetSpellInfo()->ID);
 
         if (range.first == range.second)
             return;

@@ -563,7 +563,7 @@ void InstanceScript::DoUseDoorOrButton(ObjectGuid uiGuid, uint32 uiWithRestoreTi
 
     if (go)
     {
-        if (go->GetGoType() == GAMEOBJECT_TYPE_DOOR || go->GetGoType() == GAMEOBJECT_TYPE_BUTTON)
+        if (go->GetGoType() == GAME_OBJECT_TYPE_DOOR || go->GetGoType() == GAME_OBJECT_TYPE_BUTTON)
         {
             if (go->getLootState() == GO_READY)
                 go->UseDoorOrButton(uiWithRestoreTime, bUseAlternativeState);
@@ -581,10 +581,10 @@ void InstanceScript::DoRespawnGameObject(ObjectGuid uiGuid, uint32 uiTimeToDespa
     {
         switch (go->GetGoType())
         {
-            case GAMEOBJECT_TYPE_DOOR:
-            case GAMEOBJECT_TYPE_BUTTON:
-            case GAMEOBJECT_TYPE_TRAP:
-            case GAMEOBJECT_TYPE_FISHINGNODE:
+            case GAME_OBJECT_TYPE_DOOR:
+            case GAME_OBJECT_TYPE_BUTTON:
+            case GAME_OBJECT_TYPE_TRAP:
+            case GAME_OBJECT_TYPE_FISHING_NODE:
                 // not expect any of these should ever be handled
                 LOG_ERROR("scripts", "InstanceScript: DoRespawnGameObject can't respawn gameobject entry {}, because type is {}.", go->GetEntry(), go->GetGoType());
                 return;
@@ -797,7 +797,7 @@ void InstanceScript::LoadInstanceSavedGameobjectStateData()
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SELECT_INSTANCE_SAVED_DATA);
     stmt->SetData(0, instance->GetInstanceId());
 
-    if (PreparedQueryResult result = CharacterDatabase.Query(stmt))
+    if (QueryResult result = CharacterDatabase.Query(stmt))
     {
         Field* fields;
 

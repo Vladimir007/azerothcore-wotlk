@@ -42,7 +42,7 @@ void LootItemStorage::LoadStorageFromDB()
     lootItemStore.clear();
 
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_ITEMCONTAINER_ITEMS);
-    PreparedQueryResult result = CharacterDatabase.Query(stmt);
+    QueryResult result = CharacterDatabase.Query(stmt);
     if (!result)
     {
         LOG_WARN("server.loading", ">> Loaded 0 stored items!");

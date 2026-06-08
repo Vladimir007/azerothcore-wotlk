@@ -302,7 +302,7 @@ struct boss_malygos : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id != SPELL_POWER_SPARK_MALYGOS_BUFF)
+        if (spell->ID != SPELL_POWER_SPARK_MALYGOS_BUFF)
             return;
 
         if (!bLockHealthCheck)

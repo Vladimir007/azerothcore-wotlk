@@ -122,7 +122,7 @@ struct boss_high_king_maulgar : public BossAI
         {
             me->AddLootMode(1);
             me->loot.clear();
-            me->loot.FillLoot(me->GetCreatureTemplate()->lootid, LootTemplates_Creature, me->GetLootRecipient(), false, false, me->GetLootMode(), me);
+            me->loot.FillLoot(me->GetCreatureTemplate()->LootID, LootTemplates_Creature, me->GetLootRecipient(), false, false, me->GetLootMode(), me);
             me->SetDynamicFlag(UNIT_DYNFLAG_LOOTABLE);
             _JustDied();
         }

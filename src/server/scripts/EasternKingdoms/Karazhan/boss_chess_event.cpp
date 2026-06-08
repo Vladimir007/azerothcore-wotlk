@@ -1589,7 +1589,7 @@ struct npc_chesspiece : public ScriptedAI
             }
             else if (FactionTemplateEntry const* factionTemplateEntry = me->GetFactionTemplateEntry())
             {
-                me->SetFaction(factionTemplateEntry->faction);
+                me->SetFaction(factionTemplateEntry->Faction);
             }
             else
             {
@@ -1885,7 +1885,7 @@ struct npc_chesspiece : public ScriptedAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_MELEE_ATTACK_TIMER_TRIGGER)
+        if (spellInfo->ID == SPELL_MELEE_ATTACK_TIMER_TRIGGER)
         {
             if (Creature* victim = GetEnemyPiece(10.0f))
             {
@@ -1900,7 +1900,7 @@ struct npc_chesspiece : public ScriptedAI
             return;
         }
 
-        switch (spellInfo->Id)
+        switch (spellInfo->ID)
         {
             case SPELL_MOVE_1:
             case SPELL_MOVE_2:
@@ -1911,7 +1911,7 @@ struct npc_chesspiece : public ScriptedAI
             case SPELL_MOVE_GENERIC:
                 if (Creature* medivh = ObjectAccessor::GetCreature(*me, _instance->GetGuidData(DATA_ECHO_OF_MEDIVH)))
                 {
-                    int8 result = CAST_AI(npc_echo_of_medivh, medivh->AI())->HandlePieceMove(me, target->GetGUID(), spellInfo->Id == SPELL_MOVE_GENERIC);
+                    int8 result = CAST_AI(npc_echo_of_medivh, medivh->AI())->HandlePieceMove(me, target->GetGUID(), spellInfo->ID == SPELL_MOVE_GENERIC);
                     if (result != -1)
                     {
                         DoCast(SPELL_MOVE_COOLDOWN);

@@ -572,7 +572,7 @@ public:
 
         void SpellHit(Unit*  /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_SPIKE_FAIL)
+            if (spell->ID == SPELL_SPIKE_FAIL)
             {
                 me->RemoveAllAuras();
                 me->DespawnOrUnsummon(1500ms);
@@ -646,7 +646,7 @@ public:
             if (!target || !spell)
                 return;
 
-            if (spell->Id == SPELL_SHADOW_STRIKE)
+            if (spell->ID == SPELL_SHADOW_STRIKE)
             {
                 float o = target->GetOrientation();
                 if (o >= M_PI)

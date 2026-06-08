@@ -18,10 +18,10 @@ RUN mkdir -pv \
         /azerothcore/deps                  \
         /azerothcore/env/dist/bin          \
         /azerothcore/env/dist/data/Cameras \
-        /azerothcore/env/dist/data/dbc     \
-        /azerothcore/env/dist/data/maps    \
-        /azerothcore/env/dist/data/mmaps   \
-        /azerothcore/env/dist/data/vmaps   \
+        /azerothcore/env/dist/data/DBC     \
+        /azerothcore/env/dist/data/Maps    \
+        /azerothcore/env/dist/data/mMaps   \
+        /azerothcore/env/dist/data/vMaps   \
         /azerothcore/env/dist/logs         \
         /azerothcore/env/dist/temp         \
         /azerothcore/env/dist/etc          \
@@ -47,8 +47,6 @@ ARG CTOOLS_BUILD="all"
 ARG CTYPE="RelWithDebInfo"
 ARG CCACHE_CPP2="true"
 ARG CSCRIPTPCH="OFF"
-ARG CSCRIPTS="static"
-ARG CMODULES="static"
 ARG CSCRIPTS_DEFAULT_LINKAGE="static"
 ARG CWITH_WARNINGS="ON"
 ARG CMAKE_EXTRA_OPTIONS=""
@@ -65,9 +63,11 @@ ARG CCACHE_LOGFILE=""
 RUN apt-get update                                                     \
     && apt-get install -y --no-install-recommends                         \
         build-essential ccache libtool cmake-data make cmake clang    \
-        git lsb-base curl unzip default-mysql-client openssl                  \
-        default-libmysqlclient-dev libboost-all-dev libssl-dev libmysql++-dev \
+        git lsb-base curl unzip openssl                  \
+        libboost-all-dev libssl-dev libmysql++-dev \
         libreadline-dev zlib1g-dev libbz2-dev libncurses5-dev         \
+    libc++-dev libc++abi-dev \
+    libstdc++-16-dev g++-16 \
     && rm -rf /var/lib/apt/lists/*
 
 COPY CMakeLists.txt /azerothcore/CMakeLists.txt
@@ -92,8 +92,6 @@ RUN --mount=type=cache,target=/ccache,sharing=locked \
        -DCMAKE_INSTALL_PREFIX="/azerothcore/env/dist"  \
        -DAPPS_BUILD="all"                              \
        -DTOOLS_BUILD="$CTOOLS_BUILD"                   \
-       -DSCRIPTS="$CSCRIPTS"                           \
-       -DMODULES="$CMODULES"                           \
        -DWITH_WARNINGS="$CWITH_WARNINGS"               \
        -DCMAKE_BUILD_TYPE="$CTYPE"                     \
        -DCMAKE_CXX_COMPILER="clang++"                  \
@@ -119,8 +117,8 @@ ENV ACORE_COMPONENT=undefined
 # Install base dependencies for azerothcore
 RUN apt-get update && \
     apt-get install -y --no-install-recommends \
-      libmysqlclient21 libreadline8 \
-      gettext-base default-mysql-client && \
+      libreadline8 \
+      gettext-base && \
     rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /azerothcore/env/dist/etc/ /azerothcore/env/ref/etc
@@ -243,19 +241,19 @@ LABEL description="AzerothCore Tools"
 WORKDIR /azerothcore/env/dist/
 
 RUN mkdir -pv /azerothcore/env/dist/Cameras \
-              /azerothcore/env/dist/dbc     \
-              /azerothcore/env/dist/maps    \
-              /azerothcore/env/dist/mmaps   \
-              /azerothcore/env/dist/vmaps
+              /azerothcore/env/dist/DBC     \
+              /azerothcore/env/dist/Maps    \
+              /azerothcore/env/dist/mMaps   \
+              /azerothcore/env/dist/vMaps
 
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=build \
-  /azerothcore/env/dist/bin/map_extractor /azerothcore/env/dist/bin/map_extractor
+  /azerothcore/env/dist/bin/mapExtractor /azerothcore/env/dist/bin/mapExtractor
 
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=build \
-  /azerothcore/env/dist/bin/mmaps_generator /azerothcore/env/dist/bin/mmaps_generator
+  /azerothcore/env/dist/bin/mMapsGenerator /azerothcore/env/dist/bin/mMapsGenerator
 
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=build \
-  /azerothcore/env/dist/bin/vmap4_assembler /azerothcore/env/dist/bin/vmap4_assembler
+  /azerothcore/env/dist/bin/vMapAssembler /azerothcore/env/dist/bin/vMapAssembler
 
 COPY --chown=$DOCKER_USER:$DOCKER_USER --from=build \
-  /azerothcore/env/dist/bin/vmap4_extractor /azerothcore/env/dist/bin/vmap4_extractor
+  /azerothcore/env/dist/bin/vMapExtractor /azerothcore/env/dist/bin/vMapExtractor

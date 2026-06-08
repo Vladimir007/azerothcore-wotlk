@@ -62,7 +62,7 @@ namespace PlayerSettingsStore
 
         CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_SETTINGS);
         stmt->SetData(0, playerLowGuid);
-        PreparedQueryResult dbRes = CharacterDatabase.Query(stmt);
+        QueryResult dbRes = CharacterDatabase.Query(stmt);
         if (!dbRes)
             return result;
 
@@ -107,7 +107,7 @@ CharacterDatabasePreparedStatement* PlayerSettingsStore::PrepareReplaceStatement
     return stmt;
 }
 
-void Player::_LoadCharacterSettings(PreparedQueryResult result)
+void Player::_LoadCharacterSettings(QueryResult result)
 {
     m_charSettingsMap.clear();
 

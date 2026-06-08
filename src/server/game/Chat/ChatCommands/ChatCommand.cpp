@@ -83,19 +83,19 @@ static ChatSubCommandMap COMMAND_MAP;
     InvalidateCommandMap();
     LoadCommandsIntoMap(nullptr, COMMAND_MAP, sScriptMgr->GetChatCommands());
 
-    if (PreparedQueryResult result = WorldDatabase.Query(WorldDatabase.GetPreparedStatement(WORLD_SEL_COMMANDS)))
+    if (const QueryResult result = WorldDatabase.Query(WorldDatabase.GetPreparedStatement(WORLD_SEL_COMMANDS)))
     {
         do
         {
-            Field* fields = result->Fetch();
+            const Field* fields = result->Fetch();
             std::string_view const name = fields[0].Get<std::string_view>();
+            const bool gmOnly = fields[1].Get<bool>();
             std::string_view const help = fields[2].Get<std::string_view>();
-            uint32 const secLevel = fields[1].Get<uint8>();
 
             ChatCommandNode* cmd = nullptr;
             ChatSubCommandMap* map = &COMMAND_MAP;
 
-            for (std::string_view key : Acore::Tokenize(name, COMMAND_DELIMITER, false))
+            for (std::string_view key : Tokenize(name, COMMAND_DELIMITER, false))
             {
                 auto it = map->find(key);
                 if (it != map->end())
@@ -105,7 +105,7 @@ static ChatSubCommandMap COMMAND_MAP;
                 }
                 else
                 {
-                    LOG_ERROR("sql.sql", "Table `command` contains data for non-existant command '{}'. Skipped.", name);
+                    LOG_ERROR("sql.sql", "Table `command` contains data for non-existent command '{}'. Skipped.", name);
                     cmd = nullptr;
                     break;
                 }
@@ -114,12 +114,12 @@ static ChatSubCommandMap COMMAND_MAP;
             if (!cmd)
                 continue;
 
-            if (cmd->_invoker && (cmd->_permission.RequiredLevel != secLevel))
+            if (cmd->_invoker && (cmd->_permission.RequireGM != gmOnly))
             {
-                LOG_WARN("sql.sql", "Table `command` has permission {} for '{}' which does not match the core ({}). Overriding.",
-                    secLevel, name, cmd->_permission.RequiredLevel);
+                LOG_WARN("sql.sql", "Table `command` has GM permission {} for '{}' which does not match the core ({}). Overriding.",
+                    gmOnly, name, cmd->_permission.RequireGM);
 
-                cmd->_permission.RequiredLevel = secLevel;
+                cmd->_permission.RequireGM = gmOnly;
             }
 
             if (std::holds_alternative<std::string>(cmd->_help))
@@ -154,7 +154,7 @@ void Acore::Impl::ChatCommands::ChatCommandNode::ResolveNames(std::string name)
 
 static void LogCommandUsage(WorldSession const& session, std::string_view cmdStr)
 {
-    if (AccountMgr::IsPlayerAccount(session.GetSecurity()))
+    if (!session.IsGameMaster())
         return;
 
     Player* player = session.GetPlayer();
@@ -163,17 +163,12 @@ static void LogCommandUsage(WorldSession const& session, std::string_view cmdStr
     uint32 zoneId = player->GetZoneId();
     std::string areaName = "Unknown";
     std::string zoneName = "Unknown";
-    LocaleConstant locale = sWorld->GetDefaultDbcLocale();
 
     if (AreaTableEntry const* area = sAreaTableStore.LookupEntry(areaId))
-    {
-        areaName = area->area_name[locale];
-    }
+        areaName = area->AreaName;
 
     if (AreaTableEntry const* zone = sAreaTableStore.LookupEntry(zoneId))
-    {
-        zoneName = zone->area_name[locale];
-    }
+        zoneName = zone->AreaName;
 
     std::string logMessage = Acore::StringFormat("Command: {} [Player: {} ({}) (Account: {}) X: {} Y: {} Z: {} Map: {} ({}) Area: {} ({}) Zone: {} ({}) Selected: {} ({})]",
         cmdStr, player->GetName(), player->GetGUID().ToString(),
@@ -184,7 +179,7 @@ static void LogCommandUsage(WorldSession const& session, std::string_view cmdStr
         (player->GetSelectedUnit()) ? player->GetSelectedUnit()->GetName() : "",
         targetGuid.ToString());
 
-    LOG_GM(session.GetAccountId(), logMessage);
+    LOG_GM(logMessage);
 }
 
 void Acore::Impl::ChatCommands::ChatCommandNode::SendCommandHelp(ChatHandler& handler) const
@@ -515,7 +510,7 @@ bool Acore::Impl::ChatCommands::ChatCommandNode::IsInvokerVisible(ChatHandler co
     if (who.IsConsole() && (_permission.AllowConsole == Acore::ChatCommands::Console::Yes))
         return true;
 
-    return !who.IsConsole() && who.IsAvailable(_permission.RequiredLevel);
+    return !who.IsConsole() && who.IsAvailable(_permission.RequireGM);
 }
 
 bool Acore::Impl::ChatCommands::ChatCommandNode::HasVisibleSubCommands(ChatHandler const& who) const

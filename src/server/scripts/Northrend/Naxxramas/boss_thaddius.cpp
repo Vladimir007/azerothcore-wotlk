@@ -591,7 +591,7 @@ class spell_thaddius_pos_neg_charge : public SpellScript
             {
                 if (Player* target = ihit->ToPlayer())
                 {
-                    if (target->HasAura(GetTriggeringSpell()->Id))
+                    if (target->HasAura(GetTriggeringSpell()->ID))
                     {
                         ++count;
                     }
@@ -601,7 +601,7 @@ class spell_thaddius_pos_neg_charge : public SpellScript
 
         if (count)
         {
-            uint32 spellId = GetSpellInfo()->Id == SPELL_POSITIVE_CHARGE ? SPELL_POSITIVE_CHARGE_STACK : SPELL_NEGATIVE_CHARGE_STACK;
+            uint32 spellId = GetSpellInfo()->ID == SPELL_POSITIVE_CHARGE ? SPELL_POSITIVE_CHARGE_STACK : SPELL_NEGATIVE_CHARGE_STACK;
             GetCaster()->SetAuraStack(spellId, GetCaster(), count);
         }
     }
@@ -615,7 +615,7 @@ class spell_thaddius_pos_neg_charge : public SpellScript
         if (!target)
             return;
 
-        if (target->HasAura(GetTriggeringSpell()->Id) || !target->IsPlayer())
+        if (target->HasAura(GetTriggeringSpell()->ID) || !target->IsPlayer())
         {
             SetHitDamage(0);
         }

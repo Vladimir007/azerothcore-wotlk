@@ -29,9 +29,7 @@
 #include "WorldPacket.h"
 #include "WorldSession.h"
 
-ArenaTeam::ArenaTeam()
-    : TeamId(0), Type(0), TeamName(), BackgroundColor(0), EmblemStyle(0), EmblemColor(0),
-      BorderStyle(0), BorderColor(0)
+ArenaTeam::ArenaTeam() : Team(0), Type(0), BackgroundColor(0), EmblemStyle(0), EmblemColor(0), BorderStyle(0), BorderColor(0)
 {
     Stats.WeekGames   = 0;
     Stats.SeasonGames = 0;
@@ -58,7 +56,7 @@ bool ArenaTeam::Create(ObjectGuid captainGuid, uint8 type, std::string const& te
         return false;
 
     // Generate new arena team id
-    TeamId = sArenaTeamMgr->GenerateArenaTeamId();
+    Team = sArenaTeamMgr->GenerateArenaTeamId();
 
     // Assign member variables
     CaptainGuid = captainGuid;
@@ -72,7 +70,7 @@ bool ArenaTeam::Create(ObjectGuid captainGuid, uint8 type, std::string const& te
 
     // Save arena team to db
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_ARENA_TEAM);
-    stmt->SetData(0, TeamId);
+    stmt->SetData(0, Team);
     stmt->SetData(1, TeamName);
     stmt->SetData(2, captainGuid.GetCounter());
     stmt->SetData(3, Type);
@@ -142,7 +140,7 @@ bool ArenaTeam::AddMember(ObjectGuid playerGuid)
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_MATCH_MAKER_RATING);
     stmt->SetData(0, playerGuid.GetCounter());
     stmt->SetData(1, GetSlot());
-    PreparedQueryResult result = CharacterDatabase.Query(stmt);
+    QueryResult result = CharacterDatabase.Query(stmt);
 
     uint16 matchMakerRating;
     uint16 maxMMR;
@@ -180,7 +178,7 @@ bool ArenaTeam::AddMember(ObjectGuid playerGuid)
 
     // Save player's arena team membership to db
     stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_ARENA_TEAM_MEMBER);
-    stmt->SetData(0, TeamId);
+    stmt->SetData(0, Team);
     stmt->SetData(1, playerGuid.GetCounter());
     stmt->SetData(2, personalRating);
     CharacterDatabase.Execute(stmt);
@@ -188,7 +186,7 @@ bool ArenaTeam::AddMember(ObjectGuid playerGuid)
     // Inform player if online
     if (player)
     {
-        player->SetInArenaTeam(TeamId, GetSlot(), GetType());
+        player->SetInArenaTeam(Team, GetSlot(), GetType());
         player->SetArenaTeamIdInvited(0);
 
         // Hide promote/remove buttons
@@ -206,7 +204,7 @@ bool ArenaTeam::LoadArenaTeamFromDB(QueryResult result)
 
     Field* fields = result->Fetch();
 
-    TeamId            = fields[0].Get<uint32>();
+    Team            = fields[0].Get<uint32>();
     TeamName          = fields[1].Get<std::string>();
     CaptainGuid       = ObjectGuid::Create<HighGuid::Player>(fields[2].Get<uint32>());
     Type              = fields[3].Get<uint8>();
@@ -243,7 +241,7 @@ bool ArenaTeam::LoadMembersFromDB(QueryResult result)
         uint32 arenaTeamId = fields[0].Get<uint32>();
 
         // We loaded all members for this arena_team already, break cycle
-        if (arenaTeamId > TeamId)
+        if (arenaTeamId > Team)
             break;
 
         ArenaTeamMember newMember;
@@ -278,7 +276,7 @@ bool ArenaTeam::LoadMembersFromDB(QueryResult result)
     if (Empty() || !captainPresentInTeam)
     {
         // Arena team is empty or captain is not in team, delete from db
-        LOG_DEBUG("bg.battleground", "ArenaTeam {} does not have any members or its captain is not in team, disbanding it...", TeamId);
+        LOG_DEBUG("bg.battleground", "ArenaTeam {} does not have any members or its captain is not in team, disbanding it...", Team);
         return false;
     }
 
@@ -402,17 +400,17 @@ void ArenaTeam::Disband(WorldSession* session)
     CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
 
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_ARENA_TEAM);
-    stmt->SetData(0, TeamId);
+    stmt->SetData(0, Team);
     trans->Append(stmt);
 
     stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_ARENA_TEAM_MEMBERS);
-    stmt->SetData(0, TeamId);
+    stmt->SetData(0, Team);
     trans->Append(stmt);
 
     CharacterDatabase.CommitTransaction(trans);
 
     // Remove arena team from ObjectMgr
-    sArenaTeamMgr->RemoveArenaTeam(TeamId);
+    sArenaTeamMgr->RemoveArenaTeam(Team);
 }
 
 void ArenaTeam::Disband()
@@ -425,17 +423,17 @@ void ArenaTeam::Disband()
     CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
 
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_ARENA_TEAM);
-    stmt->SetData(0, TeamId);
+    stmt->SetData(0, Team);
     trans->Append(stmt);
 
     stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_ARENA_TEAM_MEMBERS);
-    stmt->SetData(0, TeamId);
+    stmt->SetData(0, Team);
     trans->Append(stmt);
 
     CharacterDatabase.CommitTransaction(trans);
 
     // Remove arena team from ObjectMgr
-    sArenaTeamMgr->RemoveArenaTeam(TeamId);
+    sArenaTeamMgr->RemoveArenaTeam(Team);
 }
 
 void ArenaTeam::Roster(WorldSession* session)
@@ -1049,7 +1047,7 @@ void ArenaTeam::CreateTempArenaTeam(std::vector<Player*> playerList, uint8 type,
         ASSERT(playerCountInTeam == GetReqPlayersForType(type));
 
     // Generate new arena team id
-    TeamId = sArenaTeamMgr->GenerateTempArenaTeamId();
+    Team = sArenaTeamMgr->GenerateTempArenaTeamId();
 
     // Assign member variables
     CaptainGuid = playerList[0]->GetGUID();

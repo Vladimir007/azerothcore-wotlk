@@ -275,7 +275,7 @@ void Battlefield::InitStalker(uint32 entry, float x, float y, float z, float o)
 
 bool Battlefield::IsPlayerInWarOrInvited(Player* player) const
 {
-    TeamId teamId = player->GetTeamId();
+    TeamID teamId = player->GetTeamId();
     return PlayersInWar[teamId].count(player->GetGUID()) || InvitedPlayers[teamId].count(player->GetGUID());
 }
 
@@ -427,7 +427,7 @@ void Battlefield::PlayerAcceptInviteToWar(Player* player)
     }
 }
 
-void Battlefield::TeamCastSpell(TeamId team, int32 spellId)
+void Battlefield::TeamCastSpell(TeamID team, int32 spellId)
 {
     ForEachPlayerInWar(team, [spellId](Player* player)
     {
@@ -495,7 +495,7 @@ void Battlefield::ShowNpc(Creature* creature, bool aggressive)
     }
 }
 
-Group* Battlefield::GetFreeBfRaid(TeamId teamId)
+Group* Battlefield::GetFreeBfRaid(TeamID teamId)
 {
     for (ObjectGuid const& guid : Groups[teamId])
         if (Group* group = sGroupMgr->GetGroupByGUID(guid.GetCounter()))
@@ -505,7 +505,7 @@ Group* Battlefield::GetFreeBfRaid(TeamId teamId)
     return nullptr;
 }
 
-Group* Battlefield::GetGroupPlayer(ObjectGuid guid, TeamId teamId)
+Group* Battlefield::GetGroupPlayer(ObjectGuid guid, TeamID teamId)
 {
     for (ObjectGuid const& groupGuid : Groups[teamId])
         if (Group* group = sGroupMgr->GetGroupByGUID(groupGuid.GetCounter()))
@@ -636,13 +636,13 @@ BfGraveyard::BfGraveyard(Battlefield* bf) :
 {
 }
 
-void BfGraveyard::Initialize(TeamId startControl, uint32 graveyardId)
+void BfGraveyard::Initialize(TeamID startControl, uint32 graveyardId)
 {
     ControlTeam = startControl;
     GraveyardId = graveyardId;
 }
 
-void BfGraveyard::SetSpirit(Creature* spirit, TeamId team)
+void BfGraveyard::SetSpirit(Creature* spirit, TeamID team)
 {
     if (!spirit)
     {
@@ -709,7 +709,7 @@ void BfGraveyard::Resurrect()
 }
 
 // For changing graveyard control
-void BfGraveyard::GiveControlTo(TeamId team)
+void BfGraveyard::GiveControlTo(TeamID team)
 {
     ControlTeam = team;
     // Teleport to other graveyard, players which were on this graveyard
@@ -736,12 +736,12 @@ void BfGraveyard::RelocateDeadPlayers()
     }
 }
 
-Creature* Battlefield::SpawnCreature(uint32 entry, Position pos, TeamId teamId)
+Creature* Battlefield::SpawnCreature(uint32 entry, Position pos, TeamID teamId)
 {
     return SpawnCreature(entry, pos.m_positionX, pos.m_positionY, pos.m_positionZ, pos.m_orientation, teamId);
 }
 
-Creature* Battlefield::SpawnCreature(uint32 entry, float x, float y, float z, float o, TeamId teamId)
+Creature* Battlefield::SpawnCreature(uint32 entry, float x, float y, float z, float o, TeamID teamId)
 {
     Map* map = sMapMgr->CreateBaseMap(MapId);
     if (!map)
@@ -772,8 +772,8 @@ Creature* Battlefield::SpawnCreature(uint32 entry, float x, float y, float z, fl
     creature->SetHomePosition(x, y, z, o);
 
     // force using DB speeds -- do we really need this?
-    creature->SetSpeed(MOVE_WALK, cinfo->speed_walk);
-    creature->SetSpeed(MOVE_RUN, cinfo->speed_run);
+    creature->SetSpeed(MOVE_WALK, cinfo->SpeedWalk);
+    creature->SetSpeed(MOVE_RUN, cinfo->SpeedRun);
 
     map->AddToMap(creature);
     creature->setActive(true);
@@ -837,9 +837,9 @@ bool BfCapturePoint::HandlePlayerEnter(Player* player)
 {
     if (GameObject* go = GetCapturePointGo(player))
     {
-        player->SendUpdateWorldState(go->GetGOInfo()->capturePoint.worldState1, 1);
-        player->SendUpdateWorldState(go->GetGOInfo()->capturePoint.worldstate2, uint32(std::ceil((Value + MaxValue) / (2 * MaxValue) * 100.0f)));
-        player->SendUpdateWorldState(go->GetGOInfo()->capturePoint.worldstate3, NeutralValuePct);
+        player->SendUpdateWorldState(go->GetGOInfo()->CapturePoint.worldState1, 1);
+        player->SendUpdateWorldState(go->GetGOInfo()->CapturePoint.worldstate2, uint32(std::ceil((Value + MaxValue) / (2 * MaxValue) * 100.0f)));
+        player->SendUpdateWorldState(go->GetGOInfo()->CapturePoint.worldstate3, NeutralValuePct);
     }
     return ActivePlayers[player->GetTeamId()].insert(player->GetGUID()).second;
 }
@@ -847,7 +847,7 @@ bool BfCapturePoint::HandlePlayerEnter(Player* player)
 GuidUnorderedSet::iterator BfCapturePoint::HandlePlayerLeave(Player* player)
 {
     if (GameObject* go = GetCapturePointGo(player))
-        player->SendUpdateWorldState(go->GetGOInfo()->capturePoint.worldState1, 0);
+        player->SendUpdateWorldState(go->GetGOInfo()->CapturePoint.worldState1, 0);
 
     GuidUnorderedSet::iterator current = ActivePlayers[player->GetTeamId()].find(player->GetGUID());
 
@@ -869,15 +869,15 @@ void BfCapturePoint::SendChangePhase()
             if (Player* player = ObjectAccessor::FindPlayer(guid))
             {
                 // send this too, sometimes the slider disappears, dunno why :(
-                player->SendUpdateWorldState(capturePoint->GetGOInfo()->capturePoint.worldState1, 1);
+                player->SendUpdateWorldState(capturePoint->GetGOInfo()->CapturePoint.worldState1, 1);
                 // send these updates to only the ones in this objective
-                player->SendUpdateWorldState(capturePoint->GetGOInfo()->capturePoint.worldstate2, (uint32) std::ceil((Value + MaxValue) / (2 * MaxValue) * 100.0f));
+                player->SendUpdateWorldState(capturePoint->GetGOInfo()->CapturePoint.worldstate2, (uint32) std::ceil((Value + MaxValue) / (2 * MaxValue) * 100.0f));
                 // send this too, sometimes it resets :S
-                player->SendUpdateWorldState(capturePoint->GetGOInfo()->capturePoint.worldstate3, NeutralValuePct);
+                player->SendUpdateWorldState(capturePoint->GetGOInfo()->CapturePoint.worldstate3, NeutralValuePct);
             }
 }
 
-bool BfCapturePoint::SetCapturePointData(GameObject* capturePoint, TeamId team)
+bool BfCapturePoint::SetCapturePointData(GameObject* capturePoint, TeamID team)
 {
     ASSERT(capturePoint);
 
@@ -890,17 +890,17 @@ bool BfCapturePoint::SetCapturePointData(GameObject* capturePoint, TeamId team)
 
     // check info existence
     GameObjectTemplate const* goinfo = capturePoint->GetGOInfo();
-    if (goinfo->type != GAMEOBJECT_TYPE_CAPTURE_POINT)
+    if (goinfo->Type != GAME_OBJECT_TYPE_CAPTURE_POINT)
     {
         LOG_ERROR("bg.battlefield", "OutdoorPvP: GO {} is not capture point!", capturePoint->GetEntry());
         return false;
     }
 
     // get the needed values from goinfo
-    MaxValue = goinfo->capturePoint.maxTime;
-    MaxSpeed = MaxValue / (goinfo->capturePoint.minTime ? goinfo->capturePoint.minTime : 60);
-    NeutralValuePct = goinfo->capturePoint.neutralPercent;
-    MinValue = MaxValue * goinfo->capturePoint.neutralPercent / 100;
+    MaxValue = goinfo->CapturePoint.maxTime;
+    MaxSpeed = MaxValue / (goinfo->CapturePoint.minTime ? goinfo->CapturePoint.minTime : 60);
+    NeutralValuePct = goinfo->CapturePoint.neutralPercent;
+    MinValue = MaxValue * goinfo->CapturePoint.neutralPercent / 100;
     CapturePointEntry = capturePoint->GetEntry();
     if (team == TEAM_ALLIANCE)
     {
@@ -944,7 +944,7 @@ bool BfCapturePoint::Update(uint32 diff)
     if (!capturePoint)
         return false;
 
-    float radius = capturePoint->GetGOInfo()->capturePoint.radius;
+    float radius = capturePoint->GetGOInfo()->CapturePoint.radius;
 
     for (uint8 team = 0; team < 2; ++team)
     {
@@ -976,7 +976,7 @@ bool BfCapturePoint::Update(uint32 diff)
     if (G3D::fuzzyEq(factDiff, 0.0f))
         return false;
 
-    TeamId challengerId = TEAM_NEUTRAL;
+    TeamID challengerId = TEAM_NEUTRAL;
     float maxDiff = MaxSpeed * diff;
 
     if (factDiff < 0)
@@ -1003,7 +1003,7 @@ bool BfCapturePoint::Update(uint32 diff)
     }
 
     float oldValue = Value;
-    TeamId oldTeam = Team;
+    TeamID oldTeam = Team;
 
     OldState = State;
 

@@ -30,25 +30,6 @@ class WorldPacket;
 class WorldSession;
 class Player;
 
-/// Storage class for commands issued for delayed execution
-struct AC_GAME_API CliCommandHolder
-{
-    using Print = void(*)(void*, std::string_view);
-    using CommandFinished = void(*)(void*, bool success);
-
-    void* m_callbackArg;
-    char* m_command;
-    Print m_print;
-    CommandFinished m_commandFinished;
-
-    CliCommandHolder(void* callbackArg, char const* command, Print zprint, CommandFinished commandFinished);
-    ~CliCommandHolder();
-
-private:
-    CliCommandHolder(CliCommandHolder const& right) = delete;
-    CliCommandHolder& operator=(CliCommandHolder const& right) = delete;
-};
-
 // ServerMessages.dbc
 enum ServerMessageType
 {
@@ -65,9 +46,6 @@ public:
     virtual ~IWorld() = default;
     [[nodiscard]] virtual bool IsClosed() const = 0;
     virtual void SetClosed(bool val) = 0;
-    [[nodiscard]] virtual AccountTypes GetPlayerSecurityLimit() const = 0;
-    virtual void SetPlayerSecurityLimit(AccountTypes sec) = 0;
-    virtual void LoadDBAllowedSecurityLevel() = 0;
     [[nodiscard]] virtual bool getAllowMovement() const = 0;
     virtual void SetAllowMovement(bool allow) = 0;
     [[nodiscard]] virtual LocaleConstant GetDefaultDbcLocale() const = 0;
@@ -77,7 +55,7 @@ public:
     [[nodiscard]] virtual Seconds GetNextRandomBGResetTime() const = 0;
     [[nodiscard]] virtual uint16 GetConfigMaxSkillValue() const = 0;
     virtual void SetInitialWorldSettings() = 0;
-    virtual void LoadConfigSettings(bool reload = false) = 0;
+    virtual void LoadConfigSettings() = 0;
     [[nodiscard]] virtual bool IsShuttingDown() const = 0;
     [[nodiscard]] virtual uint32 GetShutDownTimeLeft() const = 0;
     virtual void ShutdownServ(uint32 time, uint32 options, uint8 exitcode, const std::string& reason = std::string()) = 0;
@@ -94,16 +72,10 @@ public:
     [[nodiscard]] virtual uint32 getIntConfig(ServerConfigs index) const = 0;
     virtual void setStringConfig(ServerConfigs index, std::string const& value) = 0;
     virtual std::string_view getStringConfig(ServerConfigs index) const = 0;
-    [[nodiscard]] virtual bool IsPvPRealm() const = 0;
-    [[nodiscard]] virtual bool IsFFAPvPRealm() const = 0;
     virtual uint32 GetNextWhoListUpdateDelaySecs() = 0;
-    virtual void ProcessCliCommands() = 0;
-    virtual void QueueCliCommand(CliCommandHolder* commandHolder) = 0;
     virtual void ForceGameEventUpdate() = 0;
     virtual void UpdateRealmCharCount(uint32 accid) = 0;
     [[nodiscard]] virtual LocaleConstant GetAvailableDbcLocale(LocaleConstant locale) const = 0;
-    virtual void LoadDBVersion() = 0;
-    [[nodiscard]] virtual char const* GetDBVersion() const = 0;
     virtual void UpdateAreaDependentAuras() = 0;
     [[nodiscard]] virtual uint32 GetCleaningFlags() const = 0;
     virtual void   SetCleaningFlags(uint32 flags) = 0;

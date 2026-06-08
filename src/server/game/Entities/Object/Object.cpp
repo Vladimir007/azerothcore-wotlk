@@ -26,6 +26,7 @@
 #include "GameTime.h"
 #include "GridNotifiers.h"
 #include "Log.h"
+#include "MapDefines.h"
 #include "MapMgr.h"
 #include "MiscPackets.h"
 #include "MovementPacketBuilder.h"
@@ -202,10 +203,10 @@ void Object::BuildCreateUpdateBlockForPlayer(UpdateData* data, Player* target)
         {
             switch (((GameObject*)this)->GetGoType())
             {
-                case GAMEOBJECT_TYPE_TRAP:
-                case GAMEOBJECT_TYPE_DUEL_ARBITER:
-                case GAMEOBJECT_TYPE_FLAGSTAND:
-                case GAMEOBJECT_TYPE_FLAGDROP:
+                case GAME_OBJECT_TYPE_TRAP:
+                case GAME_OBJECT_TYPE_DUEL_ARBITER:
+                case GAME_OBJECT_TYPE_FLAGSTAND:
+                case GAME_OBJECT_TYPE_FLAG_DROP:
                     updatetype = UPDATETYPE_CREATE_OBJECT2;
                     break;
                 default:
@@ -469,7 +470,7 @@ void Object::BuildMovementUpdate(ByteBuffer* data, uint16 flags) const
     if (flags & UPDATEFLAG_VEHICLE)
     {
         /// @todo Allow players to aquire this updateflag.
-        *data << uint32(unit->GetVehicleKit()->GetVehicleInfo()->m_ID);
+        *data << uint32(unit->GetVehicleKit()->GetVehicleInfo()->ID);
         if (unit->HasUnitMovementFlag(MOVEMENTFLAG_ONTRANSPORT))
             *data << float(unit->GetTransOffsetO());
         else
@@ -1192,8 +1193,8 @@ void WorldObject::ProcessPositionDataChanged(PositionFullTerrainStatus const& da
     _zoneId = _areaId = data.areaId;
 
     if (AreaTableEntry const* area = sAreaTableStore.LookupEntry(_areaId))
-        if (area->zone)
-            _zoneId = area->zone;
+        if (area->Zone)
+            _zoneId = area->Zone;
 
     _outdoors   = data.outdoors;
     _floorZ     = data.floorZ;
@@ -2514,7 +2515,7 @@ GameObject* WorldObject::FindNearestGameObject(uint32 entry, float range, bool o
     return go;
 }
 
-GameObject* WorldObject::FindNearestGameObjectOfType(GameobjectTypes type, float range) const
+GameObject* WorldObject::FindNearestGameObjectOfType(GameObjectTypes type, float range) const
 {
     GameObject* go = nullptr;
     Acore::NearestGameObjectTypeInObjectRangeCheck checker(*this, type, range);
@@ -2715,10 +2716,6 @@ void WorldObject::GetNearPoint(WorldObject const* searcher, float& x, float& y, 
     {
         UpdateAllowedPositionZ(x, y, z);
     }
-
-    // if detection disabled, return first point
-    if (!sWorld->getBoolConfig(CONFIG_DETECT_POS_COLLISION))
-        return;
 
     // return if the point is already in LoS
     if (!controlZ && IsWithinLOS(x, y, z))
@@ -3024,7 +3021,7 @@ void WorldObject::AddToNotify(uint16 f)
         {
             if (f & NOTIFY_VISIBILITY_CHANGED)
             {
-                uint32 EVENT_VISIBILITY_DELAY = u->FindMap() ? DynamicVisibilityMgr::GetVisibilityNotifyDelay(u->FindMap()->GetEntry()->map_type) : 1000;
+                uint32 EVENT_VISIBILITY_DELAY = u->FindMap() ? DynamicVisibilityMgr::GetVisibilityNotifyDelay(u->FindMap()->GetEntry()->MapType) : 1000;
 
                 uint32 diff = getMSTimeDiff(u->m_last_notify_mstime, GameTime::GetGameTimeMS().count());
                 if (diff >= EVENT_VISIBILITY_DELAY / 2)
@@ -3036,7 +3033,7 @@ void WorldObject::AddToNotify(uint16 f)
             }
             else if (f & NOTIFY_AI_RELOCATION)
             {
-                u->m_delayed_unit_ai_notify_timer = u->FindMap() ? DynamicVisibilityMgr::GetAINotifyDelay(u->FindMap()->GetEntry()->map_type) : 500;
+                u->m_delayed_unit_ai_notify_timer = u->FindMap() ? DynamicVisibilityMgr::GetAINotifyDelay(u->FindMap()->GetEntry()->MapType) : 500;
             }
 
             m_notifyflags |= f;

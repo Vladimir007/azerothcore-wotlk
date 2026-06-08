@@ -217,7 +217,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_SUMMON_INFERNAL)
+            if (spell->ID == SPELL_SUMMON_INFERNAL)
             {
                 me->RemoveUnitFlag(UNIT_FLAG_PACIFIED | UNIT_FLAG_NOT_SELECTABLE);
                 me->SetImmuneToPC(false);
@@ -300,7 +300,7 @@ public:
             if (bCanEat || bIsEating)
                 return;
 
-            if (pCaster->IsPlayer() && spell->Id == SPELL_PLACE_CARCASS && !me->HasAura(SPELL_JUST_EATEN))
+            if (pCaster->IsPlayer() && spell->ID == SPELL_PLACE_CARCASS && !me->HasAura(SPELL_JUST_EATEN))
             {
                 uiPlayerGUID = pCaster->GetGUID();
                 bCanEat = true;
@@ -442,7 +442,7 @@ public:
         if (!playerCaster)
             return;
 
-        if (spell->Id == SPELL_HIT_FORCE_OF_NELTHARAKU && !_tapped &&
+        if (spell->ID == SPELL_HIT_FORCE_OF_NELTHARAKU && !_tapped &&
             playerCaster->GetQuestStatus(QUEST_THE_FORCE_OF_NELTHARAKU) == QUEST_STATUS_INCOMPLETE)
         {
             _tapped = true;
@@ -576,7 +576,7 @@ public:
 
             PlayerGUID = caster->GetGUID();
 
-            if (caster->IsPlayer() && spell->Id == SPELL_POISON && !Tapped)
+            if (caster->IsPlayer() && spell->ID == SPELL_POISON && !Tapped)
             {
                 Tapped = true;
                 caster->GetClosePoint(x, y, z, me->GetObjectSize());
@@ -1565,7 +1565,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (!tapped && spell->Id == SPELL_WHISTLE)
+            if (!tapped && spell->ID == SPELL_WHISTLE)
             {
                 if (Creature* boar = me->FindNearestCreature(NPC_BOAR_ENTRY, 30.0f))
                 {
@@ -1748,7 +1748,7 @@ struct dragonmaw_race_npc : public ScriptedAI
     void Reset() override
     {
         scheduler.CancelAll();
-        me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+        me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
         me->SetWalk(true);
         me->SetDisableGravity(false);
         me->GetMotionMaster()->MoveIdle();
@@ -1757,7 +1757,7 @@ struct dragonmaw_race_npc : public ScriptedAI
 
     void sQuestAccept(Player* player, Quest const* /*quest*/) override
     {
-        me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+        me->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
         if (player)
         {
             _playerGUID = player->GetGUID();

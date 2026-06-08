@@ -226,7 +226,7 @@ void WorldSession::HandleMoveWorldportAck()
     if (!corpse && mEntry->IsDungeon())
     {
         // resurrect character upon entering instance when the corpse is not available anymore
-        if (GetPlayer()->GetCorpseLocation().GetMapId() == mEntry->MapID)
+        if (GetPlayer()->GetCorpseLocation().GetMapId() == mEntry->ID)
         {
             GetPlayer()->ResurrectPlayer(0.5f);
             GetPlayer()->RemoveCorpse();
@@ -237,12 +237,12 @@ void WorldSession::HandleMoveWorldportAck()
     if (mInstance)
     {
         Difficulty diff = GetPlayer()->GetDifficulty(mEntry->IsRaid());
-        if (MapDifficulty const* mapDiff = GetMapDifficultyData(mEntry->MapID, diff))
-            if (mapDiff->resetTime)
-                if (time_t timeReset = sInstanceSaveMgr->GetResetTimeFor(mEntry->MapID, diff))
+        if (MapDifficulty const* mapDiff = GetMapDifficultyData(mEntry->ID, diff))
+            if (mapDiff->ResetTime)
+                if (time_t timeReset = sInstanceSaveMgr->GetResetTimeFor(mEntry->ID, diff))
                 {
                     uint32 timeleft = uint32(timeReset - GameTime::GetGameTime().count());
-                    GetPlayer()->SendInstanceResetWarning(mEntry->MapID, diff, timeleft, true);
+                    GetPlayer()->SendInstanceResetWarning(mEntry->ID, diff, timeleft, true);
                 }
         allowMount = mInstance->AllowMount;
     }
@@ -354,7 +354,7 @@ void WorldSession::HandleMovementOpcodes(WorldPacket& recvData)
     // ignore, waiting processing in WorldSession::HandleMoveWorldportAckOpcode and WorldSession::HandleMoveTeleportAck
     if (plrMover && plrMover->IsBeingTeleported())
     {
-        recvData.rfinish();                     // prevent warnings spam
+        recvData.rFinish();                     // prevent warnings spam
         return;
     }
 
@@ -365,14 +365,14 @@ void WorldSession::HandleMovementOpcodes(WorldPacket& recvData)
     // prevent tampered movement data
     if (!guid || guid != mover->GetGUID())
     {
-        recvData.rfinish();                     // prevent warnings spam
+        recvData.rFinish();                     // prevent warnings spam
         return;
     }
 
     // pussywizard: typical check for incomming movement packets | prevent tampered movement data
     if (!mover || !(mover->IsInWorld()) || mover->IsDuringRemoveFromWorld() || guid != mover->GetGUID())
     {
-        recvData.rfinish();                     // prevent warnings spam
+        recvData.rFinish();                     // prevent warnings spam
         return;
     }
 
@@ -382,7 +382,7 @@ void WorldSession::HandleMovementOpcodes(WorldPacket& recvData)
 
     if (!ProcessMovementInfo(movementInfo, mover, plrMover, recvData))
     {
-        recvData.rfinish();                     // prevent warnings spam
+        recvData.rFinish();                     // prevent warnings spam
         return;
     }
 
@@ -449,7 +449,7 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo, Unit* mover
         if (!mover->GetTransport() && !mover->GetVehicle())
         {
             GameObject* go = mover->GetMap()->GetGameObject(movementInfo.transport.guid);
-            if (!go || go->GetGoType() != GAMEOBJECT_TYPE_TRANSPORT)
+            if (!go || go->GetGoType() != GAME_OBJECT_TYPE_TRANSPORT)
                 movementInfo.RemoveMovementFlag(MOVEMENTFLAG_ONTRANSPORT);
         }
     }
@@ -472,7 +472,7 @@ void WorldSession::HandleMoverRelocation(MovementInfo& movementInfo, Unit* mover
     {
         if (VehicleSeatEntry const* seat = vehicle->GetSeatForPassenger(mover))
         {
-            if (seat->m_flags & VEHICLE_SEAT_FLAG_ALLOW_TURNING && movementInfo.pos.GetOrientation() != mover->GetOrientation())
+            if (seat->Flags & VEHICLE_SEAT_FLAG_ALLOW_TURNING && movementInfo.pos.GetOrientation() != mover->GetOrientation())
             {
                 mover->SetOrientation(movementInfo.pos.GetOrientation());
                 mover->RemoveAurasWithInterruptFlags(AURA_INTERRUPT_FLAG_TURNING);
@@ -684,7 +684,7 @@ void WorldSession::HandleForceSpeedChangeAck(WorldPacket& recvData)
     // pussywizard: special check, only player mover allowed here
     if (guid != mover->GetGUID() || guid != _player->GetGUID())
     {
-        recvData.rfinish(); // prevent warnings spam
+        recvData.rFinish(); // prevent warnings spam
         return;
     }
 
@@ -694,7 +694,7 @@ void WorldSession::HandleForceSpeedChangeAck(WorldPacket& recvData)
 
     if (!ProcessMovementInfo(movementInfo, mover, _player, recvData))
     {
-        recvData.rfinish();                     // prevent warnings spam
+        recvData.rFinish();                     // prevent warnings spam
         return;
     }
 
@@ -789,7 +789,7 @@ void WorldSession::HandleMoveNotActiveMover(WorldPacket& recvData)
     // pussywizard: typical check for incomming movement packets
     if (!_player->m_mover || !_player->m_mover->IsInWorld() || _player->m_mover->IsDuringRemoveFromWorld() || old_mover_guid != _player->m_mover->GetGUID())
     {
-        recvData.rfinish(); // prevent warnings spam
+        recvData.rFinish(); // prevent warnings spam
         return;
     }
 
@@ -820,7 +820,7 @@ void WorldSession::HandleMoveKnockBackAck(WorldPacket& recvData)
     // pussywizard: typical check for incomming movement packets
     if (!mover || !mover->IsInWorld() || mover->IsDuringRemoveFromWorld() || guid != mover->GetGUID())
     {
-        recvData.rfinish(); // prevent warnings spam
+        recvData.rFinish(); // prevent warnings spam
         return;
     }
 

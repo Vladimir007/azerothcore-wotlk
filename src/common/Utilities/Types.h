@@ -1,26 +1,9 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#ifndef NCORE_TYPES_H
+#define NCORE_TYPES_H
 
 namespace Acore
 {
-    // end "iterator" tag for find_type_if
+    // End "iterator" tag for find_type_if
     struct find_type_end;
 
     template<template<typename...> typename Check, typename... Ts>
@@ -61,7 +44,7 @@ namespace Acore
     */
 
     template<template<typename...> typename Check, typename... Ts>
-    using find_type_if_t = typename find_type_if<Check, Ts...>::type;
+    using find_type_if_t = find_type_if<Check, Ts...>::type;
 
     template <typename T>
     struct dependant_false { static constexpr bool value = false; };
@@ -70,4 +53,4 @@ namespace Acore
     constexpr bool dependant_false_v = dependant_false<T>::value;
 }
 
-#endif // _TYPES_H_
+#endif

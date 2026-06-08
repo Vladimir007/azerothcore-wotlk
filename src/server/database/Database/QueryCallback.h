@@ -1,45 +1,26 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef QUERY_CALLBACK_H
+#define QUERY_CALLBACK_H
 
-#ifndef _QUERY_CALLBACK_H
-#define _QUERY_CALLBACK_H
-
-#include "DatabaseEnvFwd.h"
-#include "Define.h"
 #include <functional>
 #include <future>
 #include <list>
 #include <queue>
+#include "DatabaseEnvFwd.h"
 
-class AC_DATABASE_API QueryCallback
+class QueryCallback
 {
 public:
-    explicit QueryCallback(QueryResultFuture&& result);
-    explicit QueryCallback(PreparedQueryResultFuture&& result);
+    explicit QueryCallback(QueryResultFuture&& result, bool prepared);
 
     QueryCallback(QueryCallback&& right) noexcept;
     QueryCallback& operator=(QueryCallback&& right) noexcept;
     ~QueryCallback();
 
     QueryCallback&& WithCallback(std::function<void(QueryResult)>&& callback);
-    QueryCallback&& WithPreparedCallback(std::function<void(PreparedQueryResult)>&& callback);
+    QueryCallback&& WithPreparedCallback(std::function<void(QueryResult)>&& callback);
 
     QueryCallback&& WithChainingCallback(std::function<void(QueryCallback&, QueryResult)>&& callback);
-    QueryCallback&& WithChainingPreparedCallback(std::function<void(QueryCallback&, PreparedQueryResult)>&& callback);
+    QueryCallback&& WithChainingPreparedCallback(std::function<void(QueryCallback&, QueryResult)>&& callback);
 
     // Moves std::future from next to this object
     void SetNextQuery(QueryCallback&& next);
@@ -58,7 +39,7 @@ private:
     union
     {
         QueryResultFuture _string;
-        PreparedQueryResultFuture _prepared;
+        QueryResultFuture _prepared;
     };
 
     bool _isPrepared;
@@ -67,4 +48,4 @@ private:
     std::queue<QueryCallbackData, std::list<QueryCallbackData>> _callbacks;
 };
 
-#endif // _QUERY_CALLBACK_H
+#endif

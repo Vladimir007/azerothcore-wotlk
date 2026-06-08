@@ -308,7 +308,7 @@ public:
 
     void OnGameObjectCreate(GameObject* go) override
     {
-        switch (go->GetGOInfo()->displayId)
+        switch (go->GetGOInfo()->DisplayID)
         {
             case GO_DISPLAY_ID_HEIGAN_ERUPTION1:
             case GO_DISPLAY_ID_HEIGAN_ERUPTION2:
@@ -345,7 +345,7 @@ public:
 
     void OnGameObjectRemove(GameObject* go) override
     {
-        switch (go->GetGOInfo()->displayId)
+        switch (go->GetGOInfo()->DisplayID)
         {
             case GO_DISPLAY_ID_HEIGAN_ERUPTION1:
             case GO_DISPLAY_ID_HEIGAN_ERUPTION2:

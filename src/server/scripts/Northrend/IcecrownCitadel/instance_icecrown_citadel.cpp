@@ -556,8 +556,8 @@ public:
                     break;
                 case NPC_ZAFOD_BOOMBOX:
                     if (GameObjectTemplate const* go = sObjectMgr->GetGameObjectTemplate(GO_THE_SKYBREAKER_A))
-                        if ((GetTeamIdInInstance() == TEAM_ALLIANCE && data->mapid == go->moTransport.mapID) ||
-                                (GetTeamIdInInstance() == TEAM_HORDE && data->mapid != go->moTransport.mapID))
+                        if ((GetTeamIdInInstance() == TEAM_ALLIANCE && data->mapID == go->MOTransport.mapID) ||
+                                (GetTeamIdInInstance() == TEAM_HORDE && data->mapID != go->MOTransport.mapID))
                             return entry;
                     return 0;
                 case NPC_IGB_MURADIN_BRONZEBEARD:
@@ -1421,7 +1421,7 @@ public:
 
         bool CheckRequiredBosses(uint32 bossId, Player const* player) const override
         {
-            if (player && player->GetSession() && player->GetSession()->GetSecurity() >= SEC_MODERATOR)
+            if (player && player->GetSession() && player->GetSession()->IsGameMaster())
             {
                 return true;
             }

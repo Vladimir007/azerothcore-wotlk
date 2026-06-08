@@ -218,11 +218,11 @@ public:
     void StartingEventOpenDoors() override;
 
     /* BG Flags */
-    ObjectGuid GetFlagPickerGUID(TeamId teamId) const override { return _flagKeepers[teamId];  }
-    void SetFlagPicker(ObjectGuid guid, TeamId teamId) { _flagKeepers[teamId] = guid; }
-    void RespawnFlagAfterDrop(TeamId teamId);
-    uint8 GetFlagState(TeamId teamId) const { return _flagState[teamId]; }
-    void CheckFlagKeeperInArea(TeamId teamId);
+    ObjectGuid GetFlagPickerGUID(TeamID teamId) const override { return _flagKeepers[teamId];  }
+    void SetFlagPicker(ObjectGuid guid, TeamID teamId) { _flagKeepers[teamId] = guid; }
+    void RespawnFlagAfterDrop(TeamID teamId);
+    uint8 GetFlagState(TeamID teamId) const { return _flagState[teamId]; }
+    void CheckFlagKeeperInArea(TeamID teamId);
 
     /* Battleground Events */
     void EventPlayerDroppedFlag(Player* player) override;
@@ -234,19 +234,19 @@ public:
     void HandleKillPlayer(Player* player, Player* killer) override;
     bool SetupBattleground() override;
     void Init() override;
-    void EndBattleground(TeamId winnerTeamId) override;
+    void EndBattleground(TeamID winnerTeamId) override;
     GraveyardStruct const* GetClosestGraveyard(Player* player) override;
 
-    void UpdateFlagState(TeamId teamId, uint32 value);
+    void UpdateFlagState(TeamID teamId, uint32 value);
     bool UpdatePlayerScore(Player* player, uint32 type, uint32 value, bool doAddHonor = true) override;
-    void SetDroppedFlagGUID(ObjectGuid guid, TeamId teamId) override { _droppedFlagGUID[teamId] = guid; }
-    ObjectGuid GetDroppedFlagGUID(TeamId teamId) const { return _droppedFlagGUID[teamId];}
+    void SetDroppedFlagGUID(ObjectGuid guid, TeamID teamId) override { _droppedFlagGUID[teamId] = guid; }
+    ObjectGuid GetDroppedFlagGUID(TeamID teamId) const { return _droppedFlagGUID[teamId];}
     void FillInitialWorldStates(WorldPackets::WorldState::InitWorldStates& packet) override;
 
     /* Scorekeeping */
-    void AddPoints(TeamId teamId, uint32 points) { m_TeamScores[teamId] += points; }
+    void AddPoints(TeamID teamId, uint32 points) { m_TeamScores[teamId] += points; }
 
-    TeamId GetPrematureWinner() override;
+    TeamID GetPrematureWinner() override;
     uint32 GetMatchTime() const { return 1 + (BG_WS_TOTAL_GAME_TIME - GetStartTime()) / (MINUTE * IN_MILLISECONDS); }
     uint32 GetAssaultSpellId() const;
     void RemoveAssaultAuras();
@@ -257,7 +257,7 @@ private:
     ObjectGuid _flagKeepers[2];
     ObjectGuid _droppedFlagGUID[2];
     uint8  _flagState[2];
-    TeamId _lastFlagCaptureTeam;
+    TeamID _lastFlagCaptureTeam;
     float _wsReputationRate;
     uint32 _reputationCapture;
     uint32 _honorWinKills;

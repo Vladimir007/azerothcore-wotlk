@@ -113,7 +113,7 @@ struct boss_ionar : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_DISPERSE)
+        if (spell->ID == SPELL_DISPERSE)
             Split();
     }
 

@@ -346,7 +346,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_MARK_OF_ARLOKK_TRIGGER) // Should only hit if line of sight
+            if (spell->ID == SPELL_MARK_OF_ARLOKK_TRIGGER) // Should only hit if line of sight
             {
                 AttackStart(caster);
             }

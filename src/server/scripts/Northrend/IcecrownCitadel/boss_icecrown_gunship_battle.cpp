@@ -412,7 +412,7 @@ public:
         ResetSlots(TEAM_HORDE, nullptr);
     }
 
-    void ResetSlots(TeamId teamId, MotionTransport* t)
+    void ResetSlots(TeamID teamId, MotionTransport* t)
     {
         _transport = t;
 
@@ -546,7 +546,7 @@ public:
 
     struct npc_gunshipAI : public NullCreatureAI
     {
-        npc_gunshipAI(Creature* creature) : NullCreatureAI(creature), _instance(creature->GetInstanceScript()), _teamIdInInstance(TeamId(creature->GetInstanceScript()->GetData(DATA_TEAMID_IN_INSTANCE))), _died(false), _summonedFirstMage(false)
+        npc_gunshipAI(Creature* creature) : NullCreatureAI(creature), _instance(creature->GetInstanceScript()), _teamIdInInstance(TeamID(creature->GetInstanceScript()->GetData(DATA_TEAMID_IN_INSTANCE))), _died(false), _summonedFirstMage(false)
         {
             me->SetRegeneratingHealth(false);
         }
@@ -753,7 +753,7 @@ public:
 
     private:
         InstanceScript* _instance;
-        TeamId _teamIdInInstance;
+        TeamID _teamIdInInstance;
         std::map<ObjectGuid, uint32> _shipVisits;
         bool _died;
         bool _summonedFirstMage;
@@ -2416,9 +2416,9 @@ class spell_igb_burning_pitch_selector : public SpellScript
 
     void FilterTargets(std::list<WorldObject*>& targets)
     {
-        TeamId teamId = TEAM_HORDE;
+        TeamID teamId = TEAM_HORDE;
         if (InstanceScript* instance = GetCaster()->GetInstanceScript())
-            teamId = TeamId(instance->GetData(DATA_TEAMID_IN_INSTANCE));
+            teamId = TeamID(instance->GetData(DATA_TEAMID_IN_INSTANCE));
 
         targets.remove_if(BurningPitchFilterCheck(teamId == TEAM_HORDE ? GO_ORGRIMS_HAMMER_H : GO_THE_SKYBREAKER_A));
         if (!targets.empty())
@@ -2485,9 +2485,9 @@ class spell_igb_rocket_artillery : public SpellScript
 
     void SelectRandomTarget(std::list<WorldObject*>& targets)
     {
-        TeamId teamId = TEAM_HORDE;
+        TeamID teamId = TEAM_HORDE;
         if (InstanceScript* instance = GetCaster()->GetInstanceScript())
-            teamId = TeamId(instance->GetData(DATA_TEAMID_IN_INSTANCE));
+            teamId = TeamID(instance->GetData(DATA_TEAMID_IN_INSTANCE));
         targets.remove_if(IgbArtilleryCheck(teamId == TEAM_HORDE ? GO_ORGRIMS_HAMMER_H : GO_THE_SKYBREAKER_A));
 
         if (!targets.empty())
@@ -2567,7 +2567,7 @@ class spell_igb_on_gunship_deck_aura : public AuraScript
     bool Load() override
     {
         if (InstanceScript* instance = GetOwner()->GetInstanceScript())
-            _teamIdInInstance = TeamId(instance->GetData(DATA_TEAMID_IN_INSTANCE));
+            _teamIdInInstance = TeamID(instance->GetData(DATA_TEAMID_IN_INSTANCE));
         else
             _teamIdInInstance = TEAM_ALLIANCE;
         return true;
@@ -2580,7 +2580,7 @@ class spell_igb_on_gunship_deck_aura : public AuraScript
 
     void HandleApply(AuraEffect const* /*aurEff*/, AuraEffectHandleModes /*mode*/)
     {
-        bool enemy = GetSpellInfo()->Id == uint32(_teamIdInInstance == TEAM_HORDE ? SPELL_ON_SKYBREAKER_DECK : SPELL_ON_ORGRIMS_HAMMER_DECK);
+        bool enemy = GetSpellInfo()->ID == uint32(_teamIdInInstance == TEAM_HORDE ? SPELL_ON_SKYBREAKER_DECK : SPELL_ON_ORGRIMS_HAMMER_DECK);
         if (Creature* gunship = GetOwner()->FindNearestCreature(_teamIdInInstance == TEAM_HORDE ? NPC_ORGRIMS_HAMMER : NPC_THE_SKYBREAKER, 200.0f))
             gunship->AI()->SetGUID(GetTarget()->GetGUID(), enemy ? ACTION_SHIP_VISITS_ENEMY : ACTION_SHIP_VISITS_SELF);
     }
@@ -2592,7 +2592,7 @@ class spell_igb_on_gunship_deck_aura : public AuraScript
     }
 
 private:
-    TeamId _teamIdInInstance;
+    TeamID _teamIdInInstance;
 };
 
 class achievement_im_on_a_boat : public AchievementCriteriaScript

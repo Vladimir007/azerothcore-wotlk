@@ -749,7 +749,7 @@ class spell_illidari_council_judgement : public SpellScript
                 if (sSpellMgr->GetSpellInfo((*i)->GetAmount()))
                 {
                     GetCaster()->CastSpell(GetHitUnit(), (*i)->GetAmount(), true);
-                    GetCaster()->RemoveAurasDueToSpell((*i)->GetSpellInfo()->Id);
+                    GetCaster()->RemoveAurasDueToSpell((*i)->GetSpellInfo()->ID);
                     break;
                 }
         }

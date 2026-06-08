@@ -90,7 +90,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
     if (!spellInfo)
     {
         LOG_ERROR("network.opcode", "WORLD: unknown spell id {}", spellId);
-        recvPacket.rfinish(); // prevent spam at ignore packet
+        recvPacket.rFinish(); // prevent spam at ignore packet
         return;
     }
 
@@ -101,7 +101,7 @@ void WorldSession::HandleUseItemOpcode(WorldPacket& recvPacket)
         if (request.cancelInProgress)
         {
             pUser->SendEquipError(EQUIP_ERR_NONE, pItem, nullptr);
-            recvPacket.rfinish(); // prevent spam at ignore packet
+            recvPacket.rFinish(); // prevent spam at ignore packet
             return;
         }
     }
@@ -284,7 +284,7 @@ void WorldSession::HandleOpenItemOpcode(WorldPacket& recvPacket)
     }
 }
 
-void WorldSession::HandleOpenWrappedItemCallback(uint8 bagIndex, uint8 slot, ObjectGuid::LowType itemLowGUID, PreparedQueryResult result)
+void WorldSession::HandleOpenWrappedItemCallback(uint8 bagIndex, uint8 slot, ObjectGuid::LowType itemLowGUID, QueryResult result)
 {
     if (!GetPlayer())
         return;
@@ -392,7 +392,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
     Unit* mover = _player->m_mover;
     if (mover != _player && mover->IsPlayer())
     {
-        recvPacket.rfinish(); // prevent spam at ignore packet
+        recvPacket.rFinish(); // prevent spam at ignore packet
         return;
     }
 
@@ -401,7 +401,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
     if (!spellInfo)
     {
         LOG_ERROR("network.opcode", "WORLD: unknown spell id {}", spellId);
-        recvPacket.rfinish(); // prevent spam at ignore packet
+        recvPacket.rFinish(); // prevent spam at ignore packet
         return;
     }
 
@@ -415,7 +415,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
             spell->m_cast_count = castCount;
             spell->SendCastResult(SPELL_FAILED_DONT_REPORT);
             spell->finish(false);
-            recvPacket.rfinish(); // prevent spam at ignore packet
+            recvPacket.rFinish(); // prevent spam at ignore packet
             return;
         }
     }
@@ -478,13 +478,13 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
         // if ANYTHING CHANGES in this function, INFORM ME BEFORE applying!!!
         if (Vehicle* veh = mover->GetVehicleKit())
             if (const VehicleSeatEntry* seat = veh->GetSeatForPassenger(_player))
-                if (seat->m_flags & VEHICLE_SEAT_FLAG_CAN_ATTACK || spellInfo->Effects[EFFECT_0].Effect == SPELL_EFFECT_OPEN_LOCK /*allow looting from vehicle, but only if player has required spell (all necessary opening spells are in playercreateinfo_spell)*/)
+                if (seat->Flags & VEHICLE_SEAT_FLAG_CAN_ATTACK || spellInfo->Effects[EFFECT_0].Effect == SPELL_EFFECT_OPEN_LOCK /*allow looting from vehicle, but only if player has required spell (all necessary opening spells are in playercreateinfo_spell)*/)
                     if ((mover->IsCreature() && !mover->ToCreature()->HasSpell(spellId)) || spellInfo->IsPassive()) // the creature can't cast that spell, check player instead
                     {
                         if (!(spellInfo->Targets & TARGET_FLAG_GAMEOBJECT_ITEM) && (!_player->HasActiveSpell (spellId) || spellInfo->IsPassive()))
                         {
                             //cheater? kick? ban?
-                            recvPacket.rfinish(); // prevent spam at ignore packet
+                            recvPacket.rFinish(); // prevent spam at ignore packet
                             return;
                         }
 
@@ -497,7 +497,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
         if ((mover->IsCreature() && !mover->ToCreature()->HasSpell(spellId)) || spellInfo->IsPassive())
         {
             //cheater? kick? ban?
-            recvPacket.rfinish(); // prevent spam at ignore packet
+            recvPacket.rFinish(); // prevent spam at ignore packet
             return;
         }
     }
@@ -512,7 +512,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
     if (spellInfo->IsAutoRepeatRangedSpell() && _player->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL)
             && _player->GetCurrentSpell(CURRENT_AUTOREPEAT_SPELL)->m_spellInfo == spellInfo)
     {
-        recvPacket.rfinish();
+        recvPacket.rFinish();
         return;
     }
 
@@ -525,7 +525,7 @@ void WorldSession::HandleCastSpellOpcode(WorldPacket& recvPacket)
     // pussywizard: HandleClientCastFlags calls HandleMovementOpcodes, which can result in pretty much anything. Caster not in map will crash at GetMap() for spell difficulty in Spell constructor.
     if (!mover->FindMap())
     {
-        recvPacket.rfinish(); // prevent spam at ignore packet
+        recvPacket.rFinish(); // prevent spam at ignore packet
         return;
     }
 
@@ -582,7 +582,7 @@ void WorldSession::HandleCancelAuraOpcode(WorldPacket& recvPacket)
     if (spellInfo->IsChanneled())
     {
         if (Spell* curSpell = _player->GetCurrentSpell(CURRENT_CHANNELED_SPELL))
-            if (curSpell->m_spellInfo->Id == spellId)
+            if (curSpell->m_spellInfo->ID == spellId)
                 _player->InterruptSpell(CURRENT_CHANNELED_SPELL);
         return;
     }
@@ -673,7 +673,7 @@ void WorldSession::HandleCancelChanneling(WorldPacket& recvData)
     }
 
     Spell* spell = mover->GetCurrentSpell(CURRENT_CHANNELED_SPELL);
-    if (!spell || spell->GetSpellInfo()->Id != spellInfo->Id)
+    if (!spell || spell->GetSpellInfo()->ID != spellInfo->ID)
     {
         return;
     }
@@ -713,7 +713,7 @@ void WorldSession::HandleSelfResOpcode(WorldPacket& /*recvData*/)
             return; // silent return, client should display error by itself and not send this opcode
         }
 
-        _player->CastSpell(_player, spell->Id);
+        _player->CastSpell(_player, spell->ID);
         _player->SetUInt32Value(PLAYER_SELF_RES_SPELL, 0);
     }
 }

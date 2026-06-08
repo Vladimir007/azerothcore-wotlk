@@ -730,7 +730,7 @@ class spell_sha_earthliving_weapon : public AuraScript
 
         if (SpellInfo const* spellInfo = eventInfo.GetSpellInfo())
         {
-            if (spellInfo->Id == SPELL_SHAMAN_EARTH_SHIELD_HEAL)
+            if (spellInfo->ID == SPELL_SHAMAN_EARTH_SHIELD_HEAL)
             {
                 return false;
             }
@@ -1278,7 +1278,7 @@ class spell_sha_flurry_proc : public AuraScript
         if (SpellInfo const* spellInfo = eventInfo.GetSpellInfo())
         {
             constexpr std::array<uint32, 2> spellIcons = {SPELL_SHAMAN_STORMSTRIKE, SPELL_SHAMAN_LAVA_LASH};
-            const auto found = std::find(std::begin(spellIcons), std::end(spellIcons), spellInfo->Id);
+            const auto found = std::find(std::begin(spellIcons), std::end(spellIcons), spellInfo->ID);
 
             if ((spellInfo->SpellFamilyName == SPELLFAMILY_SHAMAN && (spellInfo->SpellFamilyFlags[0] & 0x00800000) != 0) || found != std::end(spellIcons))
             {
@@ -1610,7 +1610,7 @@ class spell_sha_glyph_of_earth_shield : public AuraScript
         if (!earthShield)
             return;
 
-        AuraEffect* earthShieldEffect = eventInfo.GetActionTarget()->GetAuraEffect(earthShield->Id, EFFECT_0, eventInfo.GetActor()->GetGUID());
+        AuraEffect* earthShieldEffect = eventInfo.GetActionTarget()->GetAuraEffect(earthShield->ID, EFFECT_0, eventInfo.GetActor()->GetGUID());
         if (!earthShieldEffect)
             return;
 
@@ -2026,7 +2026,7 @@ class spell_sha_t8_elemental_4p_bonus : public AuraScript
         // Do not proc from Lightning Overload (patch 3.1~)
         if (SpellInfo const* spellInfo = eventInfo.GetSpellInfo())
         {
-            if (spellInfo->Id == SPELL_SHAMAN_LIGHTNING_BOLT_OVERLOAD)
+            if (spellInfo->ID == SPELL_SHAMAN_LIGHTNING_BOLT_OVERLOAD)
                 return;
         }
 

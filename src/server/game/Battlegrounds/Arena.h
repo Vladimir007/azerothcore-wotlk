@@ -54,7 +54,7 @@ protected:
 private:
     void RemovePlayerAtLeave(Player* player) override;
     void CheckWinConditions() override;
-    void EndBattleground(TeamId winnerTeamId) override;
+    void EndBattleground(TeamID winnerTeamId) override;
 };
 
 #endif // ACORE_ARENA_H

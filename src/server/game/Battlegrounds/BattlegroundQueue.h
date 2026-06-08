@@ -19,7 +19,7 @@
 #define __BATTLEGROUNDQUEUE_H
 
 #include "Battleground.h"
-#include "DBCEnums.h"
+#include "DBCDefines.h"
 #include "EventProcessor.h"
 #include "ObjectGuid.h"
 #include "SharedDefines.h"
@@ -30,8 +30,8 @@ constexpr auto COUNT_OF_PLAYERS_TO_AVERAGE_WAIT_TIME = 10;
 struct GroupQueueInfo                                       // stores information about the group in queue (also used when joined as solo!)
 {
     GuidSet Players;                                        // player guid set
-    TeamId  teamId;                                         // Player team (TEAM_ALLIANCE/TEAM_HORDE)
-    TeamId  RealTeamID;                                     // Realm player team (TEAM_ALLIANCE/TEAM_HORDE)
+    TeamID  teamId;                                         // Player team (TEAM_ALLIANCE/TEAM_HORDE)
+    TeamID  RealTeamID;                                     // Realm player team (TEAM_ALLIANCE/TEAM_HORDE)
     BattlegroundTypeId BgTypeId;                            // battleground type id
     bool    IsRated;                                        // rated
     uint8   ArenaType;                                      // 2v2, 3v3, 5v5 or 0 when BG
@@ -66,14 +66,14 @@ public:
     BattlegroundQueue();
     ~BattlegroundQueue();
 
-    void BattlegroundQueueUpdate(uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketId bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating);
-    void BattlegroundQueueAnnouncerUpdate(uint32 diff, BattlegroundQueueTypeId bgQueueTypeId, BattlegroundBracketId bracket_id);
+    void BattlegroundQueueUpdate(uint32 diff, BattlegroundTypeId bgTypeId, BattlegroundBracketID bracket_id, uint8 arenaType, bool isRated, uint32 arenaRating);
+    void BattlegroundQueueAnnouncerUpdate(uint32 diff, BattlegroundQueueTypeId bgQueueTypeId, BattlegroundBracketID bracket_id);
     void UpdateEvents(uint32 diff);
 
-    void FillPlayersToBG(Battleground* bg, BattlegroundBracketId bracket_id);
-    bool CheckPremadeMatch(BattlegroundBracketId bracket_id, uint32 MinPlayersPerTeam, uint32 MaxPlayersPerTeam);
-    bool CheckNormalMatch(Battleground* bgTemplate, BattlegroundBracketId bracket_id, uint32 minPlayers, uint32 maxPlayers);
-    bool CheckSkirmishForSameFaction(BattlegroundBracketId bracket_id, uint32 minPlayersPerTeam);
+    void FillPlayersToBG(Battleground* bg, BattlegroundBracketID bracket_id);
+    bool CheckPremadeMatch(BattlegroundBracketID bracket_id, uint32 MinPlayersPerTeam, uint32 MaxPlayersPerTeam);
+    bool CheckNormalMatch(Battleground* bgTemplate, BattlegroundBracketID bracket_id, uint32 minPlayers, uint32 maxPlayers);
+    bool CheckSkirmishForSameFaction(BattlegroundBracketID bracket_id, uint32 minPlayersPerTeam);
     GroupQueueInfo* AddGroup(Player* leader, Group* group, BattlegroundTypeId bgTypeId, PvPDifficultyEntry const* bracketEntry, uint8 arenaType, bool isRated, bool isPremade, uint32 arenaRating, uint32 matchmakerRating, uint32 arenaTeamId = 0, uint32 opponentsArenaTeamId = 0);
     void RemovePlayer(ObjectGuid guid, bool decreaseInvitedCount);
     bool IsPlayerInvitedToRatedArena(ObjectGuid pl_guid);
@@ -81,9 +81,9 @@ public:
     bool GetPlayerGroupInfoData(ObjectGuid guid, GroupQueueInfo* ginfo);
     void PlayerInvitedToBGUpdateAverageWaitTime(GroupQueueInfo* ginfo);
     uint32 GetAverageQueueWaitTime(GroupQueueInfo* ginfo) const;
-    void InviteGroupToBG(GroupQueueInfo* ginfo, Battleground* bg, TeamId teamId);
-    [[nodiscard]] uint32 GetPlayersCountInGroupsQueue(BattlegroundBracketId bracketId, BattlegroundQueueGroupTypes bgqueue);
-    [[nodiscard]] bool IsAllQueuesEmpty(BattlegroundBracketId bracket_id);
+    void InviteGroupToBG(GroupQueueInfo* ginfo, Battleground* bg, TeamID teamId);
+    [[nodiscard]] uint32 GetPlayersCountInGroupsQueue(BattlegroundBracketID bracketId, BattlegroundQueueGroupTypes bgqueue);
+    [[nodiscard]] bool IsAllQueuesEmpty(BattlegroundBracketID bracket_id);
     void SendMessageBGQueue(Player* leader, Battleground* bg, PvPDifficultyEntry const* bracketEntry);
     void SendJoinMessageArenaQueue(Player* leader, GroupQueueInfo* ginfo, PvPDifficultyEntry const* bracketEntry, bool isRated);
     void SendExitMessageArenaQueue(GroupQueueInfo* ginfo);

@@ -117,7 +117,7 @@ struct boss_priestess_delrissa : public BossAI
         else if (HelpersKilled == MAX_ACTIVE_HELPERS)
         {
             me->loot.clear();
-            me->loot.FillLoot(me->GetCreatureTemplate()->lootid, LootTemplates_Creature, me->GetLootRecipient(), false, false, 1, me);
+            me->loot.FillLoot(me->GetCreatureTemplate()->LootID, LootTemplates_Creature, me->GetLootRecipient(), false, false, 1, me);
             instance->SetBossState(DATA_DELRISSA, DONE);
             me->SetDynamicFlag(UNIT_DYNFLAG_LOOTABLE);
         }

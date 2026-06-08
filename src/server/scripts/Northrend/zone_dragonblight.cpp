@@ -750,7 +750,7 @@ public:
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id != SPELL_DROP_OFF_VILLAGER)
+        if (spell->ID != SPELL_DROP_OFF_VILLAGER)
             return;
 
         if (Vehicle* gryphon = me->GetVehicleKit())
@@ -1326,7 +1326,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_SAC_REPEL_HAMMER && target->IsCreature())
+            if (spell->ID == SPELL_SAC_REPEL_HAMMER && target->IsCreature())
             {
                 target->CastSpell((Unit*)nullptr, SPELL_SAC_THROW_HAMMER, true);
                 target->ToCreature()->DespawnOrUnsummon(1ms);
@@ -1484,7 +1484,7 @@ class spell_q24545_aod_special : public SpellScript
 
     void FilterTargets(std::list<WorldObject*>& targets)
     {
-        targets.remove_if(GhoulTargetCheck(GetSpellInfo()->Id == 70790));
+        targets.remove_if(GhoulTargetCheck(GetSpellInfo()->ID == 70790));
         Acore::Containers::RandomResize(targets, 2);
     }
 
@@ -1493,7 +1493,7 @@ class spell_q24545_aod_special : public SpellScript
         PreventHitDefaultEffect(effIndex);
         if (Unit* target = GetHitUnit())
             if (target->IsCreature())
-                target->ToCreature()->AI()->DoAction(GetSpellInfo()->Id == 70790 ? -2 : -1);
+                target->ToCreature()->AI()->DoAction(GetSpellInfo()->ID == 70790 ? -2 : -1);
     }
 
     void Register() override
@@ -2060,7 +2060,7 @@ class spell_q12096_q12092_dummy : public SpellScript
         if (!tree || !player)
             return;
 
-        tree->RemoveNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
+        tree->RemoveNpcFlag(UNIT_NPC_FLAG_SPELL_CLICK);
 
         if (roll == 1) // friendly version
         {
@@ -2127,7 +2127,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (spell->Id != SPELL_HIGH_EXECUTORS_BRANDING_IRON)
+            if (spell->ID != SPELL_HIGH_EXECUTORS_BRANDING_IRON)
                 return;
 
             if (Player* player = caster->ToPlayer())

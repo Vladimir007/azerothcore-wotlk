@@ -378,7 +378,7 @@ enum BG_SA_BroadcastTexts
 
 struct BG_SA_RoundScore
 {
-    TeamId winner;
+    TeamID winner;
     Milliseconds time;
 };
 
@@ -488,7 +488,7 @@ public:
     }
 
     /// Called on battleground ending
-    void EndBattleground(TeamId winnerTeamId) override;
+    void EndBattleground(TeamID winnerTeamId) override;
 
     /// CAlled when a player leave battleground
     void RemovePlayer(Player* player) override;
@@ -501,7 +501,7 @@ public:
     bool AllowDefenseOfTheAncients(Player* source);
 
     // Achievement: Not Even a Scratch
-    bool notEvenAScratch(TeamId teamId) const { return _notEvenAScratch[teamId]; }
+    bool notEvenAScratch(TeamID teamId) const { return _notEvenAScratch[teamId]; }
 
 private:
     /// Return gate id, relative to bg data, according to gameobject id
@@ -588,7 +588,7 @@ private:
     void SendTransportsRemove(Player* player);
 
     /// Id of attacker team
-    TeamId Attackers;
+    TeamID Attackers;
     /// Totale elapsed time of current round
     Milliseconds TotalTime;
     /// Max time of round
@@ -600,7 +600,7 @@ private:
     /// Statu of battle (Start or not, and what round)
     BG_SA_Status Status;
     /// Team witch conntrol each graveyard
-    TeamId GraveyardStatus[BG_SA_MAX_GY];
+    TeamID GraveyardStatus[BG_SA_MAX_GY];
     /// Score of each round
     BG_SA_RoundScore RoundScores[2];
     /// used for know we are in timer phase or not (used for worldstate update)

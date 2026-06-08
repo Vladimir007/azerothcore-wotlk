@@ -35,33 +35,33 @@ public:
     {
         static ChatCommandTable learnAllMyCommandTable =
         {
-            { "class",      HandleLearnAllMyClassCommand,      SEC_GAMEMASTER, Console::No },
-            { "pettalents", HandleLearnAllMyPetTalentsCommand, SEC_GAMEMASTER, Console::No },
-            { "trainer",    HandleLearnAllMyTrainerSpellsCommand, SEC_GAMEMASTER, Console::No },
-            { "talents",    HandleLearnAllMyTalentsCommand,    SEC_GAMEMASTER, Console::No },
-            { "quest",      HandleLearnAllMyQuestSpells,       SEC_GAMEMASTER, Console::No }
+            { "class",      HandleLearnAllMyClassCommand,      SEC_GAME_MASTER, Console::No },
+            { "pettalents", HandleLearnAllMyPetTalentsCommand, SEC_GAME_MASTER, Console::No },
+            { "trainer",    HandleLearnAllMyTrainerSpellsCommand, SEC_GAME_MASTER, Console::No },
+            { "talents",    HandleLearnAllMyTalentsCommand,    SEC_GAME_MASTER, Console::No },
+            { "quest",      HandleLearnAllMyQuestSpells,       SEC_GAME_MASTER, Console::No }
         };
 
         static ChatCommandTable learnAllCommandTable =
         {
             { "my",        learnAllMyCommandTable },
-            { "gm",        HandleLearnAllGMCommand,            SEC_GAMEMASTER, Console::No },
-            { "crafts",    HandleLearnAllCraftsCommand,        SEC_GAMEMASTER, Console::No },
-            { "default",   HandleLearnAllDefaultCommand,       SEC_GAMEMASTER, Console::No },
-            { "lang",      HandleLearnAllLangCommand,          SEC_GAMEMASTER, Console::No },
-            { "recipes",   HandleLearnAllRecipesCommand,       SEC_GAMEMASTER, Console::No },
+            { "gm",        HandleLearnAllGMCommand,            SEC_GAME_MASTER, Console::No },
+            { "crafts",    HandleLearnAllCraftsCommand,        SEC_GAME_MASTER, Console::No },
+            { "default",   HandleLearnAllDefaultCommand,       SEC_GAME_MASTER, Console::No },
+            { "lang",      HandleLearnAllLangCommand,          SEC_GAME_MASTER, Console::No },
+            { "recipes",   HandleLearnAllRecipesCommand,       SEC_GAME_MASTER, Console::No },
         };
 
         static ChatCommandTable learnCommandTable =
         {
             { "all",  learnAllCommandTable },
-            { "",     HandleLearnCommand,                      SEC_GAMEMASTER, Console::No }
+            { "",     HandleLearnCommand,                      SEC_GAME_MASTER, Console::No }
         };
 
         static ChatCommandTable commandTable =
         {
             { "learn",   learnCommandTable },
-            { "unlearn", HandleUnLearnCommand,             SEC_GAMEMASTER, Console::No }
+            { "unlearn", HandleUnLearnCommand,             SEC_GAME_MASTER, Console::No }
         };
         return commandTable;
     }
@@ -141,9 +141,9 @@ public:
                         continue;
 
                     if (trainerSpell.IsCastable())
-                        player->CastSpell(player, trainerSpell.SpellId, true);
+                        player->CastSpell(player, trainerSpell.SpellID, true);
                     else
-                        player->learnSpell(trainerSpell.SpellId, false);
+                        player->learnSpell(trainerSpell.SpellID, false);
 
                     hadNew = true;
                 }
@@ -193,7 +193,7 @@ public:
             if (!spellInfo || !SpellMgr::IsSpellValid(spellInfo))
                 continue;
 
-            player->LearnTalent(talentInfo->TalentID, rankId, true);
+            player->LearnTalent(talentInfo->ID, rankId, true);
         }
 
         player->SetFreeTalentPoints(0);
@@ -221,14 +221,14 @@ public:
             return false;
         }
 
-        CreatureFamilyEntry const* petFamily = sCreatureFamilyStore.LookupEntry(creatureInfo->family);
+        CreatureFamilyEntry const* petFamily = sCreatureFamilyStore.LookupEntry(creatureInfo->Family);
         if (!petFamily)
         {
             handler->SendErrorMessage(LANG_WRONG_PET_TYPE);
             return false;
         }
 
-        if (petFamily->petTalentType < 0)                       // not hunter pet
+        if (petFamily->PetTalentType < 0)                       // not hunter pet
         {
             handler->SendErrorMessage(LANG_WRONG_PET_TYPE);
             return false;
@@ -245,7 +245,7 @@ public:
                 continue;
 
             // prevent learn talent for different family (cheating)
-            if (((1 << petFamily->petTalentType) & talentTabInfo->petTalentMask) == 0)
+            if (((1 << petFamily->PetTalentType) & talentTabInfo->PetTalentMask) == 0)
                 continue;
 
             // search highest talent rank
@@ -280,10 +280,10 @@ public:
     static bool HandleLearnAllLangCommand(ChatHandler* handler)
     {
         for (LanguageDesc const& langDesc : lang_description)
-            if (uint32 langSpellId = langDesc.spell_id)
+            if (uint32 langSpellId = langDesc.spellID)
             {
                 handler->GetPlayer()->learnSpell(langSpellId);
-                handler->GetPlayer()->SetSkill(langDesc.skill_id, 0, 300, 300);
+                handler->GetPlayer()->SetSkill(langDesc.skillID, 0, 300, 300);
             }
 
         handler->SendSysMessage(LANG_COMMAND_LEARN_ALL_LANG);
@@ -308,16 +308,15 @@ public:
 
     static bool HandleLearnAllCraftsCommand(ChatHandler* handler)
     {
-        for (uint32 i = 0; i < sSkillLineStore.GetNumRows(); ++i)
+        for (const SkillLineEntry* skillInfo : sSkillLineStore)
         {
-            SkillLineEntry const* skillInfo = sSkillLineStore.LookupEntry(i);
             if (!skillInfo)
                 continue;
 
-            if ((skillInfo->categoryId == SKILL_CATEGORY_PROFESSION || skillInfo->categoryId == SKILL_CATEGORY_SECONDARY) &&
-                    skillInfo->canLink)                             // only prof. with recipes have
+            if ((skillInfo->CategoryID == SKILL_CATEGORY_PROFESSION || skillInfo->CategoryID == SKILL_CATEGORY_SECONDARY) &&
+                    skillInfo->CanLink)                             // only prof. with recipes have
             {
-                HandleLearnSkillRecipesHelper(handler->GetSession()->GetPlayer(), skillInfo->id);
+                HandleLearnSkillRecipesHelper(handler->GetSession()->GetPlayer(), skillInfo->ID);
             }
         }
 
@@ -340,47 +339,35 @@ public:
         if (namePart.empty())
             return false;
 
-        // converting string that we try to find to lower case
+        // Converting string that we try to find to lower case
         wstrToLower(namePart);
 
         SkillLineEntry const* targetSkillInfo = nullptr;
-        char const* name = nullptr;
-        for (uint32 i = 1; i < sSkillLineStore.GetNumRows(); ++i)
+        std::string name{};
+        for (const SkillLineEntry* skillInfo : sSkillLineStore)
         {
-            SkillLineEntry const* skillInfo = sSkillLineStore.LookupEntry(i);
             if (!skillInfo)
                 continue;
 
-            if ((skillInfo->categoryId != SKILL_CATEGORY_PROFESSION &&
-                 skillInfo->categoryId != SKILL_CATEGORY_SECONDARY) ||
-                !skillInfo->canLink)                            // only prof with recipes have set
+            if ((skillInfo->CategoryID != SKILL_CATEGORY_PROFESSION &&
+                 skillInfo->CategoryID != SKILL_CATEGORY_SECONDARY) ||
+                !skillInfo->CanLink)                            // only prof with recipes have set
                 continue;
 
-            uint8 locale = 0;
-            for (; locale < TOTAL_LOCALES; ++locale)
-            {
-                name = skillInfo->name[locale];
-                if (!name || !*name)
-                    continue;
-
-                if (Utf8FitTo(name, namePart))
-                    break;
-            }
-
-            if (locale < TOTAL_LOCALES)
+            if (!name.empty() && Utf8FitTo(name, namePart))
             {
                 targetSkillInfo = skillInfo;
                 break;
             }
         }
 
-        if (!(name && targetSkillInfo))
+        if (name.empty() || !targetSkillInfo)
             return false;
 
-        HandleLearnSkillRecipesHelper(target, targetSkillInfo->id);
+        HandleLearnSkillRecipesHelper(target, targetSkillInfo->ID);
 
-        uint16 maxLevel = target->GetPureMaxSkillValue(targetSkillInfo->id);
-        target->SetSkill(targetSkillInfo->id, target->GetSkillStep(targetSkillInfo->id), maxLevel, maxLevel);
+        const uint16 maxLevel = target->GetPureMaxSkillValue(targetSkillInfo->ID);
+        target->SetSkill(targetSkillInfo->ID, target->GetSkillStep(targetSkillInfo->ID), maxLevel, maxLevel);
         handler->PSendSysMessage(LANG_COMMAND_LEARN_ALL_RECIPES, name);
         return true;
     }
@@ -392,7 +379,7 @@ public:
         for (SkillLineAbilityEntry const* skillLine : GetSkillLineAbilitiesBySkillLine(skillId))
         {
             // not high rank
-            if (skillLine->SupercededBySpell)
+            if (skillLine->SupersededBySpell)
                 continue;
 
             // skip racial skills

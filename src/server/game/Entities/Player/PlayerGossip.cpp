@@ -47,11 +47,11 @@ void Player::PrepareGossipMenu(WorldObject* source, uint32 menuId /*= 0*/, bool 
     if (source->IsCreature())
     {
         npcflags = source->ToUnit()->GetNpcFlags();
-        if (showQuests && npcflags & UNIT_NPC_FLAG_QUESTGIVER)
+        if (showQuests && npcflags & UNIT_NPC_FLAG_QUEST_GIVER)
             PrepareQuestMenu(source->GetGUID());
     }
     else if (source->IsGameObject())
-        if (showQuests && source->ToGameObject()->GetGoType() == GAMEOBJECT_TYPE_QUESTGIVER)
+        if (showQuests && source->ToGameObject()->GetGoType() == GAME_OBJECT_TYPE_QUEST_GIVER)
             PrepareQuestMenu(source->GetGUID());
 
     for (GossipMenuItemsContainer::const_iterator itr = menuItemBounds.first; itr != menuItemBounds.second; ++itr)
@@ -159,7 +159,7 @@ void Player::PrepareGossipMenu(WorldObject* source, uint32 menuId /*= 0*/, bool 
             switch (itr->second.OptionType)
             {
                 case GOSSIP_OPTION_GOSSIP:
-                    if (go->GetGoType() != GAMEOBJECT_TYPE_QUESTGIVER && go->GetGoType() != GAMEOBJECT_TYPE_GOOBER)
+                    if (go->GetGoType() != GAME_OBJECT_TYPE_QUEST_GIVER && go->GetGoType() != GAME_OBJECT_TYPE_GOOBER)
                         canTalk = false;
                     break;
                 default:
@@ -179,36 +179,18 @@ void Player::PrepareGossipMenu(WorldObject* source, uint32 menuId /*= 0*/, bool 
             LocaleConstant locale = GetSession()->GetSessionDbLocaleIndex();
 
             if (optionBroadcastText)
-                ObjectMgr::GetLocaleString(getGender() == GENDER_MALE ? optionBroadcastText->MaleText : optionBroadcastText->FemaleText, locale, strOptionText);
+                strOptionText = getGender() == GENDER_MALE ? optionBroadcastText->MaleText : optionBroadcastText->FemaleText;
 
             if (boxBroadcastText)
-                ObjectMgr::GetLocaleString(getGender() == GENDER_MALE ? boxBroadcastText->MaleText : boxBroadcastText->FemaleText, locale, strBoxText);
+                strBoxText = getGender() == GENDER_MALE ? boxBroadcastText->MaleText : boxBroadcastText->FemaleText;
 
-            // if the language is not default and the texts weren't found, maybe they're in gossip_menu_option_locale table
-            if (locale != DEFAULT_LOCALE)
-            {
-                if (!optionBroadcastText)
-                {
-                    /// Find localizations from database.
-                    if (GossipMenuItemsLocale const* gossipMenuLocale = sObjectMgr->GetGossipMenuItemsLocale(MAKE_PAIR32(menuId, itr->second.OptionID)))
-                        ObjectMgr::GetLocaleString(gossipMenuLocale->OptionText, locale, strOptionText);
-                }
-
-                if (!boxBroadcastText)
-                {
-                    /// Find localizations from database.
-                    if (GossipMenuItemsLocale const* gossipMenuLocale = sObjectMgr->GetGossipMenuItemsLocale(MAKE_PAIR32(menuId, itr->second.OptionID)))
-                        ObjectMgr::GetLocaleString(gossipMenuLocale->BoxText, locale, strBoxText);
-                }
-            }
-
-            menu->GetGossipMenu().AddMenuItem(itr->second.OptionID, itr->second.OptionIcon, strOptionText, 0, itr->second.OptionType, strBoxText, itr->second.BoxMoney, itr->second.BoxCoded);
+            menu->GetGossipMenu().AddMenuItem(static_cast<int32>(itr->second.OptionID), itr->second.OptionIcon, strOptionText, 0, itr->second.OptionType, strBoxText, itr->second.BoxMoney, itr->second.BoxCoded);
             menu->GetGossipMenu().AddGossipMenuItemData(itr->second.OptionID, itr->second.ActionMenuID, itr->second.ActionPoiID);
         }
     }
 
-    if (sWorld->getIntConfig(CONFIG_INSTANT_TAXI) == 2 && npcflags & UNIT_NPC_FLAG_FLIGHTMASTER)
-        menu->GetGossipMenu().AddMenuItem(-1, GOSSIP_ICON_INTERACT_1, GetSession()->GetAcoreString(LANG_TOGGLE_INSTANT_FLIGHT), 0, GOSSIP_ACTION_TOGGLE_INSTANT_FLIGHT, "", 0, false); // instant flight toggle option
+    if (sWorld->getIntConfig(CONFIG_INSTANT_TAXI) == 2 && npcflags & UNIT_NPC_FLAG_FLIGHT_MASTER)
+        menu->GetGossipMenu().AddMenuItem(-1, GOSSIP_ICON_INTERACT_1, GetSession()->GetNcoreString(LANG_TOGGLE_INSTANT_FLIGHT), 0, GOSSIP_ACTION_TOGGLE_INSTANT_FLIGHT, "", 0, false); // instant flight toggle option
 }
 
 void Player::SendPreparedGossip(WorldObject* source)
@@ -263,7 +245,7 @@ void Player::OnGossipSelect(WorldObject* source, uint32 gossipListId, uint32 men
 
     if (sWorld->getIntConfig(CONFIG_INSTANT_TAXI) == 2 && source->IsCreature())
     {
-        if (gossipOptionId == GOSSIP_ACTION_TOGGLE_INSTANT_FLIGHT && source->ToUnit()->GetNpcFlags() & UNIT_NPC_FLAG_FLIGHTMASTER)
+        if (gossipOptionId == GOSSIP_ACTION_TOGGLE_INSTANT_FLIGHT && source->ToUnit()->GetNpcFlags() & UNIT_NPC_FLAG_FLIGHT_MASTER)
         {
             ToggleInstantFlight();
 

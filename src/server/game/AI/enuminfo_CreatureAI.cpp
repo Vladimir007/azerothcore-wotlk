@@ -56,9 +56,9 @@ AC_API_EXPORT CreatureAI::EvadeReason EnumUtils<CreatureAI::EvadeReason>::FromIn
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<CreatureAI::EvadeReason>::ToIndex(CreatureAI::EvadeReason value)
+AC_API_EXPORT std::size_t EnumUtils<CreatureAI::EvadeReason>::ToIndex(CreatureAI::EvadeReason index)
 {
-    switch (value)
+    switch (index)
     {
         case CreatureAI::EVADE_REASON_NO_HOSTILES: return 0;
         case CreatureAI::EVADE_REASON_BOUNDARY: return 1;

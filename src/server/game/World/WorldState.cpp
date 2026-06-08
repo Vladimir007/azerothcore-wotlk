@@ -49,7 +49,7 @@ WorldState::~WorldState()
 void WorldState::Load()
 {
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_WORLD_STATE);
-    PreparedQueryResult result = CharacterDatabase.Query(stmt);
+    QueryResult result = CharacterDatabase.Query(stmt);
 
     if (result)
     {
@@ -420,7 +420,7 @@ void WorldState::HandlePlayerLeaveZone(Player* player, AreaTableIDs zoneId)
     }
 };
 
-void WorldState::BuffMagtheridonTeam(TeamId team)
+void WorldState::BuffMagtheridonTeam(TeamID team)
 {
     sMapMgr->DoForAllMaps([&](Map* map) -> void
     {
@@ -453,7 +453,7 @@ void WorldState::BuffMagtheridonTeam(TeamId team)
     });
 }
 
-void WorldState::DispelMagtheridonTeam(TeamId team)
+void WorldState::DispelMagtheridonTeam(TeamID team)
 {
     sMapMgr->DoForAllMaps([&](Map* map) -> void
     {

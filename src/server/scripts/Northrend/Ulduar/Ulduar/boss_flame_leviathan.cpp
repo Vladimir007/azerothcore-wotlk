@@ -584,7 +584,7 @@ void boss_flame_leviathan::ScheduleEvents()
 
 void boss_flame_leviathan::SpellHit(Unit*  /*caster*/, SpellInfo const* spellInfo)
 {
-    if (spellInfo->Id == SPELL_SYSTEMS_SHUTDOWN)
+    if (spellInfo->ID == SPELL_SYSTEMS_SHUTDOWN)
     {
         _shutdown = true; // ACHIEVEMENT
 
@@ -595,7 +595,7 @@ void boss_flame_leviathan::SpellHit(Unit*  /*caster*/, SpellInfo const* spellInf
         events.DelayEvents(21ms);
         events.ScheduleEvent(EVENT_REINSTALL, 20ms);
     }
-    else if (spellInfo->Id == 62522 /*SPELL_ELECTROSHOCK*/)
+    else if (spellInfo->ID == 62522 /*SPELL_ELECTROSHOCK*/)
         me->InterruptNonMeleeSpells(false);
 }
 
@@ -655,7 +655,7 @@ void boss_flame_leviathan::SummonTowerHelpers(uint8 towerId)
 
 void boss_flame_leviathan::SpellHitTarget(Unit* target, SpellInfo const* spell)
 {
-    if (spell->Id != SPELL_PURSUED)
+    if (spell->ID != SPELL_PURSUED)
         return;
 
     for (SeatMap::const_iterator itr = target->GetVehicleKit()->Seats.begin(); itr != target->GetVehicleKit()->Seats.end(); ++itr)
@@ -812,7 +812,7 @@ struct boss_flame_leviathan_overload_device : public NullCreatureAI
 
         if (me->GetVehicle())
         {
-            me->RemoveNpcFlag(UNIT_NPC_FLAG_SPELLCLICK);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_SPELL_CLICK);
             me->SetUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
 
             if (Unit* player = me->GetVehicle()->GetPassenger(SEAT_PLAYER))

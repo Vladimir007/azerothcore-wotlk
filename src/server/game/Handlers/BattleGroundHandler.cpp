@@ -378,8 +378,7 @@ void WorldSession::HandleBattlefieldListOpcode(WorldPacket& recvData)
     uint8 canGainXP;
     recvData >> canGainXP;                                 // players with locked xp have their own bg queue on retail
 
-    BattlemasterListEntry const* bl = sBattlemasterListStore.LookupEntry(bgTypeId);
-    if (!bl)
+    if (!sBattlemasterListStore.LookupEntry(bgTypeId))
     {
         LOG_DEBUG("bg.battleground", "BattlegroundHandler: invalid bgtype ({}) with player (Name: {}, {}) received.", bgTypeId, _player->GetName(), _player->GetGUID().ToString());
         return;
@@ -516,7 +515,7 @@ void WorldSession::HandleBattleFieldPortOpcode(WorldPacket& recvData)
             _player->SpawnCorpseBones();
         }
 
-        TeamId teamId = ginfo.teamId;
+        TeamID teamId = ginfo.teamId;
 
         // send status packet
         sBattlegroundMgr->BuildBattlegroundStatusPacket(&data, bg, queueSlot, STATUS_IN_PROGRESS, 0, bg->GetStartTime(), bg->GetArenaType(), teamId);

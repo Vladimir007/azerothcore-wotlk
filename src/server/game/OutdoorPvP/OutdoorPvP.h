@@ -115,7 +115,7 @@ public:
     // returns true if the state of the objective has changed, in this case, the OutdoorPvP must send a world state ui update.
     virtual bool Update(uint32 diff);
     virtual void ChangeState() = 0;
-    virtual void ChangeTeam(TeamId /*oldTeam*/) {}
+    virtual void ChangeTeam(TeamID /*oldTeam*/) {}
     virtual void SendChangePhase();
     virtual bool HandleGossipOption(Player* player, Creature* creature, uint32 gossipId);
     virtual bool CanTalkTo(Player* player, Creature* c, GossipMenuItems const& gso);
@@ -162,7 +162,7 @@ protected:
     // the status of the objective
     float _value{};
 
-    TeamId _team{ TEAM_NEUTRAL };
+    TeamID _team{ TEAM_NEUTRAL };
 
     // objective states
     ObjectiveStates _oldState{ OBJECTIVESTATE_NEUTRAL };
@@ -241,7 +241,7 @@ public:
     virtual bool HandleDropFlag(Player* player, uint32 spellId);
     virtual bool HandleGossipOption(Player* player, Creature* creature, uint32 gossipId);
     virtual bool CanTalkTo(Player* player, Creature* c, GossipMenuItems const& gso);
-    void TeamApplyBuff(TeamId teamId, uint32 spellId, uint32 spellId2 = 0, Player* sameMapPlr = nullptr);
+    void TeamApplyBuff(TeamID teamId, uint32 spellId, uint32 spellId2 = 0, Player* sameMapPlr = nullptr);
 
     Map* GetMap() const { return _map; }
     OPvPCapturePointMap const& GetCapturePoints() const { return _capturePoints; }
@@ -262,7 +262,7 @@ protected:
 
     void RegisterZone(uint32 zoneid);
     bool HasPlayer(Player const* player) const;
-    void TeamCastSpell(TeamId team, int32 spellId, Player* sameMapPlr = nullptr);
+    void TeamCastSpell(TeamID team, int32 spellId, Player* sameMapPlr = nullptr);
 
     // Hack to store map
     void SetMapFromZone(uint32 zone);

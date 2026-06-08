@@ -18,7 +18,7 @@
 #ifndef ACORE_SHAREDDEFINES_H
 #define ACORE_SHAREDDEFINES_H
 
-#include "DBCEnums.h"
+#include "DBCDefines.h"
 #include "Define.h"
 #include "EnumFlag.h"
 #include <cassert>
@@ -139,16 +139,16 @@ enum Classes
 // max+1 for player class
 #define MAX_CLASSES       12
 
-#define CLASSMASK_ALL_PLAYABLE \
+#define CLASS_MASK_ALL_PLAYABLE \
     ((1<<(CLASS_WARRIOR-1))|(1<<(CLASS_PALADIN-1))|(1<<(CLASS_HUNTER-1))| \
     (1<<(CLASS_ROGUE-1))  |(1<<(CLASS_PRIEST-1)) |(1<<(CLASS_SHAMAN-1))| \
     (1<<(CLASS_MAGE-1))   |(1<<(CLASS_WARLOCK-1))|(1<<(CLASS_DRUID-1)) | \
     (1<<(CLASS_DEATH_KNIGHT-1)))
 
 // valid classes for creature_template.unit_class
-#define CLASSMASK_ALL_CREATURES ((1<<(CLASS_WARRIOR-1)) | (1<<(CLASS_PALADIN-1)) | (1<<(CLASS_ROGUE-1)) | (1<<(CLASS_MAGE-1)))
+#define CLASS_MASK_ALL_CREATURES ((1<<(CLASS_WARRIOR-1)) | (1<<(CLASS_PALADIN-1)) | (1<<(CLASS_ROGUE-1)) | (1<<(CLASS_MAGE-1)))
 
-#define CLASSMASK_WAND_USERS ((1<<(CLASS_PRIEST-1))|(1<<(CLASS_MAGE-1))|(1<<(CLASS_WARLOCK-1)))
+#define CLASS_MASK_WAND_USERS ((1<<(CLASS_PRIEST-1))|(1<<(CLASS_MAGE-1))|(1<<(CLASS_WARLOCK-1)))
 
 #define PLAYER_MAX_BATTLEGROUND_QUEUES 2
 
@@ -743,7 +743,7 @@ enum Language
 
 #define LANGUAGES_COUNT   19
 
-enum TeamId : uint8
+enum TeamID : uint8
 {
     TEAM_ALLIANCE = 0,
     TEAM_HORDE,
@@ -1559,48 +1559,48 @@ enum SpellPreventionType
     SPELL_PREVENTION_TYPE_PACIFY    = 2
 };
 
-enum GameobjectTypes
+enum GameObjectTypes
 {
-    GAMEOBJECT_TYPE_DOOR                   = 0,
-    GAMEOBJECT_TYPE_BUTTON                 = 1,
-    GAMEOBJECT_TYPE_QUESTGIVER             = 2,
-    GAMEOBJECT_TYPE_CHEST                  = 3,
-    GAMEOBJECT_TYPE_BINDER                 = 4,
-    GAMEOBJECT_TYPE_GENERIC                = 5,
-    GAMEOBJECT_TYPE_TRAP                   = 6,
-    GAMEOBJECT_TYPE_CHAIR                  = 7,
-    GAMEOBJECT_TYPE_SPELL_FOCUS            = 8,
-    GAMEOBJECT_TYPE_TEXT                   = 9,
-    GAMEOBJECT_TYPE_GOOBER                 = 10,
-    GAMEOBJECT_TYPE_TRANSPORT              = 11,
-    GAMEOBJECT_TYPE_AREADAMAGE             = 12,
-    GAMEOBJECT_TYPE_CAMERA                 = 13,
-    GAMEOBJECT_TYPE_MAP_OBJECT             = 14,
-    GAMEOBJECT_TYPE_MO_TRANSPORT           = 15,
-    GAMEOBJECT_TYPE_DUEL_ARBITER           = 16,
-    GAMEOBJECT_TYPE_FISHINGNODE            = 17,
-    GAMEOBJECT_TYPE_SUMMONING_RITUAL       = 18,
-    GAMEOBJECT_TYPE_MAILBOX                = 19,
-    GAMEOBJECT_TYPE_DO_NOT_USE             = 20,
-    GAMEOBJECT_TYPE_GUARDPOST              = 21,
-    GAMEOBJECT_TYPE_SPELLCASTER            = 22,
-    GAMEOBJECT_TYPE_MEETINGSTONE           = 23,
-    GAMEOBJECT_TYPE_FLAGSTAND              = 24,
-    GAMEOBJECT_TYPE_FISHINGHOLE            = 25,
-    GAMEOBJECT_TYPE_FLAGDROP               = 26,
-    GAMEOBJECT_TYPE_MINI_GAME              = 27,
-    GAMEOBJECT_TYPE_DO_NOT_USE_2           = 28,
-    GAMEOBJECT_TYPE_CAPTURE_POINT          = 29,
-    GAMEOBJECT_TYPE_AURA_GENERATOR         = 30,
-    GAMEOBJECT_TYPE_DUNGEON_DIFFICULTY     = 31,
-    GAMEOBJECT_TYPE_BARBER_CHAIR           = 32,
-    GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING  = 33,
-    GAMEOBJECT_TYPE_GUILD_BANK             = 34,
-    GAMEOBJECT_TYPE_TRAPDOOR               = 35
+    GAME_OBJECT_TYPE_DOOR                   = 0,
+    GAME_OBJECT_TYPE_BUTTON                 = 1,
+    GAME_OBJECT_TYPE_QUEST_GIVER            = 2,
+    GAME_OBJECT_TYPE_CHEST                  = 3,
+    GAME_OBJECT_TYPE_BINDER                 = 4,
+    GAME_OBJECT_TYPE_GENERIC                = 5,
+    GAME_OBJECT_TYPE_TRAP                   = 6,
+    GAME_OBJECT_TYPE_CHAIR                  = 7,
+    GAME_OBJECT_TYPE_SPELL_FOCUS            = 8,
+    GAME_OBJECT_TYPE_TEXT                   = 9,
+    GAME_OBJECT_TYPE_GOOBER                 = 10,
+    GAME_OBJECT_TYPE_TRANSPORT              = 11,
+    GAME_OBJECT_TYPE_AREA_DAMAGE            = 12,
+    GAME_OBJECT_TYPE_CAMERA                 = 13,
+    GAME_OBJECT_TYPE_MAP_OBJECT             = 14,
+    GAME_OBJECT_TYPE_MO_TRANSPORT           = 15,
+    GAME_OBJECT_TYPE_DUEL_ARBITER           = 16,
+    GAME_OBJECT_TYPE_FISHING_NODE           = 17,
+    GAME_OBJECT_TYPE_SUMMONING_RITUAL       = 18,
+    GAME_OBJECT_TYPE_MAILBOX                = 19,
+    GAME_OBJECT_TYPE_DO_NOT_USE             = 20,
+    GAME_OBJECT_TYPE_GUARDPOST              = 21,
+    GAME_OBJECT_TYPE_SPELLCASTER            = 22,
+    GAME_OBJECT_TYPE_MEETING_STONE          = 23,
+    GAME_OBJECT_TYPE_FLAGSTAND              = 24,
+    GAME_OBJECT_TYPE_FISHING_HOLE           = 25,
+    GAME_OBJECT_TYPE_FLAG_DROP              = 26,
+    GAME_OBJECT_TYPE_MINI_GAME              = 27,
+    GAME_OBJECT_TYPE_DO_NOT_USE_2           = 28,
+    GAME_OBJECT_TYPE_CAPTURE_POINT          = 29,
+    GAME_OBJECT_TYPE_AURA_GENERATOR         = 30,
+    GAME_OBJECT_TYPE_DUNGEON_DIFFICULTY     = 31,
+    GAME_OBJECT_TYPE_BARBER_CHAIR           = 32,
+    GAME_OBJECT_TYPE_DESTRUCTIBLE_BUILDING  = 33,
+    GAME_OBJECT_TYPE_GUILD_BANK             = 34,
+    GAME_OBJECT_TYPE_TRAPDOOR               = 35
 };
 
-#define MAX_GAMEOBJECT_TYPE                  36             // sending to client this or greater value can crash client.
-#define MAX_GAMEOBJECT_DATA                  24             // Max number of uint32 vars in gameobject_template data field
+#define MAX_GAME_OBJECT_TYPE                  36             // sending to client this or greater value can crash client.
+#define MAX_GAME_OBJECT_DATA                  24             // Max number of uint32 vars in world_game_object_template data field
 
 enum GameObjectFlags : uint32
 {
@@ -3700,7 +3700,7 @@ enum AllianceId
 
 uint8 constexpr PVP_TEAMS_COUNT = 2;
 
-inline PvPTeamId GetPvPTeamId(TeamId teamId)
+inline PvPTeamId GetPvPTeamId(TeamID teamId)
 {
     if (teamId == TEAM_ALLIANCE)
     {
@@ -3715,7 +3715,7 @@ inline PvPTeamId GetPvPTeamId(TeamId teamId)
     return PVP_TEAM_NEUTRAL;
 }
 
-inline TeamId GetTeamId(PvPTeamId teamId)
+inline TeamID GetTeamId(PvPTeamId teamId)
 {
     if (teamId == PVP_TEAM_ALLIANCE)
     {
@@ -4013,7 +4013,7 @@ enum class LoginFailureReason : uint8
 
 namespace Acore::Impl
 {
-    struct AC_SHARED_API CurrentServerProcessHolder
+    struct CurrentServerProcessHolder
     {
         static ServerProcessTypes type() { return _type; }
         static ServerProcessTypes _type;

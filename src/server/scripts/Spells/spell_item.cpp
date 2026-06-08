@@ -311,16 +311,16 @@ class spell_item_titanium_seal_of_dalaran : public SpellScript
         {
             LocaleConstant loc_idx = player->GetSession()->GetSessionDbLocaleIndex();
             if (BroadcastText const* bct = sObjectMgr->GetBroadcastText(TITANIUM_SEAL_OF_DALARAN_BROADCAST_TEXT_ID_FLIP))
-                player->TextEmote(bct->GetText(loc_idx, player->getGender()));
+                player->TextEmote(bct->GetText(player->getGender()));
             if (urand(0, 1))
             {
                 if (BroadcastText const* bct = sObjectMgr->GetBroadcastText(TITANIUM_SEAL_OF_DALARAN_BROADCAST_TEXT_ID_FACE_DOWN))
-                    player->TextEmote(bct->GetText(loc_idx, player->getGender()));
+                    player->TextEmote(bct->GetText(player->getGender()));
             }
             else
             {
                 if (BroadcastText const* bct = sObjectMgr->GetBroadcastText(TITANIUM_SEAL_OF_DALARAN_BROADCAST_TEXT_ID_HEADS_UP))
-                    player->TextEmote(bct->GetText(loc_idx, player->getGender()));
+                    player->TextEmote(bct->GetText(player->getGender()));
             }
         }
     }
@@ -355,10 +355,10 @@ class spell_item_mind_amplify_dish : public SpellScript
             {
                 // little protection
                 if (target->ToCreature())
-                    if (target->ToCreature()->GetCreatureTemplate()->rank > CREATURE_ELITE_NORMAL)
+                    if (target->ToCreature()->GetCreatureTemplate()->Rank > CREATURE_ELITE_NORMAL)
                         return;
 
-                if (GetSpellInfo()->Id != SPELL_AMPLIFY_10S)
+                if (GetSpellInfo()->ID != SPELL_AMPLIFY_10S)
                     if (target->GetLevel() > 60)
                         return;
 
@@ -366,7 +366,7 @@ class spell_item_mind_amplify_dish : public SpellScript
                 if (roll_chance_i(pct))
                     player->CastSpell(target, SPELL_MENTAL_BATTLE, true);
                 else if (roll_chance_i(pct))
-                    player->CastSpell(target, GetSpellInfo()->Id == SPELL_AMPLIFY_10S ? SPELL_AMPLIFY_CHARM_10S : SPELL_AMPLIFY_CHARM_30S, true);
+                    player->CastSpell(target, GetSpellInfo()->ID == SPELL_AMPLIFY_10S ? SPELL_AMPLIFY_CHARM_10S : SPELL_AMPLIFY_CHARM_30S, true);
             }
         }
     }
@@ -811,23 +811,23 @@ class spell_item_feast : public SpellScript
         {
             LocaleConstant loc_idx = player->GetSession()->GetSessionDbLocaleIndex();
 
-            switch (GetSpellInfo()->Id)
+            switch (GetSpellInfo()->ID)
             {
                 case SPELL_GREAT_FEAST:
                     if (BroadcastText const* bct = sObjectMgr->GetBroadcastText(GREAT_FEAST_BROADCAST_TEXT_ID_PREPARE))
-                        player->TextEmote(bct->GetText(loc_idx, player->getGender()), player);
+                        player->TextEmote(bct->GetText(player->getGender()), player);
                     break;
                 case SPELL_FISH_FEAST:
                     if (BroadcastText const* bct = sObjectMgr->GetBroadcastText(FISH_FEAST_BROADCAST_TEXT_ID_PREPARE))
-                        player->TextEmote(bct->GetText(loc_idx, player->getGender()), player);
+                        player->TextEmote(bct->GetText(player->getGender()), player);
                     break;
                 case SPELL_SMALL_FEAST:
                     if (BroadcastText const* bct = sObjectMgr->GetBroadcastText(SMALL_FEAST_BROADCAST_TEXT_ID_PREPARE))
-                        player->TextEmote(bct->GetText(loc_idx, player->getGender()), player);
+                        player->TextEmote(bct->GetText(player->getGender()), player);
                     break;
                 case SPELL_GIGANTIC_FEAST:
                     if (BroadcastText const* bct = sObjectMgr->GetBroadcastText(GIGANTIC_FEAST_BROADCAST_TEXT_ID_PREPARE))
-                        player->TextEmote(bct->GetText(loc_idx, player->getGender()), player);
+                        player->TextEmote(bct->GetText(player->getGender()), player);
                     break;
             }
         }
@@ -1202,14 +1202,14 @@ class spell_item_blood_draining_enchant : public AuraScript
         if (SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(64569 /*SPELL_BLOOD_RESERVE*/))
         {
             int32 basepoints = spellInfo->Effects[EFFECT_0].CalcValue() * this->GetStackAmount();
-            eventInfo.GetActionTarget()->CastCustomSpell(spellInfo->Id, SPELLVALUE_BASE_POINT0, basepoints, eventInfo.GetActionTarget(), true);
-            eventInfo.GetActionTarget()->RemoveAurasDueToSpell(GetSpellInfo()->Id); // Remove rest auras
+            eventInfo.GetActionTarget()->CastCustomSpell(spellInfo->ID, SPELLVALUE_BASE_POINT0, basepoints, eventInfo.GetActionTarget(), true);
+            eventInfo.GetActionTarget()->RemoveAurasDueToSpell(GetSpellInfo()->ID); // Remove rest auras
         }
 
         SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(64569 /*SPELL_BLOOD_RESERVE*/);
         int32 basepoints = spellInfo->Effects[EFFECT_0].CalcValue() * this->GetStackAmount();
-        eventInfo.GetActionTarget()->CastCustomSpell(spellInfo->Id, SPELLVALUE_BASE_POINT0, basepoints, eventInfo.GetActionTarget(), true);
-        eventInfo.GetActionTarget()->RemoveAurasDueToSpell(GetSpellInfo()->Id); // Remove rest auras
+        eventInfo.GetActionTarget()->CastCustomSpell(spellInfo->ID, SPELLVALUE_BASE_POINT0, basepoints, eventInfo.GetActionTarget(), true);
+        eventInfo.GetActionTarget()->RemoveAurasDueToSpell(GetSpellInfo()->ID); // Remove rest auras
     }
 
     void Register() override
@@ -1410,7 +1410,7 @@ class spell_item_healing_trance : public AuraScript
         PreventDefaultAction();
         if (Unit* unitTarget = GetTarget())
         {
-            uint32 const itemSpell = GetSpellInfo()->Id;
+            uint32 const itemSpell = GetSpellInfo()->ID;
             uint32 spellId = 0;
 
             if (itemSpell == SPELL_HEALING_DISCOUNT)
@@ -2369,7 +2369,7 @@ class spell_item_scroll_of_recall : public SpellScript
     {
         Unit* caster = GetCaster();
         uint8 maxSafeLevel = 0;
-        switch (GetSpellInfo()->Id)
+        switch (GetSpellInfo()->ID)
         {
             case SPELL_SCROLL_OF_RECALL_I:  // Scroll of Recall
                 maxSafeLevel = 40;
@@ -2595,7 +2595,7 @@ class spell_item_shadowmourne : public AuraScript
             }
             else if (procSpell->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT)
             {
-                if (procSpell->Id != SPELL_BLOOD_PLAGUE)
+                if (procSpell->ID != SPELL_BLOOD_PLAGUE)
                     return false;
             }
         }
@@ -2830,7 +2830,7 @@ class spell_item_book_of_glyph_mastery : public SpellScript
 
     SpellCastResult CheckRequirement()
     {
-        if (HasDiscoveredAllSpells(GetSpellInfo()->Id, GetCaster()->ToPlayer()))
+        if (HasDiscoveredAllSpells(GetSpellInfo()->ID, GetCaster()->ToPlayer()))
         {
             SetCustomCastResultMessage(SPELL_CUSTOM_ERROR_LEARNED_EVERYTHING);
             return SPELL_FAILED_CUSTOM_ERROR;
@@ -2842,7 +2842,7 @@ class spell_item_book_of_glyph_mastery : public SpellScript
     void HandleScript(SpellEffIndex /*effIndex*/)
     {
         Player* caster = GetCaster()->ToPlayer();
-        uint32 spellId = GetSpellInfo()->Id;
+        uint32 spellId = GetSpellInfo()->ID;
 
         // learn random explicit discovery recipe (if any)
         if (uint32 discoveredSpellId = GetExplicitDiscoverySpell(spellId, caster))
@@ -3384,7 +3384,7 @@ class spell_item_brewfest_mount_transformation : public SpellScript
 
             uint32 spell_id;
 
-            switch (GetSpellInfo()->Id)
+            switch (GetSpellInfo()->ID)
             {
             case SPELL_BREWFEST_MOUNT_TRANSFORM:
                 if (speed >= 2.0f)
@@ -3426,7 +3426,7 @@ class spell_item_brewfest_hops : public AuraScript
 
     bool Load() override
     {
-        _spell_id = GetSpellInfo()->Id == SPELL_FRESH_DWARVEN_HOPS ? SPELL_BREWFEST_MOUNT_TRANSFORM_REVERSE : SPELL_BREWFEST_MOUNT_TRANSFORM;
+        _spell_id = GetSpellInfo()->ID == SPELL_FRESH_DWARVEN_HOPS ? SPELL_BREWFEST_MOUNT_TRANSFORM_REVERSE : SPELL_BREWFEST_MOUNT_TRANSFORM;
         return true;
     }
 
@@ -3918,7 +3918,7 @@ class spell_item_recall : public SpellScript
             return;
         }
 
-        TeamId bgTeam = player->GetBgTeamId();
+        TeamID bgTeam = player->GetBgTeamId();
         if (player->GetTeamId(true) != bgTeam)
         {
             if (SpellTargetPosition const* recallSpellTarget = sSpellMgr->GetSpellTargetPosition(bgTeam == TEAM_HORDE ? SPELL_RECALL_HORDE : SPELL_RECALL_ALLIANCE, EFFECT_0))

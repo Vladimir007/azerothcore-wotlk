@@ -220,8 +220,7 @@ void WorldSession::HandleChannelBan(WorldPacket& recvPacket)
     std::string channelName, targetName;
     recvPacket >> channelName >> targetName;
 
-    LOG_DEBUG("chat.system", "CMSG_CHANNEL_BAN {} Channel: {}, Target: {}",
-                   GetPlayerInfo(), channelName, targetName);
+    LOG_DEBUG("chat.system", "CMSG_CHANNEL_BAN {} Channel: {}, Target: {}", GetPlayerInfo(), channelName, targetName);
     if (!normalizePlayerName(targetName))
         return;
 

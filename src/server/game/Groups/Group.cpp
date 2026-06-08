@@ -1613,7 +1613,7 @@ void Group::CountTheRoll(Rolls::iterator rollI, Map* allowedMap)
     if (Loot* loot = roll->getLoot(); loot && loot->isLooted() && loot->sourceGameObject)
     {
         const GameObjectTemplate* goInfo = loot->sourceGameObject->GetGOInfo();
-        if (goInfo && goInfo->type == GAMEOBJECT_TYPE_CHEST)
+        if (goInfo && goInfo->Type == GAME_OBJECT_TYPE_CHEST)
         {
             // Deactivate chest if the last item was rolled in group
             loot->sourceGameObject->SetLootState(GO_JUST_DEACTIVATED);
@@ -1941,7 +1941,7 @@ GroupJoinBattlegroundResult Group::CanJoinBattlegroundQueue(Battleground const* 
         return ERR_GROUP_JOIN_BATTLEGROUND_FAIL;
 
     // too many players in the group
-    if (GetMembersCount() > bgEntry->maxGroupSize)
+    if (GetMembersCount() > bgEntry->MaxGroupSize)
         return ERR_BATTLEGROUND_NONE;
 
     // get a player as reference, to compare other players' stats to (arena team id, level bracket, etc.)
@@ -1954,7 +1954,7 @@ GroupJoinBattlegroundResult Group::CanJoinBattlegroundQueue(Battleground const* 
         return ERR_BATTLEGROUND_JOIN_FAILED;
 
     uint32 arenaTeamId = reference->GetArenaTeamId(arenaSlot);
-    TeamId teamId = reference->GetTeamId();
+    TeamID teamId = reference->GetTeamId();
 
     BattlegroundQueueTypeId bgQueueTypeIdRandom = BattlegroundMgr::BGQueueTypeId(BATTLEGROUND_RB, 0);
 
@@ -1980,7 +1980,7 @@ GroupJoinBattlegroundResult Group::CanJoinBattlegroundQueue(Battleground const* 
             return ERR_BATTLEGROUND_JOIN_FAILED;
 
         // not in the same battleground level braket, don't let join
-        PvPDifficultyEntry const* memberBracketEntry = GetBattlegroundBracketByLevel(bracketEntry->mapId, member->GetLevel());
+        PvPDifficultyEntry const* memberBracketEntry = GetBattlegroundBracketByLevel(bracketEntry->MapID, member->GetLevel());
         if (memberBracketEntry != bracketEntry)
             return ERR_BATTLEGROUND_JOIN_RANGE_INDEX;
 

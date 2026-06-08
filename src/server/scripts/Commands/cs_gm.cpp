@@ -38,14 +38,14 @@ public:
     {
         static ChatCommandTable gmCommandTable =
         {
-            { "chat",      HandleGMChatCommand,       SEC_GAMEMASTER,     Console::No  },
-            { "fly",       HandleGMFlyCommand,        SEC_GAMEMASTER,     Console::No  },
+            { "chat",      HandleGMChatCommand,       SEC_GAME_MASTER,     Console::No  },
+            { "fly",       HandleGMFlyCommand,        SEC_GAME_MASTER,     Console::No  },
             { "ingame",    HandleGMListIngameCommand, SEC_PLAYER,         Console::Yes },
             { "list",      HandleGMListFullCommand,   SEC_ADMINISTRATOR,  Console::Yes },
-            { "visible",   HandleGMVisibleCommand,    SEC_GAMEMASTER,     Console::No  },
+            { "visible",   HandleGMVisibleCommand,    SEC_GAME_MASTER,     Console::No  },
             { "on",        HandleGMOnCommand,         SEC_MODERATOR,      Console::No  },
             { "off",       HandleGMOffCommand,        SEC_MODERATOR,      Console::No  },
-            { "spectator", HandleGMSpectatorCommand,  SEC_GAMEMASTER,     Console::No  },
+            { "spectator", HandleGMSpectatorCommand,  SEC_GAME_MASTER,     Console::No  },
         };
         static ChatCommandTable commandTable =
         {
@@ -61,7 +61,7 @@ public:
         {
             if (!enableArg)
             {
-                if (!AccountMgr::IsPlayerAccount(session->GetSecurity()) && session->GetPlayer()->isGMChat())
+                if (session->IsGameMaster() && session->GetPlayer()->isGMChat())
                     handler->SendNotification(LANG_GM_CHAT_ON);
                 else
                     handler->SendNotification(LANG_GM_CHAT_OFF);
@@ -113,12 +113,11 @@ public:
         bool first = true;
         bool footer = false;
 
-        std::shared_lock<std::shared_mutex> lock(*HashMapHolder<Player>::GetLock());
+        std::shared_lock lock(*HashMapHolder<Player>::GetLock());
         for (auto const& [playerGuid, player] : ObjectAccessor::GetPlayers())
         {
-            AccountTypes playerSec = player->GetSession()->GetSecurity();
-            if ((player->IsGameMaster() ||
-                 (!AccountMgr::IsPlayerAccount(playerSec) && playerSec <= AccountTypes(sWorld->getIntConfig(CONFIG_GM_LEVEL_IN_GM_LIST)))) &&
+            bool isGM = player->GetSession()->IsGameMaster();
+            if ((player->IsGameMaster() || isGM) &&
                 (!handler->GetSession() || player->IsVisibleGloballyFor(handler->GetSession()->GetPlayer())))
             {
                 if (first)
@@ -128,17 +127,8 @@ public:
                     handler->SendSysMessage(LANG_GMS_ON_SRV);
                     handler->SendSysMessage("========================");
                 }
-                std::string const& name = player->GetName();
-                uint8 size = uint8(name.size());
-                uint8 security = playerSec;
-                uint8 max = ((16 - size) / 2);
-                uint8 max2 = max;
-                if ((max + max2 + size) == 16)
-                    max2 = max - 1;
                 if (handler->GetSession())
-                    handler->PSendSysMessage("|    {} GMLevel {}", name, security);
-                else
-                    handler->PSendSysMessage("|{}{}{}|   {}  |", max, " ", name, max2, " ", security);
+                    handler->PSendSysMessage("|    {} GM: {}", player->GetName(), std::string(isGM ? "yes" : "no"));
             }
         }
         if (footer)
@@ -153,9 +143,7 @@ public:
     {
         ///- Get the accounts with GM Level >0
         LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_GM_ACCOUNTS);
-        stmt->SetData(0, uint8(SEC_MODERATOR));
-        stmt->SetData(1, int32(realm.Id.Realm));
-        PreparedQueryResult result = LoginDatabase.Query(stmt);
+        QueryResult result = LoginDatabase.Query(stmt);
 
         if (result)
         {
@@ -164,17 +152,16 @@ public:
             ///- Cycle through them. Display username and GM level
             do
             {
-                Field* fields = result->Fetch();
-                std::string name = fields[0].Get<std::string>();
-                uint8 security = fields[1].Get<uint8>();
+                const Field* fields = result->Fetch();
+                auto name = fields[0].Get<std::string>();
                 uint8 max = (16 - name.length()) / 2;
                 uint8 max2 = max;
-                if ((max + max2 + name.length()) == 16)
+                if (max + max2 + name.length() == 16)
                     max2 = max - 1;
                 if (handler->GetSession())
-                    handler->PSendSysMessage("|    {} GMLevel {}", name, security);
+                    handler->PSendSysMessage("|    {}", name);
                 else
-                    handler->PSendSysMessage("|{}{}{}|   {}  |", max, " ", name, max2, " ", security);
+                    handler->PSendSysMessage("|{}{}{}|", max, " ", name, max2, " ");
             } while (result->NextRow());
             handler->SendSysMessage("========================");
         }
@@ -190,7 +177,7 @@ public:
 
         if (!visibleArg)
         {
-            handler->PSendSysMessage(LANG_YOU_ARE, _player->isGMVisible() ? handler->GetAcoreString(LANG_VISIBLE) : handler->GetAcoreString(LANG_INVISIBLE));
+            handler->PSendSysMessage(LANG_YOU_ARE, _player->isGMVisible() ? handler->GetNcoreString(LANG_VISIBLE) : handler->GetNcoreString(LANG_INVISIBLE));
             return true;
         }
 

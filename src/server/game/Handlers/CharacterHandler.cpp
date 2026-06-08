@@ -27,7 +27,6 @@
 #include "Common.h"
 #include "DatabaseEnv.h"
 #include "GameTime.h"
-#include "GitRevision.h"
 #include "Group.h"
 #include "Guild.h"
 #include "GuildMgr.h"
@@ -35,14 +34,12 @@
 #include "Language.h"
 #include "Log.h"
 #include "MapMgr.h"
-#include "Metric.h"
 #include "MotdMgr.h"
 #include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "Opcodes.h"
 #include "Pet.h"
 #include "Player.h"
-#include "PlayerDump.h"
 #include "QueryHolder.h"
 #include "RaceMgr.h"
 #include "Realm.h"
@@ -147,7 +144,7 @@ bool LoginQueryHolder::Initialize()
     stmt->SetData(0, lowGuid);
     res &= SetPreparedQuery(PLAYER_LOGIN_QUERY_LOAD_SPELL_COOLDOWNS, stmt);
 
-    if (sWorld->getBoolConfig(CONFIG_DECLINED_NAMES_USED))
+    if (realm.Timezone == REALM_ZONE_RUSSIAN)
     {
         stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHARACTER_DECLINEDNAMES);
         stmt->SetData(0, lowGuid);
@@ -225,7 +222,7 @@ bool LoginQueryHolder::Initialize()
     return res;
 }
 
-void WorldSession::HandleCharEnum(PreparedQueryResult result)
+void WorldSession::HandleCharEnum(QueryResult result)
 {
     WorldPacket data(SMSG_CHAR_ENUM, 100);                  // we guess size
 
@@ -259,7 +256,7 @@ void WorldSession::HandleCharEnumOpcode(WorldPacket& /*recvData*/)
 
     /// get all the data necessary for loading all characters (along with their pets) on the account
 
-    if (sWorld->getBoolConfig(CONFIG_DECLINED_NAMES_USED))
+    if (realm.Timezone == REALM_ZONE_RUSSIAN)
         stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_ENUM_DECLINED_NAME);
     else
         stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_ENUM);
@@ -285,18 +282,6 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
              >> createInfo->FacialHair
              >> createInfo->OutfitId;
 
-    if (AccountMgr::IsPlayerAccount(GetSecurity()))
-    {
-        if (uint32 mask = sWorld->getIntConfig(CONFIG_CHARACTER_CREATING_DISABLED))
-        {
-            if (mask & (1 << Player::TeamIdForRace(createInfo->Race)))
-            {
-                SendCharCreate(CHAR_CREATE_DISABLED);
-                return;
-            }
-        }
-    }
-
     ChrClassesEntry const* classEntry = sChrClassesStore.LookupEntry(createInfo->Class);
     if (!classEntry)
     {
@@ -314,36 +299,19 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
     }
 
     // prevent character creating Expansion race without Expansion account
-    if (raceEntry->expansion > Expansion())
+    if (raceEntry->Expansion > Expansion())
     {
         SendCharCreate(CHAR_CREATE_EXPANSION);
-        LOG_ERROR("network.opcode", "Expansion {} account:[{}] tried to Create character with expansion {} race ({})", Expansion(), GetAccountId(), raceEntry->expansion, createInfo->Race);
+        LOG_ERROR("network.opcode", "Expansion {} account:[{}] tried to Create character with expansion {} race ({})", Expansion(), GetAccountId(), raceEntry->Expansion, createInfo->Race);
         return;
     }
 
     // prevent character creating Expansion class without Expansion account
-    if (classEntry->expansion > Expansion())
+    if (classEntry->Expansion > Expansion())
     {
         SendCharCreate(CHAR_CREATE_EXPANSION_CLASS);
-        LOG_ERROR("network.opcode", "Expansion {} account:[{}] tried to Create character with expansion {} class ({})", Expansion(), GetAccountId(), classEntry->expansion, createInfo->Class);
+        LOG_ERROR("network.opcode", "Expansion {} account:[{}] tried to Create character with expansion {} class ({})", Expansion(), GetAccountId(), classEntry->Expansion, createInfo->Class);
         return;
-    }
-
-    if (AccountMgr::IsPlayerAccount(GetSecurity()))
-    {
-        uint32 raceMaskDisabled = sWorld->getIntConfig(CONFIG_CHARACTER_CREATING_DISABLED_RACEMASK);
-        if ((1 << (createInfo->Race - 1)) & raceMaskDisabled)
-        {
-            SendCharCreate(CHAR_CREATE_DISABLED);
-            return;
-        }
-
-        uint32 classMaskDisabled = sWorld->getIntConfig(CONFIG_CHARACTER_CREATING_DISABLED_CLASSMASK);
-        if ((1 << (createInfo->Class - 1)) & classMaskDisabled)
-        {
-            SendCharCreate(CHAR_CREATE_DISABLED);
-            return;
-        }
     }
 
     // prevent character creating with invalid name
@@ -363,16 +331,8 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
     }
 
     // speedup check for heroic class disabled case
-    uint32 heroic_free_slots = sWorld->getIntConfig(CONFIG_HEROIC_CHARACTERS_PER_REALM);
-    if (heroic_free_slots == 0 && AccountMgr::IsPlayerAccount(GetSecurity()) && createInfo->Class == CLASS_DEATH_KNIGHT)
-    {
-        SendCharCreate(CHAR_CREATE_UNIQUE_CLASS_LIMIT);
-        return;
-    }
-
-    // speedup check for heroic class disabled case
-    uint32 req_level_for_heroic = sWorld->getIntConfig(CONFIG_CHARACTER_CREATING_MIN_LEVEL_FOR_HEROIC_CHARACTER);
-    if (AccountMgr::IsPlayerAccount(GetSecurity()) && createInfo->Class == CLASS_DEATH_KNIGHT && req_level_for_heroic > sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL))
+    uint32 req_level_for_heroic = StartHeroicPlayerLevel;
+    if (!IsGameMaster() && createInfo->Class == CLASS_DEATH_KNIGHT && req_level_for_heroic > sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL))
     {
         SendCharCreate(CHAR_CREATE_LEVEL_REQUIREMENT);
         return;
@@ -382,7 +342,7 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
     stmt->SetData(0, createInfo->Name);
 
     _queryProcessor.AddCallback(CharacterDatabase.AsyncQuery(stmt)
-    .WithChainingPreparedCallback([this](QueryCallback& queryCallback, PreparedQueryResult result)
+    .WithChainingPreparedCallback([this](QueryCallback& queryCallback, QueryResult result)
     {
         if (result)
         {
@@ -390,72 +350,62 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
             return;
         }
 
-        LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_SUM_REALM_CHARACTERS);
+        LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_SEL_CHARACTERS_COUNT);
         stmt->SetData(0, GetAccountId());
         queryCallback.SetNextQuery(LoginDatabase.AsyncQuery(stmt));
     })
-    .WithChainingPreparedCallback([this](QueryCallback& queryCallback, PreparedQueryResult result)
+    .WithChainingPreparedCallback([this](QueryCallback& queryCallback, const QueryResult& result)
     {
-        uint64 acctCharCount = 0;
+        uint32 acctCharCount = 0;
         if (result)
         {
-            Field* fields = result->Fetch();
-            acctCharCount = uint64(fields[0].Get<double>());
+            const Field* fields = result->Fetch();
+            acctCharCount = fields[0].Get<uint32>();
         }
 
-        if (acctCharCount >= static_cast<uint64>(sWorld->getIntConfig(CONFIG_CHARACTERS_PER_ACCOUNT)))
+        if (acctCharCount >= CHARACTERS_PER_ACCOUNT)
         {
             SendCharCreate(CHAR_CREATE_ACCOUNT_LIMIT);
             return;
         }
 
-        CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_SUM_CHARS);
-        stmt->SetData(0, GetAccountId());
-        queryCallback.SetNextQuery(CharacterDatabase.AsyncQuery(stmt));
+        CharacterDatabasePreparedStatement* selSumCharsStmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_SUM_CHARS);
+        selSumCharsStmt->SetData(0, GetAccountId());
+        queryCallback.SetNextQuery(CharacterDatabase.AsyncQuery(selSumCharsStmt));
     })
-    .WithChainingPreparedCallback([this, createInfo](QueryCallback& queryCallback, PreparedQueryResult result)
+    .WithChainingPreparedCallback([this, createInfo](QueryCallback& queryCallback, const QueryResult& result)
     {
         if (result)
         {
-            Field* fields = result->Fetch();
-            createInfo->CharCount = uint8(fields[0].Get<uint64>()); // SQL's COUNT() returns uint64 but it will always be less than uint8.Max
-
-            if (createInfo->CharCount >= sWorld->getIntConfig(CONFIG_CHARACTERS_PER_REALM))
+            const Field* fields = result->Fetch();
+            createInfo->CharCount = static_cast<uint8>(fields[0].Get<uint32>());
+            if (createInfo->CharCount >= CHARACTERS_PER_REALM)
             {
                 SendCharCreate(CHAR_CREATE_SERVER_LIMIT);
                 return;
             }
         }
 
-        bool allowTwoSideAccounts = !sWorld->IsPvPRealm() || sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_ACCOUNTS) || !AccountMgr::IsPlayerAccount(GetSecurity());
-        uint32 skipCinematics = sWorld->getIntConfig(CONFIG_SKIP_CINEMATICS);
-
-        std::function<void(PreparedQueryResult)> finalizeCharacterCreation = [this, createInfo](PreparedQueryResult result)
+        std::function finalizeCharacterCreation = [this, createInfo](const QueryResult& result)
         {
             if (!sScriptMgr->CanAccountCreateCharacter(GetAccountId(), createInfo->Race, createInfo->Class))
             {
                 SendCharCreate(CHAR_CREATE_DISABLED);
                 return;
             }
-            bool haveSameRace = false;
-            uint32 heroicReqLevel = sWorld->getIntConfig(CONFIG_CHARACTER_CREATING_MIN_LEVEL_FOR_HEROIC_CHARACTER);
-            bool hasHeroicReqLevel = (heroicReqLevel == 0);
-            bool allowTwoSideAccounts = !sWorld->IsPvPRealm() || sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_ACCOUNTS) || !AccountMgr::IsPlayerAccount(GetSecurity());
-            uint32 skipCinematics = sWorld->getIntConfig(CONFIG_SKIP_CINEMATICS);
-            bool checkDeathKnightReqs = AccountMgr::IsPlayerAccount(GetSecurity()) && createInfo->Class == CLASS_DEATH_KNIGHT;
+            bool hasHeroicReqLevel = false;
+            bool checkDeathKnightReqs = !IsGameMaster() && createInfo->Class == CLASS_DEATH_KNIGHT;
 
             if (result)
             {
-                TeamId teamId = Player::TeamIdForRace(createInfo->Race);
-                uint32 freeDeathKnightSlots = sWorld->getIntConfig(CONFIG_HEROIC_CHARACTERS_PER_REALM);
+                uint32 freeDeathKnightSlots = HEROIC_CHARACTERS_PER_REALM;
 
-                Field* field = result->Fetch();
+                const Field* field = result->Fetch();
                 uint8 accRace = field[1].Get<uint8>();
 
                 if (checkDeathKnightReqs)
                 {
-                    uint8 accClass = field[2].Get<uint8>();
-                    if (accClass == CLASS_DEATH_KNIGHT)
+                    if (field[2].Get<uint8>() == CLASS_DEATH_KNIGHT)
                     {
                         if (freeDeathKnightSlots > 0)
                             --freeDeathKnightSlots;
@@ -469,39 +419,19 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
 
                     if (!hasHeroicReqLevel)
                     {
-                        uint8 accLevel = field[0].Get<uint8>();
-                        if (accLevel >= heroicReqLevel)
+                        if (field[0].Get<uint32>() >= StartHeroicPlayerLevel)
                             hasHeroicReqLevel = true;
                     }
                 }
 
-                // need to check team only for first character
-                /// @todo what to if account already has characters of both races?
-                if (!allowTwoSideAccounts)
-                {
-                    uint32 accTeam = 0;
-                    if (accRace > 0)
-                        accTeam = Player::TeamIdForRace(accRace);
-
-                    if (accTeam != teamId)
-                    {
-                        SendCharCreate(CHAR_CREATE_PVP_TEAMS_VIOLATION);
-                        return;
-                    }
-                }
-
-                // search same race for cinematic or same class if need
-                /// @todo check if cinematic already shown? (already logged in?; cinematic field)
-                while ((skipCinematics == 1 && !haveSameRace) || createInfo->Class == CLASS_DEATH_KNIGHT)
+                // Search same race for cinematic or same class if needed
+                while (createInfo->Class == CLASS_DEATH_KNIGHT)
                 {
                     if (!result->NextRow())
                         break;
 
                     field = result->Fetch();
                     accRace = field[1].Get<uint8>();
-
-                    if (!haveSameRace)
-                        haveSameRace = createInfo->Race == accRace;
 
                     if (checkDeathKnightReqs)
                     {
@@ -520,8 +450,7 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
 
                         if (!hasHeroicReqLevel)
                         {
-                            uint8 acc_level = field[0].Get<uint8>();
-                            if (acc_level >= heroicReqLevel)
+                            if (field[0].Get<uint32>() >= StartHeroicPlayerLevel)
                                 hasHeroicReqLevel = true;
                         }
                     }
@@ -559,9 +488,6 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
                 return;
             }
 
-            if ((haveSameRace && skipCinematics == 1) || skipCinematics == 2)
-                newChar->setCinematic(1);                         // not show intro
-
             newChar->SetAtLoginFlag(AT_LOGIN_FIRST);              // First login
 
             CharacterDatabaseTransaction characterTransaction = CharacterDatabase.BeginTransaction();
@@ -571,10 +497,9 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
             newChar->SaveToDB(characterTransaction, true, false);
             createInfo->CharCount++;
 
-            LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_REP_REALM_CHARACTERS);
+            LoginDatabasePreparedStatement* stmt = LoginDatabase.GetPreparedStatement(LOGIN_UPD_CHARACTERS_COUNT);
             stmt->SetData(0, createInfo->CharCount);
             stmt->SetData(1, GetAccountId());
-            stmt->SetData(2, realm.Id.Realm);
             trans->Append(stmt);
 
             LoginDatabase.CommitTransaction(trans);
@@ -584,7 +509,6 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
                 if (success)
                 {
                     LOG_INFO("entities.player.character", "Account: {} (IP: {}) Create Character: {} {}", GetAccountId(), GetRemoteAddress(), newChar->GetName(), newChar->GetGUID().ToString());
-                    sScriptMgr->OnPlayerCreate(newChar.get());
                     sCharacterCache->AddCharacterCacheEntry(newChar->GetGUID(), GetAccountId(), newChar->GetName(), newChar->getGender(), newChar->getRace(), newChar->getClass(), newChar->GetLevel());
                     SendCharCreate(CHAR_CREATE_SUCCESS);
                 }
@@ -593,15 +517,15 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
             });
         };
 
-        if (allowTwoSideAccounts && !skipCinematics && createInfo->Class != CLASS_DEATH_KNIGHT)
+        if (createInfo->Class != CLASS_DEATH_KNIGHT)
         {
-            finalizeCharacterCreation(PreparedQueryResult(nullptr));
+            finalizeCharacterCreation(QueryResult(nullptr));
             return;
         }
 
         CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_CREATE_INFO);
         stmt->SetData(0, GetAccountId());
-        stmt->SetData(1, (skipCinematics == 1 || createInfo->Class == CLASS_DEATH_KNIGHT) ? 10 : 1);
+        stmt->SetData(1, 10);
         queryCallback.WithPreparedCallback(std::move(finalizeCharacterCreation)).SetNextQuery(CharacterDatabase.AsyncQuery(stmt));
     }));
 }
@@ -827,10 +751,6 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder const& holder)
     // Send MOTD
     {
         SendPacket(sMotdMgr->GetMotdPacket(pCurrChar->GetSession()->GetSessionDbLocaleIndex()));
-
-        // send server info
-        if (sWorld->getIntConfig(CONFIG_ENABLE_SINFO_LOGIN) == 1)
-            chH.PSendSysMessage("{}", GitRevision::GetFullVersion());
     }
 
     if (uint32 guildId = sCharacterCache->GetCharacterGuildIdByGuid(pCurrChar->GetGUID()))
@@ -873,13 +793,8 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder const& holder)
         {
             if (cEntry->CinematicSequence)
                 pCurrChar->GetCinematicMgr().StartCinematic(cEntry->CinematicSequence);
-            else if (ChrRacesEntry const* rEntry = sChrRacesStore.LookupEntry(pCurrChar->getRace()))
+            else if (const ChrRacesEntry* rEntry = sChrRacesStore.LookupEntry(pCurrChar->getRace()))
                 pCurrChar->GetCinematicMgr().StartCinematic(rEntry->CinematicSequence);
-
-            // send new char string if not empty
-            std::string_view newCharString = sWorld->getStringConfig(CONFIG_NEW_CHAR_STRING);
-            if (!newCharString.empty())
-                chH.PSendSysMessage("{}", newCharString);
         }
     }
 
@@ -890,7 +805,7 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder const& holder)
     {
         AreaTriggerTeleport const* at = sObjectMgr->GetGoBackTrigger(pCurrChar->GetMapId());
         if (at)
-            pCurrChar->TeleportTo(at->target_mapId, at->target_X, at->target_Y, at->target_Z, pCurrChar->GetOrientation());
+            pCurrChar->TeleportTo(at->targetMapID, at->targetX, at->targetY, at->targetZ, pCurrChar->GetOrientation());
         else
             pCurrChar->TeleportTo(pCurrChar->m_homebindMapId, pCurrChar->m_homebindX, pCurrChar->m_homebindY, pCurrChar->m_homebindZ, pCurrChar->GetOrientation());
 
@@ -905,7 +820,7 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder const& holder)
     CharacterDatabase.Execute(stmt);
 
     LoginDatabasePreparedStatement* loginStmt = LoginDatabase.GetPreparedStatement(LOGIN_UPD_ACCOUNT_ONLINE);
-    loginStmt->SetData(0, realm.Id.Realm);
+    loginStmt->SetData(0, true);
     loginStmt->SetData(1, GetAccountId());
     LoginDatabase.Execute(loginStmt);
 
@@ -920,7 +835,7 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder const& holder)
 
     // pussywizard: send instance welcome message as when entering the instance through a portal
     if (MapDifficulty const* mapDiff = GetMapDifficultyData(pCurrChar->GetMap()->GetId(), pCurrChar->GetMap()->GetDifficulty()))
-        if (mapDiff->resetTime)
+        if (mapDiff->ResetTime)
             if (time_t timeReset = sInstanceSaveMgr->GetResetTimeFor(pCurrChar->GetMap()->GetId(), pCurrChar->GetMap()->GetDifficulty()))
             {
                 uint32 timeleft = uint32(timeReset - GameTime::GetGameTime().count());
@@ -952,14 +867,6 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder const& holder)
 
         pCurrChar->CastSpell(pCurrChar, 8326, true, 0);     // auras SPELL_AURA_GHOST, SPELL_AURA_INCREASE_SPEED(why?), SPELL_AURA_INCREASE_SWIM_SPEED(why?)
     }
-
-    // Set FFA PvP for non GM in non-rest mode
-    if (sWorld->IsFFAPvPRealm() && !pCurrChar->IsGameMaster() && !pCurrChar->HasPlayerFlag(PLAYER_FLAGS_RESTING))
-        if (!pCurrChar->HasByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_FFA_PVP))
-        {
-            sScriptMgr->OnPlayerFfaPvpStateUpdate(pCurrChar,true);
-            pCurrChar->SetByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_FFA_PVP);
-        }
 
     if (pCurrChar->HasPlayerFlag(PLAYER_FLAGS_CONTESTED_PVP))
     {
@@ -1093,27 +1000,6 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder const& holder)
     // Load pet if any (if player not alive and in taxi flight or another then pet will remember as temporary unsummoned)
     pCurrChar->LoadPet();
 
-    if (pCurrChar->GetSession()->GetRecruiterId() != 0 || pCurrChar->GetSession()->IsARecruiter())
-    {
-        bool isReferrer = pCurrChar->GetSession()->IsARecruiter();
-
-        for (auto const& [accID, session] : sWorldSessionMgr->GetAllSessions())
-        {
-            if (!session->GetRecruiterId() && !session->IsARecruiter())
-                continue;
-
-            if ((isReferrer && pCurrChar->GetSession()->GetAccountId() == session->GetRecruiterId()) || (!isReferrer && pCurrChar->GetSession()->GetRecruiterId() == session->GetAccountId()))
-            {
-                Player* rf = session->GetPlayer();
-                if (rf)
-                {
-                    pCurrChar->SendUpdateToPlayer(rf);
-                    rf->SendUpdateToPlayer(pCurrChar);
-                }
-            }
-        }
-    }
-
     sScriptMgr->OnPlayerLogin(pCurrChar);
 
     if (pCurrChar->HasAtLoginFlag(AT_LOGIN_FIRST))
@@ -1121,8 +1007,6 @@ void WorldSession::HandlePlayerLoginFromDB(LoginQueryHolder const& holder)
         pCurrChar->RemoveAtLoginFlag(AT_LOGIN_FIRST);
         sScriptMgr->OnPlayerFirstLogin(pCurrChar);
     }
-
-    METRIC_EVENT("player_events", "Login", pCurrChar->GetName());
 }
 
 void WorldSession::HandlePlayerLoginToCharInWorld(Player* pCurrChar)
@@ -1150,10 +1034,6 @@ void WorldSession::HandlePlayerLoginToCharInWorld(Player* pCurrChar)
     // Send MOTD
     {
         SendPacket(sMotdMgr->GetMotdPacket(pCurrChar->GetSession()->GetSessionDbLocaleIndex()));
-
-        // send server info
-        if (sWorld->getIntConfig(CONFIG_ENABLE_SINFO_LOGIN) == 1)
-            chH.PSendSysMessage("{}", GitRevision::GetFullVersion());
 
         LOG_DEBUG("network.opcode", "WORLD: Sent server info");
     }
@@ -1234,7 +1114,7 @@ void WorldSession::HandlePlayerLoginToCharInWorld(Player* pCurrChar)
 
     // pussywizard: send instance welcome message as when entering the instance through a portal
     if (MapDifficulty const* mapDiff = GetMapDifficultyData(pCurrChar->GetMap()->GetId(), pCurrChar->GetMap()->GetDifficulty()))
-        if (mapDiff->resetTime)
+        if (mapDiff->ResetTime)
             if (time_t timeReset = sInstanceSaveMgr->GetResetTimeFor(pCurrChar->GetMap()->GetId(), pCurrChar->GetMap()->GetDifficulty()))
             {
                 uint32 timeleft = uint32(timeReset - GameTime::GetGameTime().count());
@@ -1374,7 +1254,7 @@ void WorldSession::HandleCharRenameOpcode(WorldPacket& recvData)
         .WithPreparedCallback(std::bind(&WorldSession::HandleCharRenameCallBack, this, renameInfo, std::placeholders::_1)));
 }
 
-void WorldSession::HandleCharRenameCallBack(std::shared_ptr<CharacterRenameInfo> renameInfo, PreparedQueryResult result)
+void WorldSession::HandleCharRenameCallBack(std::shared_ptr<CharacterRenameInfo> renameInfo, QueryResult result)
 {
     if (!result)
     {
@@ -1411,7 +1291,7 @@ void WorldSession::HandleCharRenameCallBack(std::shared_ptr<CharacterRenameInfo>
     CharacterDatabase.Execute(stmt);
 
     // Removed declined name from db
-    if (sWorld->getBoolConfig(CONFIG_DECLINED_NAMES_USED))
+    if (realm.Timezone == REALM_ZONE_RUSSIAN)
     {
         stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_DECLINED_NAME);
         stmt->SetData(0, guidLow);
@@ -1429,7 +1309,7 @@ void WorldSession::HandleCharRenameCallBack(std::shared_ptr<CharacterRenameInfo>
 void WorldSession::HandleSetPlayerDeclinedNames(WorldPacket& recvData)
 {
     // pussywizard:
-    if (!sWorld->getBoolConfig(CONFIG_DECLINED_NAMES_USED))
+    if (realm.Timezone != REALM_ZONE_RUSSIAN)
         return;
 
     ObjectGuid guid;
@@ -1483,9 +1363,6 @@ void WorldSession::HandleSetPlayerDeclinedNames(WorldPacket& recvData)
         return;
     }
 
-    for (int i = 0; i < MAX_DECLINED_NAME_CASES; ++i)
-        CharacterDatabase.EscapeString(declinedname.name[i]);
-
     CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
 
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_CHAR_DECLINED_NAME);
@@ -1514,20 +1391,20 @@ void WorldSession::HandleAlterAppearance(WorldPacket& recvData)
 
     BarberShopStyleEntry const* bs_hair = sBarberShopStyleStore.LookupEntry(Hair);
 
-    if (!bs_hair || bs_hair->type != 0 || bs_hair->race != _player->getRace() || bs_hair->gender != _player->getGender())
+    if (!bs_hair || bs_hair->Type != 0 || bs_hair->Race != _player->getRace() || bs_hair->Gender != _player->getGender())
         return;
 
     BarberShopStyleEntry const* bs_facialHair = sBarberShopStyleStore.LookupEntry(FacialHair);
 
-    if (!bs_facialHair || bs_facialHair->type != 2 || bs_facialHair->race != _player->getRace() || bs_facialHair->gender != _player->getGender())
+    if (!bs_facialHair || bs_facialHair->Type != 2 || bs_facialHair->Race != _player->getRace() || bs_facialHair->Gender != _player->getGender())
         return;
 
     BarberShopStyleEntry const* bs_skinColor = sBarberShopStyleStore.LookupEntry(SkinColor);
 
-    if (bs_skinColor && (bs_skinColor->type != 3 || bs_skinColor->race != _player->getRace() || bs_skinColor->gender != _player->getGender()))
+    if (bs_skinColor && (bs_skinColor->Type != 3 || bs_skinColor->Race != _player->getRace() || bs_skinColor->Gender != _player->getGender()))
         return;
 
-    GameObject* go = _player->FindNearestGameObjectOfType(GAMEOBJECT_TYPE_BARBER_CHAIR, 5.0f);
+    GameObject* go = _player->FindNearestGameObjectOfType(GAME_OBJECT_TYPE_BARBER_CHAIR, 5.0f);
     if (!go)
     {
         WorldPacket data(SMSG_BARBER_SHOP_RESULT, 4);
@@ -1536,7 +1413,7 @@ void WorldSession::HandleAlterAppearance(WorldPacket& recvData)
         return;
     }
 
-    if (_player->getStandState() != UNIT_STAND_STATE_SIT_LOW_CHAIR + go->GetGOInfo()->barberChair.chairheight)
+    if (_player->getStandState() != UNIT_STAND_STATE_SIT_LOW_CHAIR + go->GetGOInfo()->BarberChair.chairHeight)
     {
         WorldPacket data(SMSG_BARBER_SHOP_RESULT, 4);
         data << uint32(2);
@@ -1544,7 +1421,7 @@ void WorldSession::HandleAlterAppearance(WorldPacket& recvData)
         return;
     }
 
-    uint32 cost = _player->GetBarberShopCost(bs_hair->hair_id, Color, bs_facialHair->hair_id, bs_skinColor);
+    uint32 cost = _player->GetBarberShopCost(bs_hair->HairID, Color, bs_facialHair->HairID, bs_skinColor);
 
     // 0 - ok
     // 1, 3 - not enough money
@@ -1566,11 +1443,11 @@ void WorldSession::HandleAlterAppearance(WorldPacket& recvData)
     _player->ModifyMoney(-int32(cost));                     // it isn't free
     _player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_GOLD_SPENT_AT_BARBER, cost);
 
-    _player->SetByteValue(PLAYER_BYTES, 2, uint8(bs_hair->hair_id));
+    _player->SetByteValue(PLAYER_BYTES, 2, uint8(bs_hair->HairID));
     _player->SetByteValue(PLAYER_BYTES, 3, uint8(Color));
-    _player->SetByteValue(PLAYER_BYTES_2, 0, uint8(bs_facialHair->hair_id));
+    _player->SetByteValue(PLAYER_BYTES_2, 0, uint8(bs_facialHair->HairID));
     if (bs_skinColor)
-        _player->SetByteValue(PLAYER_BYTES, 0, uint8(bs_skinColor->hair_id));
+        _player->SetByteValue(PLAYER_BYTES, 0, uint8(bs_skinColor->HairID));
 
     _player->UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_VISIT_BARBER_SHOP, 1);
 
@@ -1592,7 +1469,7 @@ void WorldSession::HandleRemoveGlyph(WorldPacket& recvData)
     {
         if (GlyphPropertiesEntry const* glyphEntry = sGlyphPropertiesStore.LookupEntry(glyph))
         {
-            _player->RemoveAurasDueToSpell(glyphEntry->SpellId);
+            _player->RemoveAurasDueToSpell(glyphEntry->SpellID);
 
             // Removed any triggered auras
             Unit::AuraMap& ownedAuras = _player->GetOwnedAuras();
@@ -1601,7 +1478,7 @@ void WorldSession::HandleRemoveGlyph(WorldPacket& recvData)
                 Aura* aura = iter->second;
                 if (SpellInfo const* triggeredByAuraSpellInfo = aura->GetTriggeredByAuraSpellInfo())
                 {
-                    if (triggeredByAuraSpellInfo->Id == glyphEntry->SpellId)
+                    if (triggeredByAuraSpellInfo->ID == glyphEntry->SpellID)
                     {
                         _player->RemoveOwnedAura(iter);
                         continue;
@@ -1610,7 +1487,7 @@ void WorldSession::HandleRemoveGlyph(WorldPacket& recvData)
                 ++iter;
             }
 
-            _player->SendLearnPacket(glyphEntry->SpellId, false); // Send packet to properly handle client-side spell tooltips
+            _player->SendLearnPacket(glyphEntry->SpellID, false); // Send packet to properly handle client-side spell tooltips
             _player->SetGlyph(slot, 0, true);
             _player->SendTalentsInfoData(false);
         }
@@ -1627,7 +1504,7 @@ void WorldSession::HandleCharCustomize(WorldPacket& recvData)
     {
         LOG_ERROR("entities.player.cheat", "Account {}, IP: {} tried to customise {}, but it does not belong to their account!",
             GetAccountId(), GetRemoteAddress(), customizeInfo->Guid.ToString());
-        recvData.rfinish();
+        recvData.rFinish();
         KickPlayer("WorldSession::HandleCharCustomize Trying to customise character of another account");
         return;
     }
@@ -1635,7 +1512,7 @@ void WorldSession::HandleCharCustomize(WorldPacket& recvData)
     // pussywizard:
     if (ObjectAccessor::FindConnectedPlayer(customizeInfo->Guid) || sWorldSessionMgr->FindOfflineSessionForCharacterGUID(customizeInfo->Guid.GetCounter()))
     {
-        recvData.rfinish();
+        recvData.rFinish();
         WorldPacket data(SMSG_CHAR_CUSTOMIZE, 1);
         data << uint8(CHAR_CREATE_ERROR);
         SendPacket(&data);
@@ -1657,7 +1534,7 @@ void WorldSession::HandleCharCustomize(WorldPacket& recvData)
         .WithPreparedCallback(std::bind(&WorldSession::HandleCharCustomizeCallback, this, customizeInfo, std::placeholders::_1)));
 }
 
-void WorldSession::HandleCharCustomizeCallback(std::shared_ptr<CharacterCustomizeInfo> customizeInfo, PreparedQueryResult result)
+void WorldSession::HandleCharCustomizeCallback(std::shared_ptr<CharacterCustomizeInfo> customizeInfo, QueryResult result)
 {
     if (!result)
     {
@@ -1729,7 +1606,7 @@ void WorldSession::HandleCharCustomizeCallback(std::shared_ptr<CharacterCustomiz
 
         trans->Append(stmt);
 
-        if (sWorld->getBoolConfig(CONFIG_DECLINED_NAMES_USED))
+        if (realm.Timezone == REALM_ZONE_RUSSIAN)
         {
             stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_DECLINED_NAME);
             stmt->SetData(0, lowGuid);
@@ -1932,7 +1809,7 @@ void WorldSession::HandleCharFactionOrRaceChange(WorldPacket& recvData)
     {
         LOG_ERROR("entities.player.cheat", "Account {}, IP: {} tried to factionchange character {}, but it does not belong to their account!",
             GetAccountId(), GetRemoteAddress(), factionChangeInfo->Guid.ToString());
-        recvData.rfinish();
+        recvData.rFinish();
         KickPlayer("WorldSession::HandleCharFactionOrRaceChange Trying to change faction of character of another account");
         return;
     }
@@ -1962,7 +1839,7 @@ void WorldSession::HandleCharFactionOrRaceChange(WorldPacket& recvData)
         .WithPreparedCallback(std::bind(&WorldSession::HandleCharFactionOrRaceChangeCallback, this, factionChangeInfo, std::placeholders::_1)));
 }
 
-void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<CharacterFactionChangeInfo> factionChangeInfo, PreparedQueryResult result)
+void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<CharacterFactionChangeInfo> factionChangeInfo, QueryResult result)
 {
     if (!result)
     {
@@ -2053,7 +1930,7 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
         }
     }
 
-    TeamId newTeam = Player::TeamIdForRace(factionChangeInfo->Race);
+    TeamID newTeam = Player::TeamIdForRace(factionChangeInfo->Race);
     if (factionChangeInfo->FactionChange == (Player::TeamIdForRace(oldRace) == newTeam))
     {
         SendCharFactionChange(factionChangeInfo->FactionChange ? CHAR_CREATE_CHARACTER_SWAP_FACTION : CHAR_CREATE_CHARACTER_RACE_ONLY, factionChangeInfo.get());
@@ -2075,16 +1952,6 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
     {
         SendCharFactionChange(CHAR_CREATE_ERROR, factionChangeInfo.get());
         return;
-    }
-
-    if (AccountMgr::IsPlayerAccount(GetSecurity()))
-    {
-        uint32 raceMaskDisabled = sWorld->getIntConfig(CONFIG_CHARACTER_CREATING_DISABLED_RACEMASK);
-        if ((1 << (factionChangeInfo->Race - 1)) & raceMaskDisabled)
-        {
-            SendCharFactionChange(CHAR_CREATE_ERROR, factionChangeInfo.get());
-            return;
-        }
     }
 
     // prevent character rename to invalid name
@@ -2119,8 +1986,6 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
 
     // Name Change and update atLogin flags
     {
-        CharacterDatabase.EscapeString(factionChangeInfo->Name);
-
         stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_CHAR_NAME_AT_LOGIN);
         stmt->SetData(0, factionChangeInfo->Name);
         stmt->SetData(1, uint16((atLoginFlags | AT_LOGIN_RESURRECT) & ~usedLoginFlag));
@@ -2271,14 +2136,14 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
                         continue;
                     }
 
-                    AreaTableEntry const* zone = sAreaTableStore.LookupEntry(sMapMgr->GetZoneId(PHASEMASK_NORMAL, pathNode->mapid, pathNode->x, pathNode->y, pathNode->z));
+                    AreaTableEntry const* zone = sAreaTableStore.LookupEntry(sMapMgr->GetZoneId(PHASEMASK_NORMAL, pathNode->MapID, pathNode->X, pathNode->Y, pathNode->Z));
                     if (!zone)
                     {
                         FillTaxiMask(field, 0);
                         continue;
                     }
 
-                    LFGDungeonEntry const* lfgDungeon = GetZoneLFGDungeonEntry(zone->area_name[GetSessionDbLocaleIndex()], GetSessionDbLocaleIndex());
+                    LFGDungeonEntry const* lfgDungeon = GetZoneLFGDungeonEntry(zone->AreaName);
                     if (!lfgDungeon)
                     {
                         FillTaxiMask(field, 0);
@@ -2312,18 +2177,6 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
                 if (uint32 guildId = playerData->GuildId)
                     if (Guild* guild = sGuildMgr->GetGuildById(guildId))
                         guild->DeleteMember(factionChangeInfo->Guid, false, false, true);
-            }
-
-            if (!sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_ADD_FRIEND))
-            {
-                // Delete Friend List
-                stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_CHAR_SOCIAL_BY_GUID);
-                stmt->SetData(0, lowGuid);
-                trans->Append(stmt);
-
-                stmt = CharacterDatabase.GetPreparedStatement(CHAR_DEL_CHAR_SOCIAL_BY_FRIEND);
-                stmt->SetData(0, lowGuid);
-                trans->Append(stmt);
             }
 
             // Leave Arena Teams
@@ -2456,7 +2309,7 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
                 stmt->SetData(0, oldReputation);
                 stmt->SetData(1, lowGuid);
 
-                PreparedQueryResult result = CharacterDatabase.Query(stmt);
+                QueryResult result = CharacterDatabase.Query(stmt);
                 if (!result)
                     continue;
 
@@ -2517,30 +2370,30 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
                     // new team
                     if (newTeam == TEAM_ALLIANCE)
                     {
-                        uint32 bitIndex = htitleInfo->bit_index;
+                        uint32 bitIndex = htitleInfo->BitIndex;
                         uint32 index = bitIndex / 32;
                         uint32 old_flag = 1 << (bitIndex % 32);
-                        uint32 new_flag = 1 << (atitleInfo->bit_index % 32);
+                        uint32 new_flag = 1 << (atitleInfo->BitIndex % 32);
 
                         if (knownTitles[index] & old_flag)
                         {
                             knownTitles[index] &= ~old_flag;
                             // use index of the new title
-                            knownTitles[atitleInfo->bit_index / 32] |= new_flag;
+                            knownTitles[atitleInfo->BitIndex / 32] |= new_flag;
                         }
                     }
                     else
                     {
-                        uint32 bitIndex = atitleInfo->bit_index;
+                        uint32 bitIndex = atitleInfo->BitIndex;
                         uint32 index = bitIndex / 32;
                         uint32 old_flag = 1 << (bitIndex % 32);
-                        uint32 new_flag = 1 << (htitleInfo->bit_index % 32);
+                        uint32 new_flag = 1 << (htitleInfo->BitIndex % 32);
 
                         if (knownTitles[index] & old_flag)
                         {
                             knownTitles[index] &= ~old_flag;
                             // use index of the new title
-                            knownTitles[htitleInfo->bit_index / 32] |= new_flag;
+                            knownTitles[htitleInfo->BitIndex / 32] |= new_flag;
                         }
                     }
 
@@ -2575,10 +2428,10 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
     SendCharFactionChange(RESPONSE_SUCCESS, factionChangeInfo.get());
 }
 
-void WorldSession::SendCharCreate(ResponseCodes result)
+void WorldSession::SendCharCreate(const ResponseCodes result)
 {
     WorldPacket data(SMSG_CHAR_CREATE, 1);
-    data << uint8(result);
+    data << static_cast<uint8>(result);
     SendPacket(&data);
 }
 

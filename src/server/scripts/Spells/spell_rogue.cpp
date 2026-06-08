@@ -258,20 +258,20 @@ class spell_rog_deadly_poison : public SpellScript
             // item combat enchantments
             for (uint8 slot = 0; slot < MAX_ENCHANTMENT_SLOT; ++slot)
             {
-                SpellItemEnchantmentEntry const* enchant = sSpellItemEnchantmentStore.LookupEntry(item->GetEnchantmentId(EnchantmentSlot(slot)));
+                SpellItemEnchantmentEntry const* enchant = sSpellItemEnchantmentStore.LookupEntry(item->GetEnchantmentId(static_cast<EnchantmentSlot>(slot)));
                 if (!enchant)
                     continue;
 
                 for (uint8 s = 0; s < 3; ++s)
                 {
-                    if (enchant->type[s] != ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL)
+                    if (enchant->Type[s] != ITEM_ENCHANTMENT_TYPE_COMBAT_SPELL)
                         continue;
 
-                    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(enchant->spellid[s]);
+                    SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(enchant->SpellID[s]);
                     if (!spellInfo)
                     {
                         LOG_ERROR("misc", "Player::CastItemCombatSpell Enchant {}, player (Name: {}, {}) cast unknown spell {}",
-                            enchant->ID, player->GetName(), player->GetGUID().ToString(), enchant->spellid[s]);
+                            enchant->ID, player->GetName(), player->GetGUID().ToString(), enchant->SpellID[s]);
                         continue;
                     }
 
@@ -284,9 +284,9 @@ class spell_rog_deadly_poison : public SpellScript
                         continue;
 
                     if (spellInfo->IsPositive())
-                        player->CastSpell(player, enchant->spellid[s], true, item);
+                        player->CastSpell(player, enchant->SpellID[s], true, item);
                     else
-                        player->CastSpell(target, enchant->spellid[s], true, item);
+                        player->CastSpell(target, enchant->SpellID[s], true, item);
                 }
             }
         }
@@ -482,11 +482,11 @@ class spell_rog_preparation : public SpellScript
                 if (spellInfo->SpellFamilyFlags[1] & SPELLFAMILYFLAG1_ROGUE_COLDB_SHADOWSTEP ||      // Cold Blood, Shadowstep
                         spellInfo->SpellFamilyFlags[0] & SPELLFAMILYFLAG_ROGUE_VAN_EVAS_SPRINT)           // Vanish, Evasion, Sprint
                 {
-                    SpellCooldowns::iterator citr = caster->GetSpellCooldownMap().find(spellInfo->Id);
+                    SpellCooldowns::iterator citr = caster->GetSpellCooldownMap().find(spellInfo->ID);
                     if (citr != caster->GetSpellCooldownMap().end() && citr->second.needSendToClient)
-                        caster->RemoveSpellCooldown(spellInfo->Id, true);
+                        caster->RemoveSpellCooldown(spellInfo->ID, true);
                     else
-                        caster->RemoveSpellCooldown(spellInfo->Id, false);
+                        caster->RemoveSpellCooldown(spellInfo->ID, false);
                 }
                 else if (hasGlyph)
                 {
@@ -495,11 +495,11 @@ class spell_rog_preparation : public SpellScript
                             (spellInfo->SpellFamilyFlags[0] & SPELLFAMILYFLAG_ROGUE_BLADE_FLURRY &&     // Blade Flurry
                                 spellInfo->SpellFamilyFlags[1] & SPELLFAMILYFLAG1_ROGUE_BLADE_FLURRY))
                     {
-                        SpellCooldowns::iterator citr = caster->GetSpellCooldownMap().find(spellInfo->Id);
+                        SpellCooldowns::iterator citr = caster->GetSpellCooldownMap().find(spellInfo->ID);
                         if (citr != caster->GetSpellCooldownMap().end() && citr->second.needSendToClient)
-                            caster->RemoveSpellCooldown(spellInfo->Id, true);
+                            caster->RemoveSpellCooldown(spellInfo->ID, true);
                         else
-                            caster->RemoveSpellCooldown(spellInfo->Id, false);
+                            caster->RemoveSpellCooldown(spellInfo->ID, false);
                     }
                 }
             }

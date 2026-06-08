@@ -1,22 +1,5 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-#ifndef AC_SMARTENUM_H
-#define AC_SMARTENUM_H
+#ifndef SMART_ENUM_H
+#define SMART_ENUM_H
 
 #include "IteratorPair.h"
 
@@ -83,7 +66,7 @@ public:
         using difference_type = std::ptrdiff_t;
 
         Iterator() : _index(EnumUtils::Count<Enum>()) {}
-        explicit Iterator(std::size_t index) : _index(index) { }
+        explicit Iterator(const std::size_t index) : _index(index) { }
 
         bool operator==(const Iterator& other) const { return other._index == _index; }
         bool operator!=(const Iterator& other) const { return !operator==(other); }
@@ -93,15 +76,15 @@ public:
         bool operator>(const Iterator& other) const { return _index > other._index; }
         bool operator>=(const Iterator& other) const { return _index >= other._index; }
 
-        value_type operator[](difference_type d) const { return FromIndex<Enum>(_index + d); }
+        value_type operator[](const difference_type d) const { return FromIndex<Enum>(_index + d); }
         value_type operator*() const { return operator[](0); }
 
-        Iterator& operator+=(difference_type d) { _index += d; return *this; }
+        Iterator& operator+=(const difference_type d) { _index += d; return *this; }
         Iterator& operator++() { return operator+=(1); }
         Iterator operator++(int) { Iterator i = *this; operator++(); return i; }
         Iterator operator+(difference_type d) const { Iterator i = *this; i += d; return i; }
 
-        Iterator& operator-=(difference_type d) { _index -= d; return *this; }
+        Iterator& operator-=(const difference_type d) { _index -= d; return *this; }
         Iterator& operator--() { return operator-=(1); }
         Iterator operator--(int) { Iterator i = *this; operator--(); return i; }
         Iterator operator-(difference_type d) const { Iterator i = *this; i -= d; return i; }
@@ -129,4 +112,4 @@ public:
     static char const* ToDescription(Enum value) { return ToString(value).Description; }
 };
 
-#endif // AC_SMART_ENUM_H
+#endif

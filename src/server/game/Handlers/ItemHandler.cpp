@@ -394,31 +394,18 @@ void WorldSession::HandleItemQuerySingleOpcode(WorldPacket& recvData)
 
     LOG_DEBUG("network.opcode", "STORAGE: Item Query = {}", item);
 
-    ItemTemplate const* pProto = sObjectMgr->GetItemTemplate(item);
-    if (pProto)
+    if (const ItemTemplate* pProto = sObjectMgr->GetItemTemplate(item))
     {
-        std::string Name = pProto->Name1;
-        std::string Description = pProto->Description;
-
-        int loc_idx = GetSessionDbLocaleIndex();
-        if (loc_idx >= 0)
-        {
-            if (ItemLocale const* il = sObjectMgr->GetItemLocale(pProto->ItemId))
-            {
-                ObjectMgr::GetLocaleString(il->Name, loc_idx, Name);
-                ObjectMgr::GetLocaleString(il->Description, loc_idx, Description);
-            }
-        }
-        // guess size
+        // Guess size
         WorldPacket queryData(SMSG_ITEM_QUERY_SINGLE_RESPONSE, 600);
         queryData << pProto->ItemId;
         queryData << pProto->Class;
         queryData << pProto->SubClass;
         queryData << pProto->SoundOverrideSubclass;
-        queryData << Name;
-        queryData << uint8(0x00);                                //pProto->Name2; // blizz not send name there, just uint8(0x00); <-- \0 = empty string = empty name...
-        queryData << uint8(0x00);                                //pProto->Name3; // blizz not send name there, just uint8(0x00);
-        queryData << uint8(0x00);                                //pProto->Name4; // blizz not send name there, just uint8(0x00);
+        queryData << pProto->Name1;
+        queryData << static_cast<uint8>(0x00);  //pProto->Name2; // blizz not send name there, just uint8(0x00); <-- \0 = empty string = empty name...
+        queryData << static_cast<uint8>(0x00);  //pProto->Name3; // blizz not send name there, just uint8(0x00);
+        queryData << static_cast<uint8>(0x00);  //pProto->Name4; // blizz not send name there, just uint8(0x00);
         queryData << pProto->DisplayInfoID;
         queryData << pProto->Quality;
         queryData << pProto->Flags;
@@ -437,17 +424,17 @@ void WorldSession::HandleItemQuerySingleOpcode(WorldPacket& recvData)
         queryData << pProto->RequiredCityRank;
         queryData << pProto->RequiredReputationFaction;
         queryData << pProto->RequiredReputationRank;
-        queryData << int32(pProto->MaxCount);
-        queryData << int32(pProto->Stackable);
+        queryData << pProto->MaxCount;
+        queryData << pProto->Stackable;
         queryData << pProto->ContainerSlots;
-        queryData << pProto->StatsCount;                         // item stats count
+        queryData << pProto->StatsCount;  // Item stats count
         for (uint32 i = 0; i < pProto->StatsCount; ++i)
         {
             queryData << pProto->ItemStat[i].ItemStatType;
             queryData << pProto->ItemStat[i].ItemStatValue;
         }
-        queryData << pProto->ScalingStatDistribution;            // scaling stats distribution
-        queryData << pProto->ScalingStatValue;                   // some kind of flags used to determine stat values column
+        queryData << pProto->ScalingStatDistribution;  // Scaling stats distribution
+        queryData << pProto->ScalingStatValue;  // Some kind of flags used to determine stat values column
         for (int i = 0; i < MAX_ITEM_PROTO_DAMAGES; ++i)
         {
             queryData << pProto->Damage[i].DamageMin;
@@ -455,7 +442,7 @@ void WorldSession::HandleItemQuerySingleOpcode(WorldPacket& recvData)
             queryData << pProto->Damage[i].DamageType;
         }
 
-        // resistances (7)
+        // Resistances (7)
         queryData << pProto->Armor;
         queryData << pProto->HolyRes;
         queryData << pProto->FireRes;
@@ -505,7 +492,7 @@ void WorldSession::HandleItemQuerySingleOpcode(WorldPacket& recvData)
             }
         }
         queryData << pProto->Bonding;
-        queryData << Description;
+        queryData << pProto->Description;
         queryData << pProto->PageText;
         queryData << pProto->LanguageID;
         queryData << pProto->PageMaterial;
@@ -688,8 +675,8 @@ void WorldSession::HandleSellItemOpcode(WorldPackets::Item::SellItem& packet)
                             return;
                         }
 
-                        uint32 dmultiplier = dcost->multiplier[ItemSubClassToDurabilityMultiplierId(pProto->Class, pProto->SubClass)];
-                        uint32 refund = uint32(std::ceil(LostDurability * dmultiplier * double(dQualitymodEntry->quality_mod)));
+                        uint32 dmultiplier = dcost->Multiplier[ItemSubClassToDurabilityMultiplierId(pProto->Class, pProto->SubClass)];
+                        uint32 refund = uint32(std::ceil(LostDurability * dmultiplier * double(dQualitymodEntry->QualityMod)));
 
                         if (!refund)
                             refund = 1;
@@ -1067,19 +1054,13 @@ void WorldSession::HandleItemNameQueryOpcode(WorldPacket& recvData)
     recvData.read_skip<uint64>();                          // guid
 
     LOG_DEBUG("network", "WORLD: CMSG_ITEM_NAME_QUERY {}", itemid);
-    ItemSetNameEntry const* pName = sObjectMgr->GetItemSetNameEntry(itemid);
-    if (pName)
+    if (const ItemSetNameEntry* pName = sObjectMgr->GetItemSetNameEntry(itemid))
     {
-        std::string Name = pName->name;
-        LocaleConstant loc_idx = GetSessionDbLocaleIndex();
-        if (loc_idx >= 0)
-            if (ItemSetNameLocale const* isnl = sObjectMgr->GetItemSetNameLocale(itemid))
-                ObjectMgr::GetLocaleString(isnl->Name, loc_idx, Name);
-
-        WorldPacket data(SMSG_ITEM_NAME_QUERY_RESPONSE, (4 + Name.size() + 1 + 4));
-        data << uint32(itemid);
+        const std::string Name = pName->name;
+        WorldPacket data(SMSG_ITEM_NAME_QUERY_RESPONSE, 4 + Name.size() + 1 + 4);
+        data << itemid;
         data << Name;
-        data << uint32(pName->InventoryType);
+        data << pName->InventoryType;
         SendPacket(&data);
     }
 }
@@ -1265,11 +1246,11 @@ void WorldSession::HandleSocketOpcode(WorldPackets::Item::SocketGems& packet)
         }
 
         // tried to put normal gem in meta socket
-        if (itemProto->Socket[i].Color == SOCKET_COLOR_META && GemProps[i]->color != SOCKET_COLOR_META)
+        if (itemProto->Socket[i].Color == SOCKET_COLOR_META && GemProps[i]->Color != SOCKET_COLOR_META)
             return;
 
         // tried to put meta gem in normal socket
-        if (itemProto->Socket[i].Color != SOCKET_COLOR_META && GemProps[i]->color == SOCKET_COLOR_META)
+        if (itemProto->Socket[i].Color != SOCKET_COLOR_META && GemProps[i]->Color == SOCKET_COLOR_META)
             return;
     }
 
@@ -1277,7 +1258,7 @@ void WorldSession::HandleSocketOpcode(WorldPackets::Item::SocketGems& packet)
     uint32 OldEnchants[MAX_GEM_SOCKETS];
     for (int i = 0; i < MAX_GEM_SOCKETS; ++i)                //get new and old enchantments
     {
-        GemEnchants[i] = (GemProps[i]) ? GemProps[i]->spellitemenchantement : 0;
+        GemEnchants[i] = (GemProps[i]) ? GemProps[i]->SpellItemEnchantment : 0;
         OldEnchants[i] = itemTarget->GetEnchantmentId(EnchantmentSlot(SOCK_ENCHANTMENT_SLOT + i));
     }
 
@@ -1345,7 +1326,7 @@ void WorldSession::HandleSocketOpcode(WorldPackets::Item::SocketGems& packet)
                     }
                 }
 
-                if (limit_newcount > 0 && uint32(limit_newcount) > limitEntry->maxCount)
+                if (limit_newcount > 0 && uint32(limit_newcount) > limitEntry->MaxCount)
                 {
                     _player->SendEquipError(EQUIP_ERR_ITEM_UNIQUE_EQUIPPABLE_SOCKETED, itemTarget, nullptr);
                     return;

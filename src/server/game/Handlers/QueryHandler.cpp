@@ -95,30 +95,17 @@ void WorldSession::HandleCreatureQueryOpcode(WorldPacket& recvData)
     CreatureTemplate const* ci = sObjectMgr->GetCreatureTemplate(entry);
     if (ci)
     {
-        std::string Name, Title;
-        Name = ci->Name;
-        Title = ci->SubName;
-
-        LocaleConstant loc_idx = GetSessionDbLocaleIndex();
-        if (loc_idx >= 0)
-        {
-            if (CreatureLocale const* cl = sObjectMgr->GetCreatureLocale(entry))
-            {
-                ObjectMgr::GetLocaleString(cl->Name, loc_idx, Name);
-                ObjectMgr::GetLocaleString(cl->Title, loc_idx, Title);
-            }
-        }
         // guess size
         WorldPacket data(SMSG_CREATURE_QUERY_RESPONSE, 100);
         data << uint32(entry);                                       // creature entry
-        data << Name;
+        data << ci->Name;
         data << uint8(0) << uint8(0) << uint8(0);                    // name2, name3, name4, always empty
-        data << Title;
+        data << ci->SubName;
         data << ci->IconName;                                        // "Directions" for guard, string for Icons 2.3.0
-        data << uint32(ci->type_flags);                              // flags
+        data << uint32(ci->TypeFlags);                              // flags
         data << uint32(ci->type);                                    // CreatureType.dbc
-        data << uint32(ci->family);                                  // CreatureFamily.dbc
-        data << uint32(ci->rank);                                    // Creature Rank (elite, boss, etc)
+        data << uint32(ci->Family);                                  // CreatureFamily.dbc
+        data << uint32(ci->Rank);                                    // Creature Rank (elite, boss, etc)
         data << uint32(ci->KillCredit[0]);                           // new in 3.1, kill credit
         data << uint32(ci->KillCredit[1]);                           // new in 3.1, kill credit
         if (ci->GetModelByIdx(0))
@@ -149,7 +136,7 @@ void WorldSession::HandleCreatureQueryOpcode(WorldPacket& recvData)
             for (std::size_t i = 0; i < MAX_CREATURE_QUEST_ITEMS; ++i)
                 data << uint32(0);
 
-        data << uint32(ci->movementId);                              // CreatureMovementInfo.dbc
+        data << uint32(ci->MovementID);                              // CreatureMovementInfo.dbc
         SendPacket(&data);
     }
     else
@@ -173,34 +160,18 @@ void WorldSession::HandleGameObjectQueryOpcode(WorldPacket& recvData)
     const GameObjectTemplate* info = sObjectMgr->GetGameObjectTemplate(entry);
     if (info)
     {
-        std::string Name;
-        std::string IconName;
-        std::string CastBarCaption;
-
-        Name = info->name;
-        IconName = info->IconName;
-        CastBarCaption = info->castBarCaption;
-
-        LocaleConstant localeConstant = GetSessionDbLocaleIndex();
-        if (localeConstant >= LOCALE_enUS)
-            if (GameObjectLocale const* gameObjectLocale = sObjectMgr->GetGameObjectLocale(entry))
-            {
-                ObjectMgr::GetLocaleString(gameObjectLocale->Name, localeConstant, Name);
-                ObjectMgr::GetLocaleString(gameObjectLocale->CastBarCaption, localeConstant, CastBarCaption);
-            }
-
         LOG_DEBUG("network", "WORLD: CMSG_GAMEOBJECT_QUERY '{}' - Entry: {}. ", info->name, entry);
         WorldPacket data (SMSG_GAMEOBJECT_QUERY_RESPONSE, 150);
         data << uint32(entry);
-        data << uint32(info->type);
-        data << uint32(info->displayId);
-        data << Name;
+        data << uint32(info->Type);
+        data << uint32(info->DisplayID);
+        data << info->name;
         data << uint8(0) << uint8(0) << uint8(0);           // name2, name3, name4
-        data << IconName;                                   // 2.0.3, string. Icon name to use instead of default icon for go's (ex: "Attack" makes sword)
-        data << CastBarCaption;                             // 2.0.3, string. Text will appear in Cast Bar when using GO (ex: "Collecting")
-        data << info->unk1;                                 // 2.0.3, string
-        data.append(info->raw.data, MAX_GAMEOBJECT_DATA);
-        data << float(info->size);                          // go size
+        data << info->IconName;                                   // 2.0.3, string. Icon name to use instead of default icon for go's (ex: "Attack" makes sword)
+        data << info->CastBarCaption;                             // 2.0.3, string. Text will appear in Cast Bar when using GO (ex: "Collecting")
+        data << info->AlertText;                                 // 2.0.3, string
+        data.append(info->Raw.data, MAX_GAME_OBJECT_DATA);
+        data << float(info->Size);                          // go size
 
         GameObjectQuestItemList const* items = sObjectMgr->GetGameObjectQuestItemList(entry);
         if (items)
@@ -246,14 +217,14 @@ void WorldSession::HandleCorpseQueryOpcode(WorldPacket& /*recvData*/)
         // search entrance map for proper show entrance
         if (MapEntry const* corpseMapEntry = sMapStore.LookupEntry(mapID))
         {
-            if (corpseMapEntry->IsDungeon() && corpseMapEntry->entrance_map >= 0)
+            if (corpseMapEntry->IsDungeon() && corpseMapEntry->EntranceMap >= 0)
             {
                 // if corpse map have entrance
-                if (Map const* entranceMap = sMapMgr->CreateBaseMap(corpseMapEntry->entrance_map))
+                if (Map const* entranceMap = sMapMgr->CreateBaseMap(corpseMapEntry->EntranceMap))
                 {
-                    mapID = corpseMapEntry->entrance_map;
-                    x = corpseMapEntry->entrance_x;
-                    y = corpseMapEntry->entrance_y;
+                    mapID = corpseMapEntry->EntranceMap;
+                    x = corpseMapEntry->EntranceX;
+                    y = corpseMapEntry->EntranceY;
                     z = entranceMap->GetHeight(GetPlayer()->GetPhaseMask(), x, y, MAX_HEIGHT);
                 }
             }
@@ -309,25 +280,15 @@ void WorldSession::HandleNpcTextQueryOpcode(WorldPacket& recvData)
 
         for (uint8 i = 0; i < MAX_GOSSIP_TEXT_OPTIONS; ++i)
         {
-            BroadcastText const* bct = sObjectMgr->GetBroadcastText(gossip->Options[i].BroadcastTextID);
-            if (bct)
+            if (const BroadcastText* bct = sObjectMgr->GetBroadcastText(gossip->Options[i].BroadcastTextID))
             {
-                text0[i] = bct->GetText(locale, GENDER_MALE, true);
-                text1[i] = bct->GetText(locale, GENDER_FEMALE, true);
+                text0[i] = bct->GetText(GENDER_MALE, true);
+                text1[i] = bct->GetText(GENDER_FEMALE, true);
             }
             else
             {
-                text0[i] = gossip->Options[i].Text_0;
-                text1[i] = gossip->Options[i].Text_1;
-            }
-
-            if (locale != DEFAULT_LOCALE && !bct)
-            {
-                if (NpcTextLocale const* npcTextLocale = sObjectMgr->GetNpcTextLocale(textID))
-                {
-                    ObjectMgr::GetLocaleString(npcTextLocale->Text_0[i], locale, text0[i]);
-                    ObjectMgr::GetLocaleString(npcTextLocale->Text_1[i], locale, text1[i]);
-                }
+                text0[i] = gossip->Options[i].Text0;
+                text1[i] = gossip->Options[i].Text1;
             }
 
             data << gossip->Options[i].Probability;
@@ -374,19 +335,12 @@ void WorldSession::HandlePageTextQueryOpcode(WorldPacket& recvData)
         if (!pageText)
         {
             data << "Item page missing.";
-            data << uint32(0);
+            data << static_cast<uint32>(0);
             pageID = 0;
         }
         else
         {
-            std::string Text = pageText->Text;
-
-            int loc_idx = GetSessionDbLocaleIndex();
-            if (loc_idx >= 0)
-                if (PageTextLocale const* player = sObjectMgr->GetPageTextLocale(pageID))
-                    ObjectMgr::GetLocaleString(player->Text, loc_idx, Text);
-
-            data << Text;
+            data << pageText->Text;
             data << pageText->NextPage;
             pageID = pageText->NextPage;
         }
@@ -415,7 +369,7 @@ void WorldSession::HandleQuestPOIQuery(WorldPacket& recvData)
 
     if (count > MAX_QUEST_LOG_SIZE)
     {
-        recvData.rfinish();
+        recvData.rFinish();
         return;
     }
 
@@ -448,13 +402,13 @@ void WorldSession::HandleQuestPOIQuery(WorldPacket& recvData)
 
                 for (QuestPOIVector::const_iterator itr = POI->begin(); itr != POI->end(); ++itr)
                 {
-                    data << uint32(itr->Id);                // POI index
+                    data << uint32(itr->ID);                // POI index
                     data << int32(itr->ObjectiveIndex);     // objective index
-                    data << uint32(itr->MapId);             // mapid
-                    data << uint32(itr->AreaId);            // areaid
-                    data << uint32(itr->FloorId);           // floorid
-                    data << uint32(itr->Unk3);              // unknown
-                    data << uint32(itr->Unk4);              // unknown
+                    data << uint32(itr->MapID);             // mapid
+                    data << uint32(itr->AreaID);            // areaid
+                    data << uint32(itr->FloorID);           // floorid
+                    data << uint32(itr->Priority);              // unknown
+                    data << uint32(itr->Flags);              // unknown
                     data << uint32(itr->points.size());     // POI points count
 
                     for (std::vector<QuestPOIPoint>::const_iterator itr2 = itr->points.begin(); itr2 != itr->points.end(); ++itr2)

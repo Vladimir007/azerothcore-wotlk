@@ -495,7 +495,7 @@ class spell_q11670_it_was_the_orcs_honest : public SpellScript
 
     void HandleScriptEffect()
     {
-        if (GetSpellInfo()->Id != 45759)
+        if (GetSpellInfo()->ID != 45759)
             return;
 
         if (Unit* caster = GetCaster())
@@ -504,7 +504,7 @@ class spell_q11670_it_was_the_orcs_honest : public SpellScript
 
     SpellCastResult CheckTarget()
     {
-        if (GetSpellInfo()->Id != 45742)
+        if (GetSpellInfo()->ID != 45742)
             return SPELL_CAST_OK;
 
         if (!GetCaster() || !GetCaster()->HasAura((GetCaster()->getGender() == GENDER_MALE ? 45760 : 45762)))

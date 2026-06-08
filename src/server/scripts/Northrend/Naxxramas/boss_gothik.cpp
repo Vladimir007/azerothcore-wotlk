@@ -710,7 +710,7 @@ public:
                 return;
             }
 
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_ANCHOR_1_TRAINEE:
                     DoCastAOE(SPELL_ANCHOR_2_TRAINEE, true);

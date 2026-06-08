@@ -35,7 +35,7 @@ class spell_gordunni_trap : public SpellScript
         if (Unit* caster = GetCaster())
             if (GameObject* chest = caster->SummonGameObject(GO_GORDUNNI_DIRT_MOUND, caster->GetPositionX(), caster->GetPositionY(), caster->GetPositionZ(), 0.0f, 0.0f, 0.0f, 0.0f, 0.0f, 0))
             {
-                chest->SetSpellId(GetSpellInfo()->Id);
+                chest->SetSpellId(GetSpellInfo()->ID);
                 caster->RemoveGameObject(chest, false);
             }
     }

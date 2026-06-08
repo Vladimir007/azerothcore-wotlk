@@ -20,7 +20,6 @@
 #include "GameEventMgr.h"
 #include "GameObjectAI.h"
 #include "GameTime.h"
-#include "GitRevision.h"
 #include "GossipDef.h"
 #include "Group.h"
 #include "MapMgr.h"
@@ -174,24 +173,10 @@ void Player::SendPreparedQuest(ObjectGuid guid)
             {
                 qe = gossiptext->Options[0].Emotes[0];
 
-                if (!gossiptext->Options[0].Text_0.empty())
-                {
-                    title = gossiptext->Options[0].Text_0;
-
-                    int loc_idx = GetSession()->GetSessionDbLocaleIndex();
-                    if (loc_idx >= 0)
-                        if (NpcTextLocale const* npcTextLocale = sObjectMgr->GetNpcTextLocale(textid))
-                            ObjectMgr::GetLocaleString(npcTextLocale->Text_0[0], loc_idx, title);
-                }
+                if (!gossiptext->Options[0].Text0.empty())
+                    title = gossiptext->Options[0].Text0;
                 else
-                {
-                    title = gossiptext->Options[0].Text_1;
-
-                    int loc_idx = GetSession()->GetSessionDbLocaleIndex();
-                    if (loc_idx >= 0)
-                        if (NpcTextLocale const* npcTextLocale = sObjectMgr->GetNpcTextLocale(textid))
-                            ObjectMgr::GetLocaleString(npcTextLocale->Text_1[0], loc_idx, title);
-                }
+                    title = gossiptext->Options[0].Text1;
             }
         }
 
@@ -584,8 +569,6 @@ void Player::AddQuest(Quest const* quest, Object* questGiver)
         auto stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_QUEST_TRACK);
         stmt->SetData(0, quest_id);
         stmt->SetData(1, GetGUID().GetCounter());
-        stmt->SetData(2, GitRevision::GetHash());
-        stmt->SetData(3, GitRevision::GetDate());
 
         // add to Quest Tracker
         CharacterDatabase.Execute(stmt);
@@ -2446,16 +2429,8 @@ void Player::SendQuestConfirmAccept(const Quest* quest, Player* pReceiver)
 {
     if (pReceiver)
     {
-        //load locale from db
-        std::string strTitle = quest->GetTitle();
-
-        int loc_idx = pReceiver->GetSession()->GetSessionDbLocaleIndex();
-        if (loc_idx >= 0)
-            if (const QuestLocale* pLocale = sObjectMgr->GetQuestLocale(quest->GetQuestId()))
-                ObjectMgr::GetLocaleString(pLocale->Title, loc_idx, strTitle);
-
         WorldPacket data(SMSG_QUEST_CONFIRM_ACCEPT, (4 + quest->GetTitle().size() + 8));
-        data << uint32(quest->GetQuestId());
+        data << quest->GetQuestId();
         data << quest->GetTitle();
         data << GetGUID();
         pReceiver->SendDirectMessage(&data);

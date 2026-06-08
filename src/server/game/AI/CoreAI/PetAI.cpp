@@ -249,7 +249,7 @@ void PetAI::UpdateAI(uint32 diff)
                 continue;
 
             // check spell cooldown, this should be checked in CheckCast...
-            if (me->HasSpellCooldown(spellInfo->Id))
+            if (me->HasSpellCooldown(spellInfo->ID))
                 continue;
 
             if (spellInfo->IsPositive())
@@ -347,7 +347,7 @@ void PetAI::UpdateAI(uint32 diff)
                     me->SendUpdateToPlayer(owner->ToPlayer());
             }
 
-            me->AddSpellCooldown(spell->m_spellInfo->Id, 0, 0);
+            me->AddSpellCooldown(spell->m_spellInfo->ID, 0, 0);
 
             spell->prepare(&targets);
         }

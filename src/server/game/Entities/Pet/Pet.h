@@ -105,9 +105,9 @@ public:
     void _SaveAuras(CharacterDatabaseTransaction trans);
     void _SaveSpells(CharacterDatabaseTransaction trans);
 
-    void _LoadSpellCooldowns(PreparedQueryResult result);
-    void _LoadAuras(PreparedQueryResult result, uint32 timediff);
-    void _LoadSpells(PreparedQueryResult result);
+    void _LoadSpellCooldowns(QueryResult result);
+    void _LoadAuras(QueryResult result, uint32 timediff);
+    void _LoadSpells(QueryResult result);
 
     bool addSpell(uint32 spellId, ActiveStates active = ACT_DECIDE, PetSpellState state = PETSPELL_NEW, PetSpellType type = PETSPELL_NORMAL);
     bool learnSpell(uint32 spell_id);

@@ -531,7 +531,7 @@ struct npc_soh_fire_trigger : public NullCreatureAI
 
     void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_START_FIRE)
+        if (spellInfo->ID == SPELL_START_FIRE)
         {
             me->CastSpell(me, SPELL_FIRE_AURA_BASE, true);
             if (AuraEffect* aurEff = me->GetAuraEffect(SPELL_FIRE_AURA_BASE, EFFECT_0))
@@ -549,7 +549,7 @@ struct npc_soh_fire_trigger : public NullCreatureAI
                 aurEff->SetAmount(amount);
             }
         }
-        else if (spellInfo->Id == SPELL_SPREAD_FIRE)
+        else if (spellInfo->ID == SPELL_SPREAD_FIRE)
         {
             me->CastSpell(me, SPELL_FIRE_AURA_BASE, true);
             if (AuraEffect* aurEff = me->GetAuraEffect(SPELL_FIRE_AURA_BASE, EFFECT_0))
@@ -567,7 +567,7 @@ struct npc_soh_fire_trigger : public NullCreatureAI
                 aurEff->SetAmount(amount);
             }
         }
-        else if (spellInfo->Id == SPELL_WATER_SPLASH)
+        else if (spellInfo->ID == SPELL_WATER_SPLASH)
         {
             if (AuraEffect* aurEff = me->GetAuraEffect(SPELL_FIRE_AURA_BASE, EFFECT_0))
             {
@@ -919,7 +919,7 @@ struct npc_hallows_end_train_fire : public NullCreatureAI
 
     void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_WATER_SPLASH && caster->ToPlayer())
+        if (spellInfo->ID == SPELL_WATER_SPLASH && caster->ToPlayer())
         {
             if (AuraEffect* aurEff = me->GetAuraEffect(SPELL_FIRE_AURA_BASE, EFFECT_0))
             {
@@ -1051,7 +1051,7 @@ struct boss_headless_horseman : public ScriptedAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_SUMMONING_RHYME_TARGET)
+        if (spellInfo->ID == SPELL_SUMMONING_RHYME_TARGET)
         {
             playerGUID = target->GetGUID();
             events.ScheduleEvent(EVENT_HH_PLAYER_TALK, 2s);
@@ -1060,7 +1060,7 @@ struct boss_headless_horseman : public ScriptedAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_THROW_HEAD_BACK)
+        if (spellInfo->ID == SPELL_THROW_HEAD_BACK)
         {
             me->SetHealth(me->GetMaxHealth());
             me->CastSpell(me, SPELL_HEAD_VISUAL, true);
@@ -1290,7 +1290,7 @@ struct boss_headless_horseman_head : public ScriptedAI
 
     void SpellHitTarget(Unit*  /*target*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_THROW_HEAD_BACK)
+        if (spellInfo->ID == SPELL_THROW_HEAD_BACK)
         {
             if (Unit* owner = GetOwner())
                 owner->ToCreature()->AI()->DoAction(me->GetHealth());
@@ -1301,7 +1301,7 @@ struct boss_headless_horseman_head : public ScriptedAI
 
     void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
     {
-        switch (spellInfo->Id)
+        switch (spellInfo->ID)
         {
             case SPELL_BODY_RESTORED_INFO:
                 me->RemoveAllAuras();
@@ -1408,7 +1408,7 @@ struct boss_headless_horseman_pumpkin : public ScriptedAI
 
     void SpellHit(Unit*  /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_SPROUTING)
+        if (spellInfo->ID == SPELL_SPROUTING)
         {
             if (Creature* cr = me->SummonCreature(NPC_PUMPKIN_FIEND, me->GetPositionX(), me->GetPositionY(), me->GetPositionZ(), 0.0f, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                 cr->SetInCombatWithZone();

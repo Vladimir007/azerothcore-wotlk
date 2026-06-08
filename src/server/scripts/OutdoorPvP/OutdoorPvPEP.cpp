@@ -43,12 +43,12 @@ void OPvPCapturePointEP_EWT::ChangeState()
     // if changing from controlling alliance to horde or vice versa
     if (_oldState == OBJECTIVESTATE_ALLIANCE && _oldState != _state)
     {
-        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_LOSE_EWT_A).c_str());
+        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_LOSE_EWT_A).c_str());
         ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_EWT, TEAM_NEUTRAL);
     }
     else if (_oldState == OBJECTIVESTATE_HORDE && _oldState != _state)
     {
-        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_LOSE_EWT_H).c_str());
+        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_LOSE_EWT_H).c_str());
         ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_EWT, TEAM_NEUTRAL);
     }
 
@@ -62,7 +62,7 @@ void OPvPCapturePointEP_EWT::ChangeState()
             SummonSupportUnitAtNorthpassTower(TEAM_ALLIANCE);
             ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_EWT, TEAM_ALLIANCE);
             if (_oldState != _state)
-                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_CAPTURE_EWT_A).c_str());
+                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_CAPTURE_EWT_A).c_str());
             break;
         case OBJECTIVESTATE_HORDE:
             m_TowerState = EP_TS_H;
@@ -70,7 +70,7 @@ void OPvPCapturePointEP_EWT::ChangeState()
             SummonSupportUnitAtNorthpassTower(TEAM_HORDE);
             ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_EWT, TEAM_HORDE);
             if (_oldState != _state)
-                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_CAPTURE_EWT_H).c_str());
+                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_CAPTURE_EWT_H).c_str());
             break;
         case OBJECTIVESTATE_NEUTRAL:
             m_TowerState = EP_TS_N;
@@ -150,7 +150,7 @@ void OPvPCapturePointEP_EWT::HandlePlayerLeave(Player* player)
     OPvPCapturePoint::HandlePlayerLeave(player);
 }
 
-void OPvPCapturePointEP_EWT::SummonSupportUnitAtNorthpassTower(TeamId teamId)
+void OPvPCapturePointEP_EWT::SummonSupportUnitAtNorthpassTower(TeamID teamId)
 {
     if (m_UnitsSummonedSideId != teamId)
     {
@@ -178,12 +178,12 @@ void OPvPCapturePointEP_NPT::ChangeState()
     // if changing from controlling alliance to horde or vice versa
     if (_oldState == OBJECTIVESTATE_ALLIANCE && _oldState != _state)
     {
-        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_LOSE_NPT_A).c_str());
+        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_LOSE_NPT_A).c_str());
         ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_NPT, TEAM_NEUTRAL);
     }
     else if (_oldState == OBJECTIVESTATE_HORDE && _oldState != _state)
     {
-        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_LOSE_NPT_H).c_str());
+        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_LOSE_NPT_H).c_str());
         ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_NPT, TEAM_NEUTRAL);
     }
 
@@ -197,7 +197,7 @@ void OPvPCapturePointEP_NPT::ChangeState()
             SummonGO(TEAM_ALLIANCE);
             ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_NPT, TEAM_ALLIANCE);
             if (_oldState != _state)
-                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_CAPTURE_NPT_A).c_str());
+                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_CAPTURE_NPT_A).c_str());
             break;
         case OBJECTIVESTATE_HORDE:
             m_TowerState = EP_TS_H;
@@ -205,7 +205,7 @@ void OPvPCapturePointEP_NPT::ChangeState()
             SummonGO(TEAM_HORDE);
             ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_NPT, TEAM_HORDE);
             if (_oldState != _state)
-                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_CAPTURE_NPT_H).c_str());
+                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_CAPTURE_NPT_H).c_str());
             break;
         case OBJECTIVESTATE_NEUTRAL:
             m_TowerState = EP_TS_N;
@@ -295,7 +295,7 @@ void OPvPCapturePointEP_NPT::HandlePlayerLeave(Player* player)
     OPvPCapturePoint::HandlePlayerLeave(player);
 }
 
-void OPvPCapturePointEP_NPT::SummonGO(TeamId teamId)
+void OPvPCapturePointEP_NPT::SummonGO(TeamID teamId)
 {
     if (m_SummonedGOSideId != teamId)
     {
@@ -323,12 +323,12 @@ void OPvPCapturePointEP_CGT::ChangeState()
     // if changing from controlling alliance to horde or vice versa
     if (_oldState == OBJECTIVESTATE_ALLIANCE && _oldState != _state)
     {
-        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_LOSE_CGT_A).c_str());
+        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_LOSE_CGT_A).c_str());
         ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_CGT, TEAM_NEUTRAL);
     }
     else if (_oldState == OBJECTIVESTATE_HORDE && _oldState != _state)
     {
-        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_LOSE_CGT_H).c_str());
+        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_LOSE_CGT_H).c_str());
         ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_CGT, TEAM_NEUTRAL);
     }
 
@@ -342,7 +342,7 @@ void OPvPCapturePointEP_CGT::ChangeState()
             LinkGraveyard(TEAM_ALLIANCE);
             ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_CGT, TEAM_ALLIANCE);
             if (_oldState != _state)
-                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_CAPTURE_CGT_A).c_str());
+                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_CAPTURE_CGT_A).c_str());
             break;
         case OBJECTIVESTATE_HORDE:
             m_TowerState = EP_TS_H;
@@ -350,7 +350,7 @@ void OPvPCapturePointEP_CGT::ChangeState()
             LinkGraveyard(TEAM_HORDE);
             ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_CGT, TEAM_HORDE);
             if (_oldState != _state)
-                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_CAPTURE_CGT_H).c_str());
+                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_CAPTURE_CGT_H).c_str());
             break;
         case OBJECTIVESTATE_NEUTRAL:
             m_TowerState = EP_TS_N;
@@ -430,7 +430,7 @@ void OPvPCapturePointEP_CGT::HandlePlayerLeave(Player* player)
     OPvPCapturePoint::HandlePlayerLeave(player);
 }
 
-void OPvPCapturePointEP_CGT::LinkGraveyard(TeamId teamId)
+void OPvPCapturePointEP_CGT::LinkGraveyard(TeamID teamId)
 {
     if (m_GraveyardSide != teamId)
     {
@@ -453,12 +453,12 @@ void OPvPCapturePointEP_PWT::ChangeState()
     // if changing from controlling alliance to horde or vice versa
     if (_oldState == OBJECTIVESTATE_ALLIANCE && _oldState != _state)
     {
-        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_LOSE_PWT_A).c_str());
+        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_LOSE_PWT_A).c_str());
         ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_PWT, TEAM_NEUTRAL);
     }
     else if (_oldState == OBJECTIVESTATE_HORDE && _oldState != _state)
     {
-        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_LOSE_PWT_H).c_str());
+        _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_LOSE_PWT_H).c_str());
         ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_PWT, TEAM_NEUTRAL);
     }
 
@@ -472,7 +472,7 @@ void OPvPCapturePointEP_PWT::ChangeState()
             artkit = 2;
             ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_PWT, TEAM_ALLIANCE);
             if (_oldState != _state)
-                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_CAPTURE_PWT_A).c_str());
+                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_CAPTURE_PWT_A).c_str());
             break;
         case OBJECTIVESTATE_HORDE:
             m_TowerState = EP_TS_H;
@@ -480,7 +480,7 @@ void OPvPCapturePointEP_PWT::ChangeState()
             artkit = 1;
             ((OutdoorPvPEP*)_pvp)->SetControlledState(EP_PWT, TEAM_HORDE);
             if (_oldState != _state)
-                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_CAPTURE_PWT_H).c_str());
+                _pvp->GetMap()->SendZoneText(EP_GraveyardZone, sObjectMgr->GetNcoreString(LANG_OPVP_EP_CAPTURE_PWT_H).c_str());
             break;
         case OBJECTIVESTATE_NEUTRAL:
             m_TowerState = EP_TS_N;
@@ -570,7 +570,7 @@ void OPvPCapturePointEP_PWT::HandlePlayerLeave(Player* player)
     OPvPCapturePoint::HandlePlayerLeave(player);
 }
 
-void OPvPCapturePointEP_PWT::SummonFlightMaster(TeamId teamId)
+void OPvPCapturePointEP_PWT::SummonFlightMaster(TeamID teamId)
 {
     if (m_FlightMasterSpawnedId != teamId)
     {
@@ -588,7 +588,7 @@ void OPvPCapturePointEP_PWT::SummonFlightMaster(TeamId teamId)
             GossipOption gso;
             gso.Action = GOSSIP_OPTION_OUTDOORPVP;
             gso.GossipId = 0;
-            gso.OptionText.assign(sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_FLIGHT_NPT));
+            gso.OptionText.assign(sObjectMgr->GetNcoreString(LANG_OPVP_EP_FLIGHT_NPT));
             gso.Id = 50;
             gso.Icon = 0;
             gso.NpcFlag = 0;
@@ -598,7 +598,7 @@ void OPvPCapturePointEP_PWT::SummonFlightMaster(TeamId teamId)
 
             gso.Action = GOSSIP_OPTION_OUTDOORPVP;
             gso.GossipId = 0;
-            gso.OptionText.assign(sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_FLIGHT_EWT));
+            gso.OptionText.assign(sObjectMgr->GetNcoreString(LANG_OPVP_EP_FLIGHT_EWT));
             gso.Id = 50;
             gso.Icon = 0;
             gso.NpcFlag = 0;
@@ -608,7 +608,7 @@ void OPvPCapturePointEP_PWT::SummonFlightMaster(TeamId teamId)
 
             gso.Action = GOSSIP_OPTION_OUTDOORPVP;
             gso.GossipId = 0;
-            gso.OptionText.assign(sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_EP_FLIGHT_CGT));
+            gso.OptionText.assign(sObjectMgr->GetNcoreString(LANG_OPVP_EP_FLIGHT_CGT));
             gso.Id = 50;
             gso.Icon = 0;
             gso.NpcFlag = 0;
@@ -721,7 +721,7 @@ void OutdoorPvPEP::BuffTeams()
     }
 }
 
-void OutdoorPvPEP::SetControlledState(uint32 index, TeamId teamId)
+void OutdoorPvPEP::SetControlledState(uint32 index, TeamID teamId)
 {
     EP_ControlsId[index] = teamId;
 }

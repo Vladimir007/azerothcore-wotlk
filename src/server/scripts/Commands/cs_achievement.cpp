@@ -32,7 +32,7 @@ public:
     {
         static ChatCommandTable achievementCommandTable =
         {
-            { "add",      HandleAchievementAddCommand,      SEC_GAMEMASTER,    Console::Yes },
+            { "add",      HandleAchievementAddCommand,      SEC_GAME_MASTER,    Console::Yes },
             { "checkall", HandleAchievementCheckAllCommand, SEC_ADMINISTRATOR, Console::Yes }
         };
         static ChatCommandTable commandTable =
@@ -56,12 +56,12 @@ public:
         if (player->IsConnected())
         {
             player->GetConnectedPlayer()->CompletedAchievement(achievementEntry);
-            handler->PSendSysMessage(LANG_ACHIEVEMENT_ADD_ONLINE, achievementEntry->ID, achievementEntry->name[0], player->GetName());
+            handler->PSendSysMessage(LANG_ACHIEVEMENT_ADD_ONLINE, achievementEntry->ID, achievementEntry->Name, player->GetName());
         }
         else
         {
             sAchievementMgr->CompletedAchievementForOfflinePlayer(player->GetGUID().GetCounter(), achievementEntry);
-            handler->PSendSysMessage(LANG_ACHIEVEMENT_ADD_OFFLINE, achievementEntry->ID, achievementEntry->name[0], player->GetName());
+            handler->PSendSysMessage(LANG_ACHIEVEMENT_ADD_OFFLINE, achievementEntry->ID, achievementEntry->Name, player->GetName());
         }
 
         return true;

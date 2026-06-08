@@ -103,8 +103,6 @@ protected:
     ReadDataHandlerResult ReadDataHandler();
 
 private:
-    void CheckIpCallback(PreparedQueryResult result);
-
     /// writes network.opcode log
     /// accessing WorldSession is not threadsafe, only do it when holding _worldSessionLock
     void LogOpcodeText(OpcodeClient opcode, std::unique_lock<std::mutex> const& guard) const;
@@ -113,8 +111,8 @@ private:
     void SendPacketAndLogOpcode(WorldPacket const& packet);
     void HandleSendAuthSession();
     void HandleAuthSession(WorldPacket& recvPacket);
-    void HandleAuthSessionCallback(std::shared_ptr<ClientAuthSession> authSession, PreparedQueryResult result);
-    void LoadSessionPermissionsCallback(PreparedQueryResult result);
+    void HandleAuthSessionCallback(std::shared_ptr<ClientAuthSession> authSession, QueryResult result);
+    void LoadSessionPermissionsCallback(QueryResult result);
     void SendAuthResponseError(uint8 code);
 
     bool HandlePing(WorldPacket& recvPacket);
@@ -135,7 +133,6 @@ private:
     std::size_t _sendBufferSize;
 
     QueryCallbackProcessor _queryProcessor;
-    std::string _ipCountry;
 
     bool _loggingPackets;
 };

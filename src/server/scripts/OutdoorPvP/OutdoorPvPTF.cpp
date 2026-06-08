@@ -121,7 +121,7 @@ void OutdoorPvPTF::SaveRequiredWorldStates() const
     sWorldState->setWorldState(WORLD_STATE_OPVP_TF_UI_LOCKED_TIME_HOURS, lockExpireTime);
 }
 
-void OutdoorPvPTF::ResetZoneToTeamControlled(TeamId team)
+void OutdoorPvPTF::ResetZoneToTeamControlled(TeamID team)
 {
     switch (team)
     {
@@ -149,7 +149,7 @@ void OutdoorPvPTF::ResetZoneToTeamControlled(TeamId team)
     SendUpdateWorldState(WORLD_STATE_OPVP_TF_UI_TOWER_COUNT_A, m_AllianceTowersControlled);
 }
 
-void OPvPCapturePointTF::ResetToTeamControlled(TeamId team)
+void OPvPCapturePointTF::ResetToTeamControlled(TeamID team)
 {
     switch (team)
     {
@@ -368,7 +368,7 @@ bool OutdoorPvPTF::SetupOutdoorPvP()
 
             uint32 const hordeTowers = uint32(sWorldState->getWorldState(WORLD_STATE_OPVP_TF_UI_TOWER_COUNT_H));
             uint32 const allianceTowers = uint32(sWorldState->getWorldState(WORLD_STATE_OPVP_TF_UI_TOWER_COUNT_A));
-            TeamId const controllingTeam = hordeTowers > allianceTowers ? TEAM_HORDE : TEAM_ALLIANCE;
+            TeamID const controllingTeam = hordeTowers > allianceTowers ? TEAM_HORDE : TEAM_ALLIANCE;
 
             ResetZoneToTeamControlled(controllingTeam);
         }
@@ -400,14 +400,14 @@ void OPvPCapturePointTF::ChangeState()
     {
         if (uint32 alliance_towers = ((OutdoorPvPTF*)_pvp)->GetAllianceTowersControlled())
             ((OutdoorPvPTF*)_pvp)->SetAllianceTowersControlled(--alliance_towers);
-        _pvp->GetMap()->SendZoneText(OutdoorPvPTFBuffZones[0], sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_TF_LOSE_A).c_str());
+        _pvp->GetMap()->SendZoneText(OutdoorPvPTFBuffZones[0], sObjectMgr->GetNcoreString(LANG_OPVP_TF_LOSE_A).c_str());
     }
     // if changing from controlling horde to alliance
     else if (_oldState == OBJECTIVESTATE_HORDE)
     {
         if (uint32 horde_towers = ((OutdoorPvPTF*)_pvp)->GetHordeTowersControlled())
             ((OutdoorPvPTF*)_pvp)->SetHordeTowersControlled(--horde_towers);
-        _pvp->GetMap()->SendZoneText(OutdoorPvPTFBuffZones[0], sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_TF_LOSE_H).c_str());
+        _pvp->GetMap()->SendZoneText(OutdoorPvPTFBuffZones[0], sObjectMgr->GetNcoreString(LANG_OPVP_TF_LOSE_H).c_str());
     }
 
     uint32 artkit = 21;
@@ -422,7 +422,7 @@ void OPvPCapturePointTF::ChangeState()
                 if (alliance_towers < TF_TOWER_NUM)
                     ((OutdoorPvPTF*)_pvp)->SetAllianceTowersControlled(++alliance_towers);
 
-                _pvp->GetMap()->SendZoneText(OutdoorPvPTFBuffZones[0], sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_TF_CAPTURE_A).c_str());
+                _pvp->GetMap()->SendZoneText(OutdoorPvPTFBuffZones[0], sObjectMgr->GetNcoreString(LANG_OPVP_TF_CAPTURE_A).c_str());
 
                 for (PlayerSet::iterator itr = _activePlayers[0].begin(); itr != _activePlayers[0].end(); ++itr)
                     if (Player* player = ObjectAccessor::FindPlayer(*itr))
@@ -437,7 +437,7 @@ void OPvPCapturePointTF::ChangeState()
                 if (horde_towers < TF_TOWER_NUM)
                     ((OutdoorPvPTF*)_pvp)->SetHordeTowersControlled(++horde_towers);
 
-                _pvp->GetMap()->SendZoneText(OutdoorPvPTFBuffZones[0], sObjectMgr->GetAcoreStringForDBCLocale(LANG_OPVP_TF_CAPTURE_H).c_str());
+                _pvp->GetMap()->SendZoneText(OutdoorPvPTFBuffZones[0], sObjectMgr->GetNcoreString(LANG_OPVP_TF_CAPTURE_H).c_str());
 
                 for (PlayerSet::iterator itr = _activePlayers[1].begin(); itr != _activePlayers[1].end(); ++itr)
                     if (Player* player = ObjectAccessor::FindPlayer(*itr))

@@ -273,7 +273,7 @@ void ScriptedAI::DoRewardPlayersInArea()
 {
     me->GetMap()->DoForAllPlayers([&](Player* player)
     {
-        if (player->GetFaction() != me->GetCreatureTemplate()->faction && !player->IsGameMaster())
+        if (player->GetFaction() != me->GetCreatureTemplate()->Faction && !player->IsGameMaster())
             if (player->GetAreaId() == me->GetAreaId())
                 player->KilledMonsterCredit(me->GetEntry());
     });

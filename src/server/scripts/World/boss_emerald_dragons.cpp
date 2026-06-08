@@ -431,7 +431,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_DRAW_SPIRIT && target->IsPlayer())
+            if (spell->ID == SPELL_DRAW_SPIRIT && target->IsPlayer())
             {
                 Position targetPos = target->GetPosition();
                 me->SummonCreature(NPC_SPIRIT_SHADE, targetPos, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 50000);

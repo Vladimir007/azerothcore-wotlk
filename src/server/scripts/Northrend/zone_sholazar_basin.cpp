@@ -179,7 +179,7 @@ public:
             if (running)
             {
                 uint8 a = 0;
-                switch (spellInfo->Id)
+                switch (spellInfo->ID)
                 {
                     case 51931:
                         a = 4;
@@ -722,7 +722,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id != SPELL_OFFER)
+            if (spellInfo->ID != SPELL_OFFER)
                 return;
 
             Player* player = caster->ToPlayer();
@@ -1069,7 +1069,7 @@ class spell_shango_tracks : public SpellScript
     {
         if (Unit* target = GetHitUnit())
         {
-            switch (GetSpellInfo()->Id)
+            switch (GetSpellInfo()->ID)
             {
                 case SPELL_CORRECT_TRACKS:
                     target->Say(SAY_CORRECT_TRACKS, target);

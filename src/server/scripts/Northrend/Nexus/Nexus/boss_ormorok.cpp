@@ -19,6 +19,7 @@
 #include "ScriptedCreature.h"
 #include "nexus.h"
 #include "PassiveAI.h"
+#include "MapDefines.h"
 
 enum eEnums
 {

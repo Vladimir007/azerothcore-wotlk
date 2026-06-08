@@ -1,126 +1,140 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "WorldDatabase.h"
-#include "MySQLPreparedStatement.h"
 
 void WorldDatabaseConnection::DoPrepareStatements()
 {
     if (!m_reconnecting)
-        m_stmts.resize(MAX_WORLDDATABASE_STATEMENTS);
+        m_stmts.resize(MAX_WORLD_DATABASE_STATEMENTS);
 
-    PrepareStatement(WORLD_SEL_QUEST_POOLS, "SELECT entry, pool_entry FROM pool_quest", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_DEL_CRELINKED_RESPAWN, "DELETE FROM linked_respawn WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_REP_CREATURE_LINKED_RESPAWN, "REPLACE INTO linked_respawn (guid, linkedGuid) VALUES (?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_SEL_CREATURE_TEXT, "SELECT CreatureID, GroupID, ID, Text, Type, Language, Probability, Emote, Duration, Sound, BroadcastTextId, TextRange FROM creature_text", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_SMART_SCRIPTS, "SELECT entryorguid, source_type, id, link, event_type, event_phase_mask, event_chance, event_flags, event_param1, event_param2, event_param3, event_param4, event_param5, event_param6, action_type, action_param1, action_param2, action_param3, action_param4, action_param5, action_param6, target_type, target_param1, target_param2, target_param3, target_param4, target_x, target_y, target_z, target_o FROM smart_scripts ORDER BY entryorguid, source_type, id, link", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_SMARTAI_WP, "SELECT entry, pointid, position_x, position_y, position_z, orientation, delay FROM waypoints ORDER BY entry, pointid", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_DEL_GAMEOBJECT, "DELETE FROM gameobject WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_DEL_EVENT_GAMEOBJECT, "DELETE FROM game_event_gameobject WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_INS_GRAVEYARD_ZONE, "INSERT INTO graveyard_zone (ID, GhostZone, Faction) VALUES (?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_DEL_GRAVEYARD_ZONE, "DELETE FROM graveyard_zone WHERE ID = ? AND GhostZone = ? AND Faction = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_INS_GAME_TELE, "INSERT INTO game_tele (id, position_x, position_y, position_z, orientation, map, name) VALUES (?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_DEL_GAME_TELE, "DELETE FROM game_tele WHERE name = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_INS_NPC_VENDOR, "INSERT INTO npc_vendor (entry, item, maxcount, incrtime, extendedcost) VALUES(?, ?, ?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_DEL_NPC_VENDOR, "DELETE FROM npc_vendor WHERE entry = ? AND item = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_SEL_NPC_VENDOR_REF, "SELECT item, maxcount, incrtime, ExtendedCost FROM npc_vendor WHERE entry = ? ORDER BY slot ASC", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_UPD_CREATURE_MOVEMENT_TYPE, "UPDATE creature SET MovementType = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_CREATURE_FACTION, "UPDATE creature_template SET faction = ? WHERE entry = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_CREATURE_NPCFLAG, "UPDATE creature_template SET npcflag = ? WHERE entry = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_CREATURE_POSITION, "UPDATE creature SET position_x = ?, position_y = ?, position_z = ?, orientation = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_CREATURE_WANDER_DISTANCE, "UPDATE creature SET wander_distance = ?, MovementType = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_CREATURE_SPAWN_TIME_SECS, "UPDATE creature SET spawntimesecs = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_INS_CREATURE_FORMATION, "INSERT INTO creature_formations (leaderGUID, memberGUID, dist, angle, groupAI) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_INS_WAYPOINT_DATA, "INSERT INTO waypoint_data (id, point, position_x, position_y, position_z) VALUES (?, ?, ?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_DEL_WAYPOINT_DATA, "DELETE FROM waypoint_data WHERE id = ? AND point = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_WAYPOINT_DATA_POINT, "UPDATE waypoint_data SET point = point - 1 WHERE id = ? AND point > ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_WAYPOINT_DATA_POSITION, "UPDATE waypoint_data SET position_x = ?, position_y = ?, position_z = ? where id = ? AND point = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_WAYPOINT_DATA_WPGUID, "UPDATE waypoint_data SET wpguid = ? WHERE id = ? and point = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_MAX_ID, "SELECT MAX(id) FROM waypoint_data", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_MAX_POINT, "SELECT MAX(point) FROM waypoint_data WHERE id = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_BY_ID, "SELECT point, position_x, position_y, position_z, orientation, velocity, delay, smoothTransition, move_type, action, action_chance FROM waypoint_data WHERE id = ? ORDER BY point", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_POS_BY_ID, "SELECT point, position_x, position_y, position_z FROM waypoint_data WHERE id = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_POS_FIRST_BY_ID, "SELECT position_x, position_y, position_z FROM waypoint_data WHERE point = 1 AND id = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_POS_LAST_BY_ID, "SELECT position_x, position_y, position_z, orientation FROM waypoint_data WHERE id = ? ORDER BY point DESC LIMIT 1", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_BY_WPGUID, "SELECT id, point FROM waypoint_data WHERE wpguid = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_ALL_BY_WPGUID, "SELECT id, point, delay, move_type, action, action_chance FROM waypoint_data WHERE wpguid = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_UPD_WAYPOINT_DATA_ALL_WPGUID, "UPDATE waypoint_data SET wpguid = 0", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_BY_POS, "SELECT id, point FROM waypoint_data WHERE (abs(position_x - ?) <= ?) and (abs(position_y - ?) <= ?) and (abs(position_z - ?) <= ?)", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_WPGUID_BY_ID, "SELECT wpguid FROM waypoint_data WHERE id = ? and wpguid <> 0", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_ACTION, "SELECT DISTINCT action FROM waypoint_data", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_SCRIPTS_MAX_ID, "SELECT MAX(guid) FROM waypoint_scripts", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_INS_CREATURE_ADDON, "INSERT INTO creature_addon(guid, path_id) VALUES (?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_CREATURE_ADDON_PATH, "UPDATE creature_addon SET path_id = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_DEL_CREATURE_ADDON, "DELETE FROM creature_addon WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_SEL_CREATURE_ADDON_BY_GUID, "SELECT guid FROM creature_addon WHERE guid = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_INS_WAYPOINT_SCRIPT, "INSERT INTO waypoint_scripts (guid) VALUES (?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_DEL_WAYPOINT_SCRIPT, "DELETE FROM waypoint_scripts WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_WAYPOINT_SCRIPT_ID, "UPDATE waypoint_scripts SET id = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_WAYPOINT_SCRIPT_X, "UPDATE waypoint_scripts SET x = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_WAYPOINT_SCRIPT_Y, "UPDATE waypoint_scripts SET y = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_WAYPOINT_SCRIPT_Z, "UPDATE waypoint_scripts SET z = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_WAYPOINT_SCRIPT_O, "UPDATE waypoint_scripts SET o = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_SEL_WAYPOINT_SCRIPT_ID_BY_GUID, "SELECT id FROM waypoint_scripts WHERE guid = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_DEL_CREATURE, "DELETE FROM creature WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_SEL_COMMANDS, "SELECT name, security, help FROM command", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_CREATURE_TEMPLATE, "SELECT entry, difficulty_entry_1, difficulty_entry_2, difficulty_entry_3, KillCredit1, KillCredit2, name, subname, IconName, gossip_menu_id, minlevel, maxlevel, exp, faction, npcflag, speed_walk, speed_run, speed_swim, speed_flight, detection_range, `rank`, dmgschool, DamageModifier, BaseAttackTime, RangeAttackTime, BaseVariance, RangeVariance, unit_class, unit_flags, unit_flags2, dynamicflags, family, type, type_flags, lootid, pickpocketloot, skinloot, PetSpellDataId, VehicleId, mingold, maxgold, AIName, MovementType, ctm.Ground, ctm.Swim, ctm.Flight, ctm.Rooted, ctm.Chase, ctm.Random, ctm.InteractionPauseTimer, HoverHeight, HealthModifier, ManaModifier, ArmorModifier, ExperienceModifier, RacialLeader, movementId, RegenHealth, CreatureImmunitiesId, flags_extra, ScriptName FROM creature_template ct LEFT JOIN creature_template_movement ctm ON ct.entry = ctm.CreatureId WHERE entry = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_WAYPOINT_SCRIPT_BY_ID, "SELECT guid, delay, command, datalong, datalong2, dataint, x, y, z, o FROM waypoint_scripts WHERE id = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_ITEM_TEMPLATE_BY_NAME, "SELECT entry FROM item_template WHERE name = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_CREATURE_BY_ID, "SELECT guid FROM creature WHERE id1 = ? OR id2 = ? OR id3 = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAMEOBJECT_NEAREST, "SELECT guid, id, position_x, position_y, position_z, map, (POW(position_x - ?, 2) + POW(position_y - ?, 2) + POW(position_z - ?, 2)) AS order_ FROM gameobject WHERE map = ? AND (POW(position_x - ?, 2) + POW(position_y - ?, 2) + POW(position_z - ?, 2)) <= ? AND (phaseMask & ?) <> 0 ORDER BY order_", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_CREATURE_NEAREST, "SELECT guid, id1, id2, id3, position_x, position_y, position_z, map, (POW(position_x - ?, 2) + POW(position_y - ?, 2) + POW(position_z - ?, 2)) AS order_ FROM creature WHERE map = ? AND (POW(position_x - ?, 2) + POW(position_y - ?, 2) + POW(position_z - ?, 2)) <= ? AND (phaseMask & ?) <> 0 ORDER BY order_", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_INS_CREATURE, "INSERT INTO creature (guid, id1, id2, id3, map, spawnMask, phaseMask, equipment_id, position_x, position_y, position_z, orientation, spawntimesecs, wander_distance, currentwaypoint, curhealth, curmana, MovementType, npcflag, unit_flags, dynamicflags) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_SEL_GAME_EVENTS, "SELECT eventEntry, UNIX_TIMESTAMP(start_time), UNIX_TIMESTAMP(end_time), occurence, length, holiday, holidayStage, description, world_event, announce FROM game_event", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_PREREQUISITE_DATA, "SELECT eventEntry, prerequisite_event FROM game_event_prerequisite", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_CREATURE_DATA, "SELECT guid, eventEntry FROM game_event_creature", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_GAMEOBJECT_DATA, "SELECT guid, eventEntry FROM game_event_gameobject", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_MODEL_EQUIPMENT_DATA, "SELECT creature.guid, creature.id1, creature.id2, creature.id3, game_event_model_equip.eventEntry, game_event_model_equip.modelid, game_event_model_equip.equipment_id FROM creature JOIN game_event_model_equip ON creature.guid=game_event_model_equip.guid", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_QUEST_DATA, "SELECT id, quest, eventEntry FROM game_event_creature_quest", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_GAMEOBJECT_QUEST_DATA, "SELECT id, quest, eventEntry FROM game_event_gameobject_quest", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_QUEST_CONDITION_DATA, "SELECT quest, eventEntry, condition_id, num FROM game_event_quest_condition", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_CONDITION_DATA, "SELECT eventEntry, condition_id, req_num, max_world_state_field, done_world_state_field FROM game_event_condition", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_NPC_FLAGS, "SELECT guid, eventEntry, npcflag FROM game_event_npcflag", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_QUEST_SEASONAL_RELATIONS, "SELECT questId, eventEntry FROM game_event_seasonal_questrelation", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_BATTLEGROUND_DATA, "SELECT eventEntry, bgflag FROM game_event_battleground_holiday", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_POOL_DATA, "SELECT pool_template.entry, game_event_pool.eventEntry FROM pool_template JOIN game_event_pool ON pool_template.entry = game_event_pool.pool_entry", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_ARENA_SEASON, "SELECT eventEntry FROM game_event_arena_seasons WHERE season = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_DEL_GAME_EVENT_CREATURE, "DELETE FROM game_event_creature WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_DEL_GAME_EVENT_MODEL_EQUIP, "DELETE FROM game_event_model_equip WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_SEL_GAME_EVENT_NPC_VENDOR, "SELECT eventEntry, guid, item, maxcount, incrtime, ExtendedCost FROM game_event_npc_vendor ORDER BY guid, slot ASC", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_INS_GAMEOBJECT, "INSERT INTO gameobject (guid, id, map, spawnMask, phaseMask, position_x, position_y, position_z, orientation, rotation0, rotation1, rotation2, rotation3, spawntimesecs, animprogress, state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_INS_DISABLES, "INSERT INTO disables (entry, sourceType, flags, comment) VALUES (?, ?, ?, ?)", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_SEL_DISABLES, "SELECT entry FROM disables WHERE entry = ? AND sourceType = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_DEL_DISABLES, "DELETE FROM disables WHERE entry = ? AND sourceType = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_CREATURE_ZONE_AREA_DATA, "UPDATE creature SET zoneId = ?, areaId = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_UPD_GAMEOBJECT_ZONE_AREA_DATA, "UPDATE gameobject SET zoneId = ?, areaId = ? WHERE guid = ?", CONNECTION_ASYNC);
-    PrepareStatement(WORLD_INS_GAMEOBJECT_ADDON, "INSERT INTO gameobject_addon (guid, invisibilityType, invisibilityValue) VALUES (?, 0, 0)", CONNECTION_ASYNC);
-    // 0: uint8
-    PrepareStatement(WORLD_SEL_REQ_XP, "SELECT Experience FROM player_xp_for_level WHERE Level = ?", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_UPD_VERSION, "UPDATE version SET core_version = ?, core_revision = ?", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_QUEST_POOLS, "SELECT id, pool FROM world_pool_quest", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_DEL_CREATURE_LINKED_RESPAWN, "DELETE FROM world_linked_respawn WHERE guid = $1", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_REP_CREATURE_LINKED_RESPAWN,
+        "INSERT INTO world_linked_respawn (guid, link_type, linked_guid) VALUES ($1, 0, $2) ON CONFLICT (guid, link_type) DO UPDATE SET linked_guid=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_CREATURE_TEXT,
+        "SELECT creature, group, id, text, type, language, probability, emote, duration, sound, broadcast_text, text_range FROM world_creature_text", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_SMART_SCRIPTS,
+        "SELECT entry, source_type, id, link, event_type, event_phase_mask, event_chance, event_flags, event_params, "
+        "action_type, action_params, target_type, target_params, target_position, target_orientation FROM world_smart_script ORDER BY entry, source_type, id, link", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_DEL_GAMEOBJECT, "DELETE FROM world_game_object WHERE guid = $1", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_DEL_EVENT_GAMEOBJECT, "DELETE FROM world_game_event_game_object WHERE guid = $1", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_INS_GRAVEYARD_ZONE, "INSERT INTO world_graveyard_zone (id, ghost_zone, faction, comment) VALUES ($1, $2, $3, '')", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_DEL_GRAVEYARD_ZONE, "DELETE FROM world_graveyard_zone WHERE id=$1 AND ghost_zone=$2 AND faction=$3", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_INS_GAME_TELE, "INSERT INTO world_game_teleport (id, position, orientation, map, name) VALUES ($1, ARRAY[$2, $3, $4], $5, $6, $7)", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_DEL_GAME_TELE, "DELETE FROM world_game_teleport WHERE name=$1", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_INS_NPC_VENDOR, "INSERT INTO world_npc_vendor (entry, item, max_count, incr_time, extended_cost, slot) VALUES($1, $2, $3, $4, $5, 0)", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_DEL_NPC_VENDOR, "DELETE FROM world_npc_vendor WHERE entry=$1 AND item=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_NPC_VENDOR_REF, "SELECT item, max_count, incr_time, extended_cost FROM world_npc_vendor WHERE entry=$1 ORDER BY slot ASC", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_UPD_CREATURE_MOVEMENT_TYPE, "UPDATE world_creature SET movement_type=$1 WHERE guid=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_CREATURE_FACTION, "UPDATE world_creature_template SET faction=$1 WHERE id=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_CREATURE_NPC_FLAG, "UPDATE world_creature_template SET npc_flag=$1 WHERE id=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_CREATURE_POSITION, "UPDATE world_creature SET position=ARRAY[$1, $2, $3], orientation=$4 WHERE guid=$5", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_CREATURE_WANDER_DISTANCE, "UPDATE world_creature SET wander_distance=$1, movement_type=$2 WHERE guid=$3", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_CREATURE_SPAWN_TIME_SECS, "UPDATE world_creature SET spawn_time_secs=$1 WHERE guid=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_DEL_CREATURE, "DELETE FROM world_creature WHERE guid=$1", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_CREATURE_BY_ID, "SELECT guid FROM world_creature WHERE id1=$1 OR id2=$2 OR id3=$3", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_INS_CREATURE_FORMATION,
+        "INSERT INTO world_creature_formation (leader_guid, member_guid, dist, angle, group_ai, point1, point2) VALUES ($1, $2, $3, $4, $5, 0, 0)", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_SMARTAI_WP, "SELECT id, point, position, orientation, delay FROM world_waypoint ORDER BY id, point", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_INS_WAYPOINT_DATA,
+        "INSERT INTO world_waypoint_data (id, point, position, orientation, velocity, delay, smooth_transition, move_type, action, action_chance, guid) "
+        "VALUES ($1, $2, ARRAY[$3, $4, $5], NULL, 0.0, 0, FALSE, 0, 0, 100, 0)", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_DEL_WAYPOINT_DATA, "DELETE FROM world_waypoint_data WHERE id=$1 AND point=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_WAYPOINT_DATA_POINT, "UPDATE world_waypoint_data SET point=(point - 1) WHERE id=$1 AND point > $2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_WAYPOINT_DATA_POSITION, "UPDATE world_waypoint_data SET position=ARRAY[$1, $2, $3] WHERE id=$4 AND point=$5", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_WAYPOINT_DATA_WP_GUID, "UPDATE world_waypoint_data SET guid=$1 WHERE id=$2 and point=$3", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_MAX_ID, "SELECT MAX(id) FROM world_waypoint_data", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_MAX_POINT, "SELECT MAX(point) FROM world_waypoint_data WHERE id=$1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_BY_ID,
+        "SELECT point, position, orientation, velocity, delay, smooth_transition, move_type, action, action_chance FROM world_waypoint_data WHERE id=$1 ORDER BY point", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_POS_BY_ID, "SELECT point, position FROM world_waypoint_data WHERE id=$1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_POS_FIRST_BY_ID, "SELECT position FROM world_waypoint_data WHERE point=1 AND id=$1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_POS_LAST_BY_ID, "SELECT position, orientation FROM world_waypoint_data WHERE id=$1 ORDER BY point DESC LIMIT 1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_BY_WP_GUID, "SELECT id, point FROM world_waypoint_data WHERE guid=$1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_ALL_BY_WP_GUID, "SELECT id, point, delay, move_type, action, action_chance FROM world_waypoint_data WHERE guid=$1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_UPD_WAYPOINT_DATA_ALL_WP_GUID, "UPDATE world_waypoint_data SET guid=0", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_BY_POS,
+        "SELECT id, point FROM world_waypoint_data WHERE ABS(position[1] - $1) <= $4 AND ABS(position[2] - $2) <= $4 AND ABS(position[3] - $3) <= $4", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_WP_GUID_BY_ID, "SELECT guid FROM world_waypoint_data WHERE id=$1 and guid <> 0", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_DATA_ACTION, "SELECT DISTINCT action FROM world_waypoint_data", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_SCRIPTS_MAX_ID, "SELECT MAX(guid) FROM world_waypoint_script", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_INS_WAYPOINT_SCRIPT,
+        "INSERT INTO world_waypoint_script (guid, entry, delay, command, data_i, data_f) VALUES ($1, 0, 0, 0, ARRAY[0, 0, 0], ARRAY[0.0, 0.0, 0.0, 0.0])", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_DEL_WAYPOINT_SCRIPT, "DELETE FROM world_waypoint_script WHERE guid=$1", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_WAYPOINT_SCRIPT_ID, "UPDATE world_waypoint_script SET entry=$1 WHERE guid=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_WAYPOINT_SCRIPT_X, "UPDATE world_waypoint_script SET data_f[1]=$1 WHERE guid=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_WAYPOINT_SCRIPT_Y, "UPDATE world_waypoint_script SET data_f[2]=$1 WHERE guid=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_WAYPOINT_SCRIPT_Z, "UPDATE world_waypoint_script SET data_f[3]=$1 WHERE guid=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_WAYPOINT_SCRIPT_O, "UPDATE world_waypoint_script SET data_f[4]=$1 WHERE guid=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_WAYPOINT_SCRIPT_ID_BY_GUID, "SELECT entry FROM world_waypoint_script WHERE guid=$1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_WAYPOINT_SCRIPT_BY_ID, "SELECT guid, delay, command, data_i, data_f FROM world_waypoint_script WHERE entry=$1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_INS_CREATURE_ADDON,
+        "INSERT INTO world_creature_addon (guid, path, mount, bytes1, bytes2, emote, visibility_distance_type, auras) VALUES ($1, $2, 0, 0, 0, 0, 0, '')", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_CREATURE_ADDON_PATH, "UPDATE world_creature_addon SET path=$1 WHERE guid=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_DEL_CREATURE_ADDON, "DELETE FROM world_creature_addon WHERE guid=$1", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_CREATURE_ADDON_BY_GUID, "SELECT guid FROM world_creature_addon WHERE guid=$1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_COMMANDS, "SELECT name, gm_only, help FROM world_command", CONNECTION_SYNCH);
+
+    PrepareStatement(WORLD_SEL_CREATURE_TEMPLATE,
+        "SELECT id, difficulty, kill_credit, name, title, icon_name, gossip_menu, min_level, max_level, expansion, "
+        "faction, npc_flag, flags_extra, speed_walk, speed_run, speed_swim, speed_flight, detection_range, rank, "
+        "damage_school, damage_modifier, base_attack_time, range_attack_time, base_variance, range_variance, "
+        "unit_class, unit_flags, unit_flags2, dynamic_flags, family, type, type_flags, loot, "
+        "pickpocket_loot, skin_loot, pet_spell_data, vehicle, gold_min, gold_max, name_ai, movement_type, movement, "
+        "ctm.ground, ctm.swim, ctm.flight, ctm.rooted, ctm.chase, ctm.random, ctm.interaction_pause_timer, "
+        "hover_height, health_modifier, mana_modifier, armor_modifier, experience_modifier, racial_leader, regen_health, immunity, script_name "
+        "FROM world_creature_template ct LEFT JOIN world_creature_template_movement ctm ON ct.id = ctm.creature WHERE id=$1", CONNECTION_SYNCH);
+
+
+    PrepareStatement(WORLD_SEL_ITEM_TEMPLATE_BY_NAME, "SELECT id FROM world_item_template WHERE name=$1", CONNECTION_SYNCH);
+
+    PrepareStatement(WORLD_SEL_GAMEOBJECT_NEAREST,
+        "SELECT guid, id, position, map"
+        "FROM world_game_object WHERE map=$1 AND (POW(position[1] - $2, 2) + POW(position[2] - $3, 2) + POW(position[3] - $4, 2)) <= $5 AND (phase_mask & $6) <> 0 "
+        "ORDER BY (POW(position[1] - $2, 2) + POW(position[2] - $3, 2) + POW(position[3] - $4, 2))", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_CREATURE_NEAREST,
+        "SELECT guid, id1, id2, id3, position, map "
+        "FROM world_creature WHERE map=$1 AND (POW(position[1] - $2, 2) + POW(position[2] - $3, 2) + POW(position[3] - $4, 2)) <= $5 AND (phaseMask & $6) <> 0 "
+        "ORDER BY (POW(position[1] - $2, 2) + POW(position[2] - $3, 2) + POW(position[3] - $4, 2))", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_INS_CREATURE,
+        "INSERT INTO world_creature (guid, id1, id2, id3, map, zone, area, spawn_mask, phase_mask, equipment, position, orientation, spawn_time_secs, "
+        "wander_distance, waypoint, health, mana, movement_type, npc_flag, unit_flags, dynamic_flags) "
+        "VALUES ($1, $2, $3, $4, $5, 0, 0, $6, $7, $8, ARRAY[$9, $10, $11], $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_GAME_EVENTS,
+        "SELECT id, EXTRACT(epoch FROM start_time), EXTRACT(epoch FROM end_time), occurrence, length, "
+        "holiday, holiday_stage, description, world_event, announce FROM world_game_event", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_PREREQUISITE_DATA, "SELECT event, prerequisite FROM world_game_event_prerequisite", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_CREATURE_DATA, "SELECT guid, event FROM world_game_event_creature", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_GAMEOBJECT_DATA, "SELECT guid, event FROM world_game_event_game_object", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_MODEL_EQUIPMENT_DATA,
+        "SELECT cr.guid, cr.id1, cr.id2, cr.id3, eq.event, eq.model, eq.equipment FROM world_creature cr JOIN world_game_event_model_equip eq ON cr.guid=eq.guid", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_QUEST_DATA, "SELECT id, quest, event FROM world_game_event_creature_quest", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_GAMEOBJECT_QUEST_DATA, "SELECT id, quest, event FROM world_game_event_game_object_quest", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_QUEST_CONDITION_DATA, "SELECT quest, event, condition, num FROM world_game_event_quest_condition", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_CONDITION_DATA, "SELECT event, condition, req_num, world_state_field_max, world_state_field_done FROM world_game_event_condition", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_NPC_FLAGS, "SELECT guid, event, flag FROM world_game_event_npc_flag", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_QUEST_SEASONAL_RELATIONS, "SELECT quest, event FROM world_game_event_seasonal_quest_relation", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_BATTLEGROUND_DATA, "SELECT id, flag FROM world_game_event_battleground_holiday", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_POOL_DATA, "SELECT t1.id, t2.event FROM world_pool_template t1 JOIN world_game_event_pool t2 ON t1.id = t2.id", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_ARENA_SEASON, "SELECT event FROM world_game_event_arena_season WHERE season=$1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_DEL_GAME_EVENT_CREATURE, "DELETE FROM world_game_event_creature WHERE guid=$1", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_DEL_GAME_EVENT_MODEL_EQUIP, "DELETE FROM world_game_event_model_equip WHERE guid=$1", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_GAME_EVENT_NPC_VENDOR,
+        "SELECT event, guid, item, max_count, incr_time, extended_cost FROM world_game_event_npc_vendor ORDER BY guid, slot ASC", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_INS_GAMEOBJECT,
+        "INSERT INTO world_game_object (guid, id, map, zone, area, spawn_mask, phase_mask, position, orientation, rotation, spawn_time, anim_progress, state) "
+        "VALUES ($1, $2, $3, 0, 0, $4, $5, ARRAY[$6, $7, $8], $9, ARRAY[$10, $11, $12, $13], $14, $15, $16)", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_INS_DISABLES, "INSERT INTO world_disable_data (entry, type, flags, params0, params1, comment) VALUES ($1, $2, $3, '{}', '{}', $4)", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_DISABLES, "SELECT entry FROM world_disable_data WHERE entry=$1 AND type=$2", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_DEL_DISABLES, "DELETE FROM world_disable_data WHERE entry=$1 AND type=$2", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_CREATURE_ZONE_AREA_DATA, "UPDATE world_creature SET zone=$1, area=$2 WHERE guid=$3", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_UPD_GAMEOBJECT_ZONE_AREA_DATA, "UPDATE world_game_object SET zone=$1, area=$2 WHERE guid=$3", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_INS_GAMEOBJECT_ADDON,
+        "INSERT INTO world_game_object_addon (guid, invisibility_type, invisibility_value, parent_rotation) VALUES ($1, 0, 0, ARRAY[0, 0, 0, 1])", CONNECTION_ASYNC);
+    PrepareStatement(WORLD_SEL_REQ_XP, "SELECT experience FROM world_player_xp_for_level WHERE level=$1", CONNECTION_SYNCH);
 }
 
-WorldDatabaseConnection::WorldDatabaseConnection(MySQLConnectionInfo& connInfo) : MySQLConnection(connInfo)
-{
-}
+WorldDatabaseConnection::WorldDatabaseConnection(const std::string& connectionStr) : PSQLConnection(connectionStr) { }
 
-WorldDatabaseConnection::WorldDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* q, MySQLConnectionInfo& connInfo) : MySQLConnection(q, connInfo)
-{
-}
+WorldDatabaseConnection::WorldDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* queue, const std::string& connectionStr):
+    PSQLConnection(queue, connectionStr) { }
 
-WorldDatabaseConnection::~WorldDatabaseConnection()
-{
-}
+WorldDatabaseConnection::~WorldDatabaseConnection() { }

@@ -793,7 +793,7 @@ bool SmartAI::AssistPlayerInCombatAgainst(Unit* who)
         return false;
 
     //experimental (unknown) flag not present
-    if (!(me->GetCreatureTemplate()->type_flags & CREATURE_TYPE_FLAG_CAN_ASSIST))
+    if (!(me->GetCreatureTemplate()->TypeFlags & CREATURE_TYPE_FLAG_CAN_ASSIST))
         return false;
 
     // Xinef: victim of unit has to be a player controlled unit
@@ -820,7 +820,7 @@ void SmartAI::JustRespawned()
     mDespawnState = 0;
     mEscortState = SMART_ESCORT_NONE;
     me->SetVisible(true);
-    if (me->GetFaction() != me->GetCreatureTemplate()->faction)
+    if (me->GetFaction() != me->GetCreatureTemplate()->Faction)
         me->RestoreFaction();
     mJustReset = true;
     JustReachedHome();
@@ -1314,7 +1314,7 @@ void SmartAI::DistancingEnded()
 
 bool SmartAI::IsMainSpellPrevented(SpellInfo const* spellInfo) const
 {
-    if (me->HasSpellCooldown(spellInfo->Id))
+    if (me->HasSpellCooldown(spellInfo->ID))
         return true;
 
     if (spellInfo->PreventionType == SPELL_PREVENTION_TYPE_SILENCE && me->HasFlag(UNIT_FIELD_FLAGS, UNIT_FLAG_SILENCED))
@@ -1328,7 +1328,7 @@ bool SmartAI::IsMainSpellPrevented(SpellInfo const* spellInfo) const
 void SmartAI::OnSpellFailed(SpellInfo const* spell)
 {
     CreatureAI::OnSpellFailed(spell);
-    if (_mainSpellId == spell->Id)
+    if (_mainSpellId == spell->ID)
         if (_currentRangeMode && IsMainSpellPrevented(spell))
             SetCurrentRangeMode(false);
 }

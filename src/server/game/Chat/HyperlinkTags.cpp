@@ -151,9 +151,6 @@ bool Acore::Hyperlinks::LinkTags::item::StoreTo(ItemLinkData& val, std::string_v
         if (!val.Item->RandomSuffix)
             return false;
 
-        if (randomPropertyId < -static_cast<int32>(sItemRandomSuffixStore.GetNumRows()))
-            return false;
-
         if (ItemRandomSuffixEntry const* suffixEntry = sItemRandomSuffixStore.LookupEntry(-randomPropertyId))
         {
             val.RandomSuffix = suffixEntry;

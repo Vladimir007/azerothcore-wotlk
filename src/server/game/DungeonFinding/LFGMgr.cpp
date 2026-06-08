@@ -114,7 +114,7 @@ namespace lfg
         RewardMapStore.clear();
 
         // ORDER BY is very important for GetRandomDungeonReward!
-        QueryResult result = WorldDatabase.Query("SELECT dungeonId, maxLevel, firstQuestId, otherQuestId FROM lfg_dungeon_rewards ORDER BY dungeonId, maxLevel ASC");
+        const QueryResult result = WorldDatabase.Query("SELECT dungeon, max_level, first_quest, other_quest FROM world_lfg_dungeon_reward ORDER BY dungeon, max_level ASC");
 
         if (!result)
         {
@@ -124,7 +124,7 @@ namespace lfg
 
         uint32 count = 0;
 
-        Field* fields = nullptr;
+        const Field* fields = nullptr;
         do
         {
             fields = result->Fetch();
@@ -261,10 +261,9 @@ namespace lfg
 
         LfgDungeonStore.clear();
 
-        // Initialize Dungeon map with data from dbcs
-        for (uint32 i = 0; i < sLFGDungeonStore.GetNumRows(); ++i)
+        // Initialize Dungeon map with data from DBCs
+        for (const LFGDungeonEntry* dungeon : sLFGDungeonStore)
         {
-            LFGDungeonEntry const* dungeon = sLFGDungeonStore.LookupEntry(i);
             if (!dungeon)
                 continue;
 
@@ -276,12 +275,13 @@ namespace lfg
                 case LFG_TYPE_RANDOM:
                     LfgDungeonStore[dungeon->ID] = LFGDungeonData(dungeon);
                     break;
+                default:
+                    break;
             }
         }
 
         // Fill teleport locations from DB
-        //                                                   0          1           2           3            4
-        QueryResult result = WorldDatabase.Query("SELECT dungeonId, position_x, position_y, position_z, orientation FROM lfg_dungeon_template");
+        const QueryResult result = WorldDatabase.Query("SELECT dungeon, position, orientation FROM world_lfg_dungeon_template");
 
         if (!result)
         {
@@ -294,9 +294,9 @@ namespace lfg
 
         do
         {
-            Field* fields = result->Fetch();
+            const Field* fields = result->Fetch();
             uint32 dungeonId = fields[0].Get<uint32>();
-            LFGDungeonContainer::iterator dungeonItr = LfgDungeonStore.find(dungeonId);
+            auto dungeonItr = LfgDungeonStore.find(dungeonId);
             if (dungeonItr == LfgDungeonStore.end())
             {
                 LOG_ERROR("lfg", "table `lfg_dungeon_template` contains coordinates for wrong dungeon {}", dungeonId);
@@ -304,10 +304,11 @@ namespace lfg
             }
 
             LFGDungeonData& data = dungeonItr->second;
-            data.x = fields[1].Get<float>();
-            data.y = fields[2].Get<float>();
-            data.z = fields[3].Get<float>();
-            data.o = fields[4].Get<float>();
+            auto pos = fields[1].GetArray<float, 3>();
+            data.x = pos[0];
+            data.y = pos[1];
+            data.z = pos[2];
+            data.o = fields[2].Get<float>();
 
             ++count;
         } while (result->NextRow());
@@ -315,26 +316,26 @@ namespace lfg
         LOG_INFO("server.loading", ">> Loaded {} LFG Entrance Positions in {} ms", count, GetMSTimeDiffToNow(oldMSTime));
         LOG_INFO("server.loading", " ");
 
-        // Fill all other teleport coords from areatriggers
-        for (LFGDungeonContainer::iterator itr = LfgDungeonStore.begin(); itr != LfgDungeonStore.end(); ++itr)
+        // Fill all other teleport coords from area triggers
+        for (auto itr = LfgDungeonStore.begin(); itr != LfgDungeonStore.end(); ++itr)
         {
             LFGDungeonData& dungeon = itr->second;
 
-            // No teleport coords in database, load from areatriggers
+            // No teleport coords in database, load from area triggers
             if (dungeon.type != LFG_TYPE_RANDOM && dungeon.x == 0.0f && dungeon.y == 0.0f && dungeon.z == 0.0f)
             {
                 AreaTriggerTeleport const* at = sObjectMgr->GetMapEntranceTrigger(dungeon.map);
                 if (!at)
                 {
-                    LOG_ERROR("lfg", "LFGMgr::LoadLFGDungeons: Failed to load dungeon {}, cant find areatrigger for map {}", dungeon.name, dungeon.map);
+                    LOG_ERROR("lfg", "LFGMgr::LoadLFGDungeons: Failed to load dungeon {}, can't find area trigger for map {}", dungeon.name, dungeon.map);
                     continue;
                 }
 
-                dungeon.map = at->target_mapId;
-                dungeon.x = at->target_X;
-                dungeon.y = at->target_Y;
-                dungeon.z = at->target_Z;
-                dungeon.o = at->target_Orientation;
+                dungeon.map = at->targetMapID;
+                dungeon.x = at->targetX;
+                dungeon.y = at->targetY;
+                dungeon.z = at->targetZ;
+                dungeon.o = at->targetOrientation;
             }
 
             if (dungeon.type != LFG_TYPE_RANDOM)
@@ -499,9 +500,9 @@ namespace lfg
                 lockData = LFG_LOCKSTATUS_RAID_LOCKED;
             else if (dungeon->difficulty > DUNGEON_DIFFICULTY_NORMAL && (!mapEntry || !mapEntry->IsRaid()) && sInstanceSaveMgr->PlayerIsPermBoundToInstance(player->GetGUID(), dungeon->map, Difficulty(dungeon->difficulty)))
                 lockData = LFG_LOCKSTATUS_RAID_LOCKED;
-            else if ((dungeon->minlevel > level && !sWorld->getBoolConfig(CONFIG_DUNGEON_ACCESS_REQUIREMENTS_LFG_DBC_LEVEL_OVERRIDE)) || (sWorld->getBoolConfig(CONFIG_DUNGEON_ACCESS_REQUIREMENTS_LFG_DBC_LEVEL_OVERRIDE) && ar && ar->levelMin > 0 && ar->levelMin > level))
+            else if ((dungeon->minLevel > level && !sWorld->getBoolConfig(CONFIG_DUNGEON_ACCESS_REQUIREMENTS_LFG_DBC_LEVEL_OVERRIDE)) || (sWorld->getBoolConfig(CONFIG_DUNGEON_ACCESS_REQUIREMENTS_LFG_DBC_LEVEL_OVERRIDE) && ar && ar->levelMin > 0 && ar->levelMin > level))
                 lockData = LFG_LOCKSTATUS_TOO_LOW_LEVEL;
-            else if ((dungeon->maxlevel < level && !sWorld->getBoolConfig(CONFIG_DUNGEON_ACCESS_REQUIREMENTS_LFG_DBC_LEVEL_OVERRIDE)) || (sWorld->getBoolConfig(CONFIG_DUNGEON_ACCESS_REQUIREMENTS_LFG_DBC_LEVEL_OVERRIDE) && ar && ar->levelMax > 0 && ar->levelMax < level))
+            else if ((dungeon->maxLevel < level && !sWorld->getBoolConfig(CONFIG_DUNGEON_ACCESS_REQUIREMENTS_LFG_DBC_LEVEL_OVERRIDE)) || (sWorld->getBoolConfig(CONFIG_DUNGEON_ACCESS_REQUIREMENTS_LFG_DBC_LEVEL_OVERRIDE) && ar && ar->levelMax > 0 && ar->levelMax < level))
                 lockData = LFG_LOCKSTATUS_TOO_HIGH_LEVEL;
             else if (dungeon->seasonal && !IsSeasonActive(dungeon->id))
                 lockData = LFG_LOCKSTATUS_NOT_IN_SEASON;
@@ -2663,7 +2664,7 @@ namespace lfg
         GroupsStore.erase(it);
     }
 
-    TeamId LFGMgr::GetTeam(ObjectGuid guid)
+    TeamID LFGMgr::GetTeam(ObjectGuid guid)
     {
         return PlayersStore[guid].GetTeam();
     }
@@ -2695,12 +2696,12 @@ namespace lfg
         GroupsStore[gguid].SetLeader(leader);
     }
 
-    void LFGMgr::SetTeam(ObjectGuid guid, TeamId teamId)
+    void LFGMgr::SetTeam(ObjectGuid guid, TeamID teamID)
     {
         if (sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_GROUP))
-            teamId = TEAM_ALLIANCE; // @Not Sure About That TeamId is supposed to be uint8 Team = 0(@TrinityCore)
+            teamID = TEAM_ALLIANCE; // @Not Sure About That TeamId is supposed to be uint8 Team = 0(@TrinityCore)
 
-        PlayersStore[guid].SetTeam(teamId);
+        PlayersStore[guid].SetTeam(teamID);
     }
 
     ObjectGuid LFGMgr::GetGroup(ObjectGuid guid)
@@ -2934,7 +2935,7 @@ namespace lfg
         {
             lfg::LFGDungeonData const& dungeon = itr->second;
             if ((dungeon.type == lfg::LFG_TYPE_RANDOM || (dungeon.seasonal && sLFGMgr->IsSeasonActive(dungeon.id)))
-                    && dungeon.expansion <= expansion && dungeon.minlevel <= level && level <= dungeon.maxlevel)
+                    && dungeon.expansion <= expansion && dungeon.minLevel <= level && level <= dungeon.maxLevel)
                 randomDungeons.insert(dungeon.Entry());
         }
         return randomDungeons;

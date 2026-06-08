@@ -483,7 +483,7 @@ struct boss_majordomo : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (events.IsInPhase(PHASE_DEFEAT_OUTRO) && spellInfo->Id == SPELL_TELEPORT_SELF)
+        if (events.IsInPhase(PHASE_DEFEAT_OUTRO) && spellInfo->ID == SPELL_TELEPORT_SELF)
         {
             me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
             me->SetHomePosition(MajordomoRagnaros);

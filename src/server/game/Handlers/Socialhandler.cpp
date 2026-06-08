@@ -36,7 +36,7 @@ void WorldSession::HandleContactListOpcode(WorldPacket& recv_data)
 
 void WorldSession::HandleAddFriendOpcode(WorldPacket& recv_data)
 {
-    std::string friendName = GetAcoreString(LANG_FRIEND_IGNORE_UNKNOWN);
+    std::string friendName = GetNcoreString(LANG_FRIEND_IGNORE_UNKNOWN);
     std::string friendNote;
 
     recv_data >> friendName;
@@ -53,34 +53,27 @@ void WorldSession::HandleAddFriendOpcode(WorldPacket& recv_data)
     if (!playerData)
         return;
 
-    uint32 friendAccountId = playerData->AccountId;
-    TeamId teamId = Player::TeamIdForRace(playerData->Race);
     FriendsResult friendResult = FRIEND_NOT_FOUND;
 
-    if (!AccountMgr::IsPlayerAccount(GetSecurity()) || sWorld->getBoolConfig(CONFIG_ALLOW_GM_FRIEND)|| AccountMgr::IsPlayerAccount(AccountMgr::GetSecurity(friendAccountId, realm.Id.Realm)))
+    if (friendGuid)
     {
-        if (friendGuid)
+        if (friendGuid == GetPlayer()->GetGUID())
+            friendResult = FRIEND_SELF;
+        else if (GetPlayer()->GetSocial()->HasFriend(friendGuid))
+            friendResult = FRIEND_ALREADY;
+        else
         {
-            if (friendGuid == GetPlayer()->GetGUID())
-                friendResult = FRIEND_SELF;
-            else if (GetPlayer()->GetTeamId() != teamId && !sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_ADD_FRIEND)  && AccountMgr::IsPlayerAccount(GetSecurity()))
-                friendResult = FRIEND_ENEMY;
-            else if (GetPlayer()->GetSocial()->HasFriend(friendGuid))
-                friendResult = FRIEND_ALREADY;
+            Player* pFriend = ObjectAccessor::FindConnectedPlayer(friendGuid);
+            if (pFriend && pFriend->IsVisibleGloballyFor(GetPlayer()) && !pFriend->GetSession()->IsGameMaster())
+                friendResult = FRIEND_ADDED_ONLINE;
             else
-            {
-                Player* pFriend = ObjectAccessor::FindConnectedPlayer(friendGuid);
-                if (pFriend && pFriend->IsVisibleGloballyFor(GetPlayer()) && !pFriend->GetSession()->IsGMAccount())
-                    friendResult = FRIEND_ADDED_ONLINE;
-                else
-                    friendResult = FRIEND_ADDED_OFFLINE;
-                if (GetPlayer()->GetSocial()->AddToSocialList(friendGuid, SOCIAL_FLAG_FRIEND))
-                    GetPlayer()->GetSocial()->SetFriendNote(friendGuid, friendNote);
-                else
-                friendResult = FRIEND_LIST_FULL;
-            }
-            GetPlayer()->GetSocial()->SetFriendNote(friendGuid, friendNote);
+                friendResult = FRIEND_ADDED_OFFLINE;
+            if (GetPlayer()->GetSocial()->AddToSocialList(friendGuid, SOCIAL_FLAG_FRIEND))
+                GetPlayer()->GetSocial()->SetFriendNote(friendGuid, friendNote);
+            else
+            friendResult = FRIEND_LIST_FULL;
         }
+        GetPlayer()->GetSocial()->SetFriendNote(friendGuid, friendNote);
     }
 
     sSocialMgr->SendFriendStatus(GetPlayer(), friendResult, friendGuid, false);
@@ -102,7 +95,7 @@ void WorldSession::HandleDelFriendOpcode(WorldPacket& recv_data)
 
 void WorldSession::HandleAddIgnoreOpcode(WorldPacket& recv_data)
 {
-    std::string ignoreName = GetAcoreString(LANG_FRIEND_IGNORE_UNKNOWN);
+    std::string ignoreName = GetNcoreString(LANG_FRIEND_IGNORE_UNKNOWN);
 
     recv_data >> ignoreName;
 

@@ -121,7 +121,7 @@ public:
     bool HandlePlayerEnter(Player* player) override;
     void HandlePlayerLeave(Player* player) override;
 
-    void ResetToTeamControlled(TeamId team);
+    void ResetToTeamControlled(TeamID team);
 
     void UpdateTowerState();
 
@@ -148,7 +148,7 @@ public:
 
     void SaveRequiredWorldStates() const;
 
-    void ResetZoneToTeamControlled(TeamId team);
+    void ResetZoneToTeamControlled(TeamID team);
 
     void RecalculateClientUILockTime()
     {

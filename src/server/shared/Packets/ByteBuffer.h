@@ -1,34 +1,17 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef BYTE_BUFFER_H
+#define BYTE_BUFFER_H
 
-#ifndef _BYTEBUFFER_H
-#define _BYTEBUFFER_H
-
-#include "ByteConverter.h"
-#include "Define.h"
 #include <array>
 #include <cstring>
 #include <string>
 #include <vector>
 
+#include "Define.h"
+
 class MessageBuffer;
 
 // Root of ByteBuffer exception hierarchy
-class AC_SHARED_API ByteBufferException : public std::exception
+class ByteBufferException : public std::exception
 {
 public:
     ~ByteBufferException() noexcept override = default;
@@ -42,7 +25,7 @@ private:
     std::string msg_;
 };
 
-class AC_SHARED_API ByteBufferPositionException : public ByteBufferException
+class ByteBufferPositionException : public ByteBufferException
 {
 public:
     ByteBufferPositionException(bool add, std::size_t pos, std::size_t size, std::size_t valueSize);
@@ -50,7 +33,7 @@ public:
     ~ByteBufferPositionException() noexcept override = default;
 };
 
-class AC_SHARED_API ByteBufferSourceException : public ByteBufferException
+class ByteBufferSourceException : public ByteBufferException
 {
 public:
     ByteBufferSourceException(std::size_t pos, std::size_t size, std::size_t valueSize);
@@ -58,7 +41,7 @@ public:
     ~ByteBufferSourceException() noexcept override = default;
 };
 
-class AC_SHARED_API ByteBufferInvalidValueException : public ByteBufferException
+class ByteBufferInvalidValueException : public ByteBufferException
 {
 public:
     ByteBufferInvalidValueException(char const* type, char const* value);
@@ -66,24 +49,22 @@ public:
     ~ByteBufferInvalidValueException() noexcept override = default;
 };
 
-class AC_SHARED_API ByteBuffer
+class ByteBuffer
 {
 public:
     constexpr static std::size_t DEFAULT_SIZE = 0x1000;
 
-    // constructor
     ByteBuffer()
     {
         _storage.reserve(DEFAULT_SIZE);
     }
 
-    explicit ByteBuffer(std::size_t reserve) : _rpos(0), _wpos(0)
+    explicit ByteBuffer(const std::size_t reserve)
     {
         _storage.reserve(reserve);
     }
 
-    ByteBuffer(ByteBuffer&& buf) noexcept :
-        _rpos(buf._rpos), _wpos(buf._wpos), _storage(std::move(buf._storage))
+    ByteBuffer(ByteBuffer&& buf) noexcept : _rpos(buf._rpos), _wpos(buf._wpos), _storage(std::move(buf._storage))
     {
         buf._rpos = 0;
         buf._wpos = 0;
@@ -128,104 +109,100 @@ public:
     template <typename T>
     void append(T value)
     {
-        static_assert(std::is_fundamental<T>::value, "append(compound)");
-        EndianConvert(value);
-        append((uint8*)&value, sizeof(value));
+        static_assert(std::is_fundamental_v<T>, "append(compound)");
+        append(reinterpret_cast<uint8*>(&value), sizeof(value));
     }
 
     template <typename T>
-    void put(std::size_t pos, T value)
+    void put(const std::size_t pos, T value)
     {
-        static_assert(std::is_fundamental<T>::value, "append(compound)");
-        EndianConvert(value);
-        put(pos, (uint8*)&value, sizeof(value));
+        static_assert(std::is_fundamental_v<T>, "append(compound)");
+        put(pos, reinterpret_cast<uint8*>(&value), sizeof(value));
     }
 
-    ByteBuffer& operator<<(bool value)
+    ByteBuffer& operator<<(const bool value)
     {
         append<uint8>(value ? 1 : 0);
         return *this;
     }
 
-    ByteBuffer& operator<<(uint8 value)
+    ByteBuffer& operator<<(const uint8 value)
     {
         append<uint8>(value);
         return *this;
     }
 
-    ByteBuffer& operator<<(uint16 value)
+    ByteBuffer& operator<<(const uint16 value)
     {
         append<uint16>(value);
         return *this;
     }
 
-    ByteBuffer& operator<<(uint32 value)
+    ByteBuffer& operator<<(const uint32 value)
     {
         append<uint32>(value);
         return *this;
     }
 
-    ByteBuffer& operator<<(uint64 value)
+    ByteBuffer& operator<<(const uint64 value)
     {
         append<uint64>(value);
         return *this;
     }
 
     // signed as in 2e complement
-    ByteBuffer& operator<<(int8 value)
+    ByteBuffer& operator<<(const int8 value)
     {
         append<int8>(value);
         return *this;
     }
 
-    ByteBuffer& operator<<(int16 value)
+    ByteBuffer& operator<<(const int16 value)
     {
         append<int16>(value);
         return *this;
     }
 
-    ByteBuffer& operator<<(int32 value)
+    ByteBuffer& operator<<(const int32 value)
     {
         append<int32>(value);
         return *this;
     }
 
-    ByteBuffer& operator<<(int64 value)
+    ByteBuffer& operator<<(const int64 value)
     {
         append<int64>(value);
         return *this;
     }
 
     // floating points
-    ByteBuffer& operator<<(float value)
+    ByteBuffer& operator<<(const float value)
     {
         append<float>(value);
         return *this;
     }
 
-    ByteBuffer& operator<<(double value)
+    ByteBuffer& operator<<(const double value)
     {
         append<double>(value);
         return *this;
     }
 
-    ByteBuffer& operator<<(std::string_view value)
+    ByteBuffer& operator<<(const std::string_view value)
     {
-        if (std::size_t len = value.length())
-        {
+        if (const std::size_t len = value.length())
             append(reinterpret_cast<uint8 const*>(value.data()), len);
-        }
 
         append(static_cast<uint8>(0));
         return *this;
     }
 
-    ByteBuffer& operator<<(std::string const& str)
+    ByteBuffer& operator<<(const std::string& str)
     {
         return operator<<(std::string_view(str));
     }
 
-    ByteBuffer& operator<<(char const* str)
+    ByteBuffer& operator<<(const char* str)
     {
         return operator<<(std::string_view(str ? str : ""));
     }
@@ -297,9 +274,7 @@ public:
     uint8& operator[](std::size_t const pos)
     {
         if (pos >= size())
-        {
             throw ByteBufferPositionException(false, pos, 1, size());
-        }
 
         return _storage[pos];
     }
@@ -307,9 +282,7 @@ public:
     uint8 const& operator[](std::size_t const pos) const
     {
         if (pos >= size())
-        {
             throw ByteBufferPositionException(false, pos, 1, size());
-        }
 
         return _storage[pos];
     }
@@ -322,14 +295,14 @@ public:
         return _rpos;
     }
 
-    void rfinish()
+    void rFinish()
     {
         _rpos = wpos();
     }
 
     [[nodiscard]] std::size_t wpos() const { return _wpos; }
 
-    std::size_t wpos(std::size_t wpos_)
+    std::size_t wpos(const std::size_t wpos_)
     {
         _wpos = wpos_;
         return _wpos;
@@ -338,12 +311,10 @@ public:
     template<typename T>
     void read_skip() { read_skip(sizeof(T)); }
 
-    void read_skip(std::size_t skip)
+    void read_skip(const std::size_t skip)
     {
         if (_rpos + skip > size())
-        {
             throw ByteBufferPositionException(false, _rpos, skip, size());
-        }
 
         _rpos += skip;
     }
@@ -355,24 +326,18 @@ public:
         return r;
     }
 
-    template <typename T> [[nodiscard]] T read(std::size_t pos) const
+    template <typename T>
+    [[nodiscard]] T read(const std::size_t pos) const
     {
         if (pos + sizeof(T) > size())
-        {
             throw ByteBufferPositionException(false, pos, sizeof(T), size());
-        }
-
-        T val = *((T const*)&_storage[pos]);
-        EndianConvert(val);
-        return val;
+        return *reinterpret_cast<T const*>(&_storage[pos]);
     }
 
-    void read(uint8* dest, std::size_t len)
+    void read(uint8* dest, const std::size_t len)
     {
         if (_rpos  + len > size())
-        {
             throw ByteBufferPositionException(false, _rpos, len, size());
-        }
 
         std::memcpy(dest, &_storage[_rpos], len);
         _rpos += len;
@@ -387,27 +352,23 @@ public:
     void readPackGUID(uint64& guid)
     {
         if (rpos() + 1 > size())
-        {
             throw ByteBufferPositionException(false, _rpos, 1, size());
-        }
 
         guid = 0;
 
-        uint8 guidmark = 0;
-        (*this) >> guidmark;
+        uint8 guidMark = 0;
+        *this >> guidMark;
 
         for (int i = 0; i < 8; ++i)
         {
-            if (guidmark & (uint8(1) << i))
+            if (guidMark & (static_cast<uint8>(1) << i))
             {
                 if (rpos() + 1 > size())
-                {
                     throw ByteBufferPositionException(false, _rpos, 1, size());
-                }
 
                 uint8 bit;
-                (*this) >> bit;
-                guid |= (uint64(bit) << (i * 8));
+                *this >> bit;
+                guid |= (static_cast<uint64>(bit) << (i * 8));
             }
         }
     }
@@ -424,9 +385,7 @@ public:
     uint8* contents()
     {
         if (_storage.empty())
-        {
             throw ByteBufferException();
-        }
 
         return _storage.data();
     }
@@ -434,9 +393,7 @@ public:
     [[nodiscard]] uint8 const* contents() const
     {
         if (_storage.empty())
-        {
             throw ByteBufferException();
-        }
 
         return _storage.data();
     }
@@ -444,19 +401,17 @@ public:
     [[nodiscard]] std::size_t size() const { return _storage.size(); }
     [[nodiscard]] bool empty() const { return _storage.empty(); }
 
-    void resize(std::size_t newsize)
+    void resize(const std::size_t newSize)
     {
-        _storage.resize(newsize, 0);
+        _storage.resize(newSize, 0);
         _rpos = 0;
         _wpos = size();
     }
 
-    void reserve(std::size_t ressize)
+    void reserve(const std::size_t resSize)
     {
-        if (ressize > size())
-        {
-            _storage.reserve(ressize);
-        }
+        if (resSize > size())
+            _storage.reserve(resSize);
     }
 
     void shrink_to_fit()
@@ -464,14 +419,14 @@ public:
         _storage.shrink_to_fit();
     }
 
-    void append(char const* src, std::size_t cnt)
+    void append(char const* src, const std::size_t cnt)
     {
-        return append((uint8 const*)src, cnt);
+        return append(reinterpret_cast<const uint8*>(src), cnt);
     }
 
-    template<class T> void append(const T* src, std::size_t cnt)
+    template<class T> void append(const T* src, const std::size_t cnt)
     {
-        return append((uint8 const*)src, cnt * sizeof(T));
+        return append(reinterpret_cast<const uint8*>(src), cnt * sizeof(T));
     }
 
     void append(uint8 const* src, std::size_t cnt);
@@ -490,13 +445,13 @@ public:
         append(arr.data(), Size);
     }
 
-    // can be used in SMSG_MONSTER_MOVE opcode
-    void appendPackXYZ(float x, float y, float z)
+    // Can be used in SMSG_MONSTER_MOVE opcode
+    void appendPackXYZ(const float x, const float y, const float z)
     {
         uint32 packed = 0;
-        packed |= ((int)(x / 0.25f) & 0x7FF);
-        packed |= ((int)(y / 0.25f) & 0x7FF) << 11;
-        packed |= ((int)(z / 0.25f) & 0x3FF) << 22;
+        packed |= static_cast<int>(x / 0.25f) & 0x7FF;
+        packed |= (static_cast<int>(y / 0.25f) & 0x7FF) << 11;
+        packed |= (static_cast<int>(z / 0.25f) & 0x3FF) << 22;
         *this << packed;
     }
 
@@ -510,8 +465,8 @@ public:
         {
             if (guid & 0xFF)
             {
-                packGUID[0] |= uint8(1 << i);
-                packGUID[size] =  uint8(guid & 0xFF);
+                packGUID[0] |= static_cast<uint8>(1 << i);
+                packGUID[size] =  static_cast<uint8>(guid & 0xFF);
                 ++size;
             }
 
@@ -524,40 +479,11 @@ public:
     void AppendPackedTime(time_t time);
     void put(std::size_t pos, uint8 const* src, std::size_t cnt);
     void print_storage() const;
-    void textlike() const;
-    void hexlike() const;
+    void textLike() const;
+    void hexLike() const;
 
 protected:
     std::size_t _rpos{0}, _wpos{0};
     std::vector<uint8> _storage;
 };
-
-/// @todo Make a ByteBuffer.cpp and move all this inlining to it.
-template<>
-inline std::string ByteBuffer::read<std::string>()
-{
-    std::string tmp;
-    *this >> tmp;
-    return tmp;
-}
-
-template<>
-inline void ByteBuffer::read_skip<char*>()
-{
-    std::string temp;
-    *this >> temp;
-}
-
-template<>
-inline void ByteBuffer::read_skip<char const*>()
-{
-    read_skip<char*>();
-}
-
-template<>
-inline void ByteBuffer::read_skip<std::string>()
-{
-    read_skip<char*>();
-}
-
 #endif

@@ -738,7 +738,7 @@ class spell_ulduar_stone_grip_cast_target : public SpellScript
         // Remove "main tank" and non-player targets
         targets.remove_if(StoneGripTargetSelector(GetCaster()->ToCreature(), GetCaster()->GetVictim()));
         // Maximum affected targets per difficulty mode
-        uint32 maxTargets = GetSpellInfo()->Id == SPELL_STONE_GRIP ? 1 : 3;
+        uint32 maxTargets = GetSpellInfo()->ID == SPELL_STONE_GRIP ? 1 : 3;
 
         // Return a random amount of targets based on maxTargets
         while (maxTargets < targets.size())

@@ -1166,7 +1166,7 @@ public:
             {
                 return;
             }
-            player->CastSpell(player, spellInfoTrigger->Id, false);
+            player->CastSpell(player, spellInfoTrigger->ID, false);
             if (TempSummon* summons = go->SummonCreature(npc, go->GetPositionX(), go->GetPositionY(), go->GetPositionZ(), player->GetOrientation() - M_PI, TEMPSUMMON_TIMED_DESPAWN_OOC_ALIVE, 6000))
             {
                 summons->SetCorpseDelay(5 * MINUTE);

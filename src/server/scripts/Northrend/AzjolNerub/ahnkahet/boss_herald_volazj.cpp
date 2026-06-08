@@ -408,7 +408,7 @@ class spell_volazj_whisper : public SpellScript
         }
 
         uint32 text = 0;
-        switch (GetSpellInfo()->Id)
+        switch (GetSpellInfo()->ID)
         {
             case SPELL_WHISPER_AGGRO:    text = WHISPER_AGGRO;    break;
             case SPELL_WHISPER_INSANITY: text = WHISPER_INSANITY; break;

@@ -21,7 +21,6 @@
 #include "Log.h"
 #include "Map.h"
 #include "MapMgr.h"
-#include "Metric.h"
 
 class UpdateRequest
 {
@@ -42,7 +41,6 @@ public:
 
     void call() override
     {
-        METRIC_TIMER("map_update_time_diff", METRIC_TAG("map_id", std::to_string(m_map.GetId())));
         m_map.Update(m_diff, s_diff);
         m_updater.update_finished();
     }
@@ -90,35 +88,26 @@ private:
     uint32 m_diff;
 };
 
-MapUpdater::MapUpdater() : pending_requests(0), _cancelationToken(false)
+MapUpdater::MapUpdater() : pending_requests(0), _cancellationToken(false)
 {
 }
 
-void MapUpdater::activate(std::size_t num_threads)
+void MapUpdater::activate()
 {
-    _workerThreads.reserve(num_threads);
-    for (std::size_t i = 0; i < num_threads; ++i)
-    {
-        _workerThreads.push_back(std::thread(&MapUpdater::WorkerThread, this));
-    }
+    _workerThread = std::make_unique<std::thread>(&MapUpdater::WorkerThread, this);
 }
 
 void MapUpdater::deactivate()
 {
-    _cancelationToken = true;
+    _cancellationToken = true;
 
     wait();  // This is where we wait for tasks to complete
 
     _queue.Cancel();  // Cancel the queue to prevent further task processing
 
-    // Join all worker threads
-    for (auto& thread : _workerThreads)
-    {
-        if (thread.joinable())
-        {
-            thread.join();
-        }
-    }
+    // Join worker thread
+    if (_workerThread && _workerThread->joinable())
+        _workerThread->join();
 }
 
 void MapUpdater::wait()
@@ -155,7 +144,7 @@ void MapUpdater::schedule_lfg_update(uint32 diff)
 
 bool MapUpdater::activated()
 {
-    return !_workerThreads.empty();
+    return _workerThread != nullptr;
 }
 
 void MapUpdater::update_finished()
@@ -171,17 +160,13 @@ void MapUpdater::update_finished()
 
 void MapUpdater::WorkerThread()
 {
-    LoginDatabase.WarnAboutSyncQueries(true);
-    CharacterDatabase.WarnAboutSyncQueries(true);
-    WorldDatabase.WarnAboutSyncQueries(true);
-
-    while (!_cancelationToken)
+    while (!_cancellationToken)
     {
         UpdateRequest* request = nullptr;
 
         _queue.WaitAndPop(request);  // Wait for and pop a request from the queue
 
-        if (!_cancelationToken && request)
+        if (!_cancellationToken && request)
         {
             request->call();  // Execute the request
             delete request;  // Clean up after processing

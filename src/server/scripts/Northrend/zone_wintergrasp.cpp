@@ -226,7 +226,7 @@ public:
         GraveyardVect graveyard = wintergrasp->GetGraveyardVector();
         for (uint8 i = 0; i < graveyard.size(); i++)
             if (graveyard[i]->GetControlTeamId() == player->GetTeamId())
-                AddGossipItemFor(player, GOSSIP_ICON_CHAT, sObjectMgr->GetAcoreStringForDBCLocale(((BfGraveyardWG*)graveyard[i])->GetTextId()), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + i);
+                AddGossipItemFor(player, GOSSIP_ICON_CHAT, sObjectMgr->GetNcoreString(((BfGraveyardWG*)graveyard[i])->GetTextId()), GOSSIP_SENDER_MAIN, GOSSIP_ACTION_INFO_DEF + i);
 
         SendGossipMenuFor(player, player->GetGossipTextId(creature), creature->GetGUID());
         return true;
@@ -825,7 +825,7 @@ public:
                 if (me->GetVehicleKit())
                     for (SeatMap::iterator itr = me->GetVehicleKit()->Seats.begin(); itr != me->GetVehicleKit()->Seats.end(); ++itr)
                         if (const VehicleSeatEntry* seatInfo = itr->second.SeatInfo)
-                            if (seatInfo->m_flags & VEHICLE_SEAT_FLAG_CAN_CONTROL)
+                            if (seatInfo->Flags & VEHICLE_SEAT_FLAG_CAN_CONTROL)
                                 if (Unit* passenger = ObjectAccessor::GetUnit(*me, itr->second.Passenger.Guid))
                                     if (!CanControlVehicle(passenger))
                                     {
@@ -961,7 +961,7 @@ class spell_wintergrasp_create_vehicle : public SpellScript
 
             uint32 entry = GetSpellInfo()->Effects[effIndex].MiscValue;
             int32 duration = GetSpellInfo()->GetDuration();
-            if (TempSummon* summon = caster->GetMap()->SummonCreature(entry, *GetHitDest(), properties, duration, originalCaster, GetSpellInfo()->Id))
+            if (TempSummon* summon = caster->GetMap()->SummonCreature(entry, *GetHitDest(), properties, duration, originalCaster, GetSpellInfo()->ID))
             {
                 if (summon->IsInMap(caster))
                 {
@@ -1121,7 +1121,7 @@ public:
                 return false;
 
             if (Vehicle* vehicle = source->GetVehicle())
-                if (vehicle->GetVehicleInfo()->m_ID == 244) // Wintergrasp Tower Cannon
+                if (vehicle->GetVehicleInfo()->ID == 244) // Wintergrasp Tower Cannon
                     return true;
         }
 

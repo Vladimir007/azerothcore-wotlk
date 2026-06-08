@@ -90,7 +90,7 @@ public:
             envelopingWinds_Timer = 9000;
             shock_Timer = 5000;
 
-            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
             me->SetFaction(FACTION_FRIENDLY);
 
             Talk(SAY_SUMMON);
@@ -101,7 +101,7 @@ public:
             if (_defeated)
             {
                 Talk(SAY_FREE);
-                me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
             }
         }
 
@@ -486,7 +486,7 @@ struct npc_magister_aledis : public ScriptedAI
     void Reset() override
     {
         me->RestoreFaction();
-        me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+        me->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
         me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
         me->SetImmuneToPC(true);
     }
@@ -502,7 +502,7 @@ struct npc_magister_aledis : public ScriptedAI
             me->RemoveAllAuras();
             me->GetThreatMgr().ClearAllThreat();
             me->CombatStop(true);
-            me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+            me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
             me->SetImmuneToPC(true);
             Talk(SAY_DEFEATED);
 

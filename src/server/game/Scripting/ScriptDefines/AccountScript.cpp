@@ -19,44 +19,9 @@
 #include "ScriptMgr.h"
 #include "ScriptMgrMacros.h"
 
-void ScriptMgr::OnAccountLogin(uint32 accountId)
-{
-    CALL_ENABLED_HOOKS(AccountScript, ACCOUNTHOOK_ON_ACCOUNT_LOGIN, script->OnAccountLogin(accountId));
-}
-
 void ScriptMgr::OnBeforeAccountDelete(uint32 accountId)
 {
     CALL_ENABLED_HOOKS(AccountScript, ACCOUNTHOOK_ON_BEFORE_ACCOUNT_DELETE, script->OnBeforeAccountDelete(accountId));
-}
-
-void ScriptMgr::OnLastIpUpdate(uint32 accountId, std::string ip)
-{
-    CALL_ENABLED_HOOKS(AccountScript, ACCOUNTHOOK_ON_LAST_IP_UPDATE, script->OnLastIpUpdate(accountId, ip));
-}
-
-void ScriptMgr::OnFailedAccountLogin(uint32 accountId)
-{
-    CALL_ENABLED_HOOKS(AccountScript, ACCOUNTHOOK_ON_FAILED_ACCOUNT_LOGIN, script->OnFailedAccountLogin(accountId));
-}
-
-void ScriptMgr::OnEmailChange(uint32 accountId)
-{
-    CALL_ENABLED_HOOKS(AccountScript, ACCOUNTHOOK_ON_EMAIL_CHANGE, script->OnEmailChange(accountId));
-}
-
-void ScriptMgr::OnFailedEmailChange(uint32 accountId)
-{
-    CALL_ENABLED_HOOKS(AccountScript, ACCOUNTHOOK_ON_FAILED_EMAIL_CHANGE, script->OnFailedEmailChange(accountId));
-}
-
-void ScriptMgr::OnPasswordChange(uint32 accountId)
-{
-    CALL_ENABLED_HOOKS(AccountScript, ACCOUNTHOOK_ON_PASSWORD_CHANGE, script->OnPasswordChange(accountId));
-}
-
-void ScriptMgr::OnFailedPasswordChange(uint32 accountId)
-{
-    CALL_ENABLED_HOOKS(AccountScript, ACCOUNTHOOK_ON_FAILED_PASSWORD_CHANGE, script->OnFailedPasswordChange(accountId));
 }
 
 bool ScriptMgr::CanAccountCreateCharacter(uint32 accountId, uint8 charRace, uint8 charClass)

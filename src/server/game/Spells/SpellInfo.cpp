@@ -509,9 +509,9 @@ int32 SpellEffectInfo::CalcValue(Unit const* caster, int32 const* bp, Unit const
                 CreatureTemplate const* cInfo = caster->ToCreature()->GetCreatureTemplate();
 
                 CreatureBaseStats const* pCBS = sObjectMgr->GetCreatureBaseStats(caster->GetLevel(), caster->getClass());
-                float CBSPowerCreature = pCBS->BaseDamage[cInfo->expansion];
+                float CBSPowerCreature = pCBS->BaseDamage[cInfo->Expansion];
                 CreatureBaseStats const* spellCBS = sObjectMgr->GetCreatureBaseStats(_spellInfo->SpellLevel, caster->getClass());
-                float CBSPowerSpell = spellCBS->BaseDamage[cInfo->expansion];
+                float CBSPowerSpell = spellCBS->BaseDamage[cInfo->Expansion];
                 value *= CBSPowerCreature / CBSPowerSpell;
             }
         }
@@ -532,7 +532,7 @@ float SpellEffectInfo::CalcValueMultiplier(Unit* caster, Spell* spell) const
 {
     float multiplier = ValueMultiplier;
     if (Player* modOwner = (caster ? caster->GetSpellModOwner() : nullptr))
-        modOwner->ApplySpellMod(_spellInfo->Id, SPELLMOD_VALUE_MULTIPLIER, multiplier, spell);
+        modOwner->ApplySpellMod(_spellInfo->ID, SPELLMOD_VALUE_MULTIPLIER, multiplier, spell);
     return multiplier;
 }
 
@@ -540,7 +540,7 @@ float SpellEffectInfo::CalcDamageMultiplier(Unit* caster, Spell* spell) const
 {
     float multiplier = DamageMultiplier;
     if (Player* modOwner = (caster ? caster->GetSpellModOwner() : nullptr))
-        modOwner->ApplySpellMod(_spellInfo->Id, SPELLMOD_DAMAGE_MULTIPLIER, multiplier, spell);
+        modOwner->ApplySpellMod(_spellInfo->ID, SPELLMOD_DAMAGE_MULTIPLIER, multiplier, spell);
     return multiplier;
 }
 
@@ -560,7 +560,7 @@ float SpellEffectInfo::CalcRadius(Unit* caster, Spell* spell) const
         radius += RadiusEntry->RadiusPerLevel * caster->GetLevel();
         radius = std::min(radius, RadiusEntry->RadiusMax);
         if (Player* modOwner = caster->GetSpellModOwner())
-            modOwner->ApplySpellMod(_spellInfo->Id, SPELLMOD_RADIUS, radius, spell);
+            modOwner->ApplySpellMod(_spellInfo->ID, SPELLMOD_RADIUS, radius, spell);
     }
 
     return radius;
@@ -785,7 +785,7 @@ std::array<SpellEffectInfo::StaticData, TOTAL_SPELL_EFFECTS> SpellEffectInfo::_d
 
 SpellInfo::SpellInfo(SpellEntry const* spellEntry)
 {
-    Id = spellEntry->Id;
+    ID = spellEntry->ID;
     CategoryEntry = spellEntry->Category ? sSpellCategoryStore.LookupEntry(spellEntry->Category) : nullptr;
     Dispel = spellEntry->Dispel;
     Mechanic = spellEntry->Mechanic;
@@ -829,7 +829,7 @@ SpellInfo::SpellInfo(SpellEntry const* spellEntry)
     DurationEntry = spellEntry->DurationIndex ? sSpellDurationStore.LookupEntry(spellEntry->DurationIndex) : nullptr;
     PowerType = spellEntry->PowerType;
     ManaCost = spellEntry->ManaCost;
-    ManaCostPerlevel = spellEntry->ManaCostPerlevel;
+    ManaCostPerlevel = spellEntry->ManaCostPerLevel;
     ManaPerSecond = spellEntry->ManaPerSecond;
     ManaPerSecondPerLevel = spellEntry->ManaPerSecondPerLevel;
     ManaCostPercentage = spellEntry->ManaCostPercentage;
@@ -879,7 +879,7 @@ SpellInfo::~SpellInfo()
 
 uint32 SpellInfo::GetCategory() const
 {
-    return CategoryEntry ? CategoryEntry->Id : 0;
+    return CategoryEntry ? CategoryEntry->ID : 0;
 }
 
 bool SpellInfo::HasEffect(SpellEffects effect) const
@@ -951,7 +951,7 @@ bool SpellInfo::IsExplicitDiscovery() const
     return ((Effects[0].Effect == SPELL_EFFECT_CREATE_RANDOM_ITEM
              || Effects[0].Effect == SPELL_EFFECT_CREATE_ITEM_2)
             && Effects[1].Effect == SPELL_EFFECT_SCRIPT_EFFECT)
-           || Id == 64323;
+           || ID == 64323;
 }
 
 bool SpellInfo::IsLootCrafting() const
@@ -1019,7 +1019,7 @@ bool SpellInfo::IsPrimaryProfessionFirstRank() const
 
 bool SpellInfo::IsAbilityLearnedWithProfession() const
 {
-    SkillLineAbilityMapBounds bounds = sSpellMgr->GetSkillLineAbilityMapBounds(Id);
+    SkillLineAbilityMapBounds bounds = sSpellMgr->GetSkillLineAbilityMapBounds(ID);
 
     for (SkillLineAbilityMap::const_iterator _spell_idx = bounds.first; _spell_idx != bounds.second; ++_spell_idx)
     {
@@ -1036,7 +1036,7 @@ bool SpellInfo::IsAbilityLearnedWithProfession() const
 
 bool SpellInfo::IsAbilityOfSkillType(uint32 skillType) const
 {
-    SkillLineAbilityMapBounds bounds = sSpellMgr->GetSkillLineAbilityMapBounds(Id);
+    SkillLineAbilityMapBounds bounds = sSpellMgr->GetSkillLineAbilityMapBounds(ID);
 
     for (SkillLineAbilityMap::const_iterator _spell_idx = bounds.first; _spell_idx != bounds.second; ++_spell_idx)
         if (_spell_idx->second->SkillLine == uint32(skillType))
@@ -1076,7 +1076,7 @@ bool SpellInfo::NeedsToBeTriggeredByCaster(SpellInfo const* triggeringSpell, uin
     if (effIndex < MAX_SPELL_EFFECTS && (triggeringSpell->Effects[effIndex].TargetA.GetCheckType() == TARGET_CHECK_ENTRY || triggeringSpell->Effects[effIndex].TargetB.GetCheckType() == TARGET_CHECK_ENTRY))
     {
         // xinef:
-        if (Id == 60563)
+        if (ID == 60563)
             return true;
 
         for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
@@ -1238,7 +1238,7 @@ bool SpellInfo::IsPassiveStackableWithRanks() const
 
 bool SpellInfo::IsMultiSlotAura() const
 {
-    return IsPassive() || Id == 40075; // No other way to make 40075 have more than 1 copy of aura
+    return IsPassive() || ID == 40075; // No other way to make 40075 have more than 1 copy of aura
 }
 
 bool SpellInfo::IsCooldownStartedOnEvent() const
@@ -1445,7 +1445,7 @@ SpellCastResult SpellInfo::CheckShapeshift(uint32 form) const
 {
     // talents that learn spells can have stance requirements that need ignore
     // (this requirement only for client-side stance show in talent description)
-    if (GetTalentSpellCost(Id) > 0 &&
+    if (GetTalentSpellCost(ID) > 0 &&
             (Effects[0].Effect == SPELL_EFFECT_LEARN_SPELL || Effects[1].Effect == SPELL_EFFECT_LEARN_SPELL || Effects[2].Effect == SPELL_EFFECT_LEARN_SPELL))
         return SPELL_CAST_OK;
 
@@ -1467,7 +1467,7 @@ SpellCastResult SpellInfo::CheckShapeshift(uint32 form) const
             LOG_ERROR("spells", "GetErrorAtShapeshiftedCast: unknown shapeshift {}", form);
             return SPELL_CAST_OK;
         }
-        actAsShifted = !(shapeInfo->flags1 & SHAPESHIFT_FLAG_STANCE);            // shapeshift acts as normal form for spells
+        actAsShifted = !(shapeInfo->Flags & SHAPESHIFT_FLAG_STANCE);            // shapeshift acts as normal form for spells
     }
 
     if (actAsShifted)
@@ -1487,7 +1487,7 @@ SpellCastResult SpellInfo::CheckShapeshift(uint32 form) const
     // Check if stance disables cast of not-stance spells
     // Example: cannot cast any other spells in zombie or ghoul form
     /// @todo: Find a way to disable use of these spells clientside
-    if (shapeInfo && (shapeInfo->flags1 & SHAPESHIFT_FLAG_CAN_ONLY_CAST_SHAPESHIFT_SPELLS))
+    if (shapeInfo && (shapeInfo->Flags & SHAPESHIFT_FLAG_CAN_ONLY_CAST_SHAPESHIFT_SPELLS))
     {
         if (!(stanceMask & Stances))
             return SPELL_FAILED_ONLY_SHAPESHIFT;
@@ -1508,10 +1508,10 @@ SpellCastResult SpellInfo::CheckLocation(uint32 map_id, uint32 zone_id, uint32 a
             for (uint8 i = 0; i < MAX_GROUP_AREA_IDS; ++i)
                 if (groupEntry->AreaId[i] == zone_id || groupEntry->AreaId[i] == area_id)
                     found = true;
-            if (found || !groupEntry->nextGroup)
+            if (found || !groupEntry->NextGroup)
                 break;
             // Try search in next group
-            groupEntry = sAreaGroupStore.LookupEntry(groupEntry->nextGroup);
+            groupEntry = sAreaGroupStore.LookupEntry(groupEntry->NextGroup);
         }
 
         if (!found)
@@ -1527,7 +1527,7 @@ SpellCastResult SpellInfo::CheckLocation(uint32 map_id, uint32 zone_id, uint32 a
             areaEntry = sAreaTableStore.LookupEntry(zone_id);
         }
 
-        if (!areaEntry || !areaEntry->IsFlyable() || (strict && (areaEntry->flags & AREA_FLAG_NO_FLY_ZONE) != 0) || !player->canFlyInZone(map_id, zone_id, this))
+        if (!areaEntry || !areaEntry->IsFlyable() || (strict && (areaEntry->Flags & AREA_FLAG_NO_FLY_ZONE) != 0) || !player->canFlyInZone(map_id, zone_id, this))
         {
             return SPELL_FAILED_INCORRECT_AREA;
         }
@@ -1542,7 +1542,7 @@ SpellCastResult SpellInfo::CheckLocation(uint32 map_id, uint32 zone_id, uint32 a
     }
 
     // DB base check (if non empty then must fit at least single for allow)
-    SpellAreaMapBounds saBounds = sSpellMgr->GetSpellAreaMapBounds(Id);
+    SpellAreaMapBounds saBounds = sSpellMgr->GetSpellAreaMapBounds(ID);
     if (saBounds.first != saBounds.second)
     {
         for (SpellAreaMap::const_iterator itr = saBounds.first; itr != saBounds.second; ++itr)
@@ -1554,7 +1554,7 @@ SpellCastResult SpellInfo::CheckLocation(uint32 map_id, uint32 zone_id, uint32 a
     }
 
     // bg spell checks
-    switch (Id)
+    switch (ID)
     {
         case 23333:                                         // Warsong Flag
         case 23335:                                         // Silverwing Flag
@@ -1636,14 +1636,14 @@ bool SpellInfo::ValidateAttribute6SpellDamageMods(Unit const* caster, const Aura
 
     // Xinef we have a hook to decide which auras should profit to the spell, by default no profits
     // Xinef: Scourge Strike - Trigger
-    if (Id == 70890 && auraEffect)
+    if (ID == 70890 && auraEffect)
     {
         SpellInfo const* auraInfo = auraEffect->GetSpellInfo();
         return auraInfo->SpellIconID == 3086 ||
                (auraInfo->SpellFamilyName == SPELLFAMILY_DEATHKNIGHT && (auraInfo->SpellFamilyFlags & flag96(8388608, 64, 16) || auraInfo->SpellIconID == 235 || auraInfo->SpellIconID == 154));
     }
     // Xinef: Necrosis, no profits for done and taken
-    else if (Id == 51460)
+    else if (ID == 51460)
         return false;
 
     // Xinef: Do not affect dots and auras obtained from items, only affected by self casted auras
@@ -1670,7 +1670,7 @@ SpellCastResult SpellInfo::CheckTarget(Unit const* caster, WorldObject const* ta
 
         if (HasAttribute(SPELL_ATTR3_NOT_ON_AOE_IMMUNE))
             if (auto creature = unitTarget->ToCreature())
-                if (CreatureImmunities const* immunities = sSpellMgr->GetCreatureImmunities(creature->GetCreatureTemplate()->CreatureImmunitiesId))
+                if (CreatureImmunities const* immunities = sSpellMgr->GetCreatureImmunities(creature->GetCreatureTemplate()->CreatureImmunitiesID))
                     if (immunities->ImmuneAoE)
                         return SPELL_FAILED_BAD_TARGETS;
 
@@ -1699,7 +1699,7 @@ SpellCastResult SpellInfo::CheckTarget(Unit const* caster, WorldObject const* ta
                     if (!targetCreature)
                         return SPELL_FAILED_BAD_TARGETS;
 
-                    if (!LootTemplates_Pickpocketing.HaveLootFor(targetCreature->GetCreatureTemplate()->pickpocketLootId))
+                    if (!LootTemplates_Pickpocketing.HaveLootFor(targetCreature->GetCreatureTemplate()->PickpocketLootID))
                         return SPELL_FAILED_TARGET_NO_POCKETS;
                 }
 
@@ -2021,7 +2021,7 @@ AuraStateType SpellInfo::LoadAuraState() const
                                         || Effects[i].ApplyAuraName == SPELL_AURA_MOD_ROOT))
                 return AURA_STATE_FROZEN;
 
-    switch (Id)
+    switch (ID)
     {
         case 71465: // Divine Surge
         case 50241: // Oculus, Drake spell Evasive Maneuvers
@@ -2094,7 +2094,7 @@ SpellSpecificType SpellInfo::LoadSpellSpecific() const
                 else
                 {
                     SpellInfo const* firstRankSpellInfo = GetFirstRankSpell();
-                    switch (firstRankSpellInfo->Id)
+                    switch (firstRankSpellInfo->ID)
                     {
                         case 8118: // Strength
                         case 8099: // Stamina
@@ -2168,7 +2168,7 @@ SpellSpecificType SpellInfo::LoadSpellSpecific() const
                     return SPELL_SPECIFIC_HAND;
 
                 // Judgement of Wisdom, Judgement of Light, Judgement of Justice
-                if (Id == 20184 || Id == 20185 || Id == 20186)
+                if (ID == 20184 || ID == 20185 || ID == 20186)
                     return SPELL_SPECIFIC_JUDGEMENT;
 
                 // only paladin auras have this (for palaldin class family)
@@ -2176,7 +2176,7 @@ SpellSpecificType SpellInfo::LoadSpellSpecific() const
                     return SPELL_SPECIFIC_AURA;
 
                 // Illidari Council Paladin (Gathios the Shatterer)
-                if (Id == 41459 || Id == 41469)
+                if (ID == 41459 || ID == 41469)
                     return SPELL_SPECIFIC_SEAL;
 
                 break;
@@ -2186,13 +2186,13 @@ SpellSpecificType SpellInfo::LoadSpellSpecific() const
                 // family flags 10 (Lightning), 42 (Earth), 37 (Water), proc shield from T2 8 pieces bonus
                 if (SpellFamilyFlags[1] & 0x420
                         || (SpellFamilyFlags[0] & 0x00000400 && HasAttribute(SPELL_ATTR1_NO_THREAT))
-                        || Id == 23552)
+                        || ID == 23552)
                     return SPELL_SPECIFIC_ELEMENTAL_SHIELD;
 
                 break;
             }
         case SPELLFAMILY_DEATHKNIGHT:
-            if (Id == 48266 || Id == 48263 || Id == 48265)
+            if (ID == 48266 || ID == 48263 || ID == 48265)
                 return SPELL_SPECIFIC_PRESENCE;
             break;
     }
@@ -2210,7 +2210,7 @@ SpellSpecificType SpellInfo::LoadSpellSpecific() const
                     return SPELL_SPECIFIC_CHARM;
                 case SPELL_AURA_TRACK_CREATURES:
                     /// @workaround For non-stacking tracking spells (We need generic solution)
-                    if (Id == 30645) // Gas Cloud Tracking
+                    if (ID == 30645) // Gas Cloud Tracking
                         return SPELL_SPECIFIC_NORMAL;
                     [[fallthrough]]; /// @todo: Not sure whether the fallthrough was a mistake (forgetting a break) or intended. This should be double-checked.
                 case SPELL_AURA_TRACK_RESOURCES:
@@ -2278,7 +2278,7 @@ void SpellInfo::_LoadImmunityInfo()
                     }
                     case 679:
                     {
-                        if (Id == 57742)
+                        if (ID == 57742)
                         {
                             mechanicImmunityMask |= (1ULL << MECHANIC_SNARE) | (1ULL << MECHANIC_ROOT)
                                                      | (1ULL << MECHANIC_FEAR) | (1ULL << MECHANIC_STUN)
@@ -2297,7 +2297,7 @@ void SpellInfo::_LoadImmunityInfo()
                     }
                     case 1557:
                     {
-                        if (Id == 64187)
+                        if (ID == 64187)
                         {
                             mechanicImmunityMask |= (1ULL << MECHANIC_STUN);
                             immuneInfo.AuraTypeImmune.insert(SPELL_AURA_MOD_STUN);
@@ -2329,7 +2329,7 @@ void SpellInfo::_LoadImmunityInfo()
                     }
                     case 1630:
                     {
-                        if (Id == 64112)
+                        if (ID == 64112)
                         {
                             immuneInfo.SpellEffectImmune.insert(SPELL_EFFECT_ATTACK_ME);
                             immuneInfo.AuraTypeImmune.insert(SPELL_AURA_MOD_TAUNT);
@@ -2378,7 +2378,7 @@ void SpellInfo::_LoadImmunityInfo()
                     }
                     case 878:
                     {
-                        if (Id == 66092)
+                        if (ID == 66092)
                         {
                             mechanicImmunityMask |= (1ULL << MECHANIC_SNARE) | (1ULL << MECHANIC_STUN)
                                                      | (1ULL << MECHANIC_DISORIENTED) | (1ULL << MECHANIC_FREEZE);
@@ -2416,7 +2416,7 @@ void SpellInfo::_LoadImmunityInfo()
             }
             case SPELL_AURA_MECHANIC_IMMUNITY:
             {
-                switch (Id)
+                switch (ID)
                 {
                     case 34471: // The Beast Within
                     case 19574: // Bestial Wrath
@@ -2500,14 +2500,14 @@ void SpellInfo::ApplyAllSpellImmunitiesTo(Unit* target, SpellEffectInfo const* e
 
     if (uint32 schoolImmunity = immuneInfo->SchoolImmuneMask)
     {
-        target->ApplySpellImmune(Id, IMMUNITY_SCHOOL, schoolImmunity, apply);
+        target->ApplySpellImmune(ID, IMMUNITY_SCHOOL, schoolImmunity, apply);
 
         if (apply && HasAttribute(SPELL_ATTR1_IMMUNITY_PURGES_EFFECT))
 {
             target->RemoveAppliedAuras([this, target, schoolImmunity](AuraApplication const* aurApp) -> bool
             {
                 SpellInfo const* auraSpellInfo = aurApp->GetBase()->GetSpellInfo();
-                if (auraSpellInfo->Id == Id)                                     // Don't remove self
+                if (auraSpellInfo->ID == ID)                                     // Don't remove self
                     return false;
                 if (auraSpellInfo->IsPassive())                                  // Don't remove passive auras
                     return false;
@@ -2530,15 +2530,15 @@ void SpellInfo::ApplyAllSpellImmunitiesTo(Unit* target, SpellEffectInfo const* e
     {
         for (uint32 i = 0; i < MAX_MECHANIC; ++i)
             if (mechanicImmunity & (1ULL << i))
-                target->ApplySpellImmune(Id, IMMUNITY_MECHANIC, i, apply);
+                target->ApplySpellImmune(ID, IMMUNITY_MECHANIC, i, apply);
 
         if (apply && HasAttribute(SPELL_ATTR1_IMMUNITY_PURGES_EFFECT))
-            target->RemoveAurasWithMechanic(mechanicImmunity, AURA_REMOVE_BY_DEFAULT, Id);
+            target->RemoveAurasWithMechanic(mechanicImmunity, AURA_REMOVE_BY_DEFAULT, ID);
     }
 
     if (uint32 dispelImmunity = immuneInfo->DispelImmuneMask)
     {
-        target->ApplySpellImmune(Id, IMMUNITY_DISPEL, dispelImmunity, apply);
+        target->ApplySpellImmune(ID, IMMUNITY_DISPEL, dispelImmunity, apply);
 
         if (apply && HasAttribute(SPELL_ATTR1_IMMUNITY_PURGES_EFFECT))
         {
@@ -2554,11 +2554,11 @@ void SpellInfo::ApplyAllSpellImmunitiesTo(Unit* target, SpellEffectInfo const* e
     }
 
     if (uint32 damageImmunity = immuneInfo->DamageSchoolMask)
-        target->ApplySpellImmune(Id, IMMUNITY_DAMAGE, damageImmunity, apply);
+        target->ApplySpellImmune(ID, IMMUNITY_DAMAGE, damageImmunity, apply);
 
     for (AuraType auraType : immuneInfo->AuraTypeImmune)
     {
-        target->ApplySpellImmune(Id, IMMUNITY_STATE, auraType, apply);
+        target->ApplySpellImmune(ID, IMMUNITY_STATE, auraType, apply);
         if (apply && HasAttribute(SPELL_ATTR1_IMMUNITY_PURGES_EFFECT))
         {
             target->RemoveAppliedAuras([this, auraType](AuraApplication const* aurApp) -> bool
@@ -2572,7 +2572,7 @@ void SpellInfo::ApplyAllSpellImmunitiesTo(Unit* target, SpellEffectInfo const* e
     }
 
     for (SpellEffects effectType : immuneInfo->SpellEffectImmune)
-        target->ApplySpellImmune(Id, IMMUNITY_EFFECT, effectType, apply);
+        target->ApplySpellImmune(ID, IMMUNITY_EFFECT, effectType, apply);
 }
 
 bool SpellInfo::CanSpellProvideImmunityAgainstAura(SpellInfo const* auraSpellInfo) const
@@ -2731,7 +2731,7 @@ float SpellInfo::GetMaxRange(bool positive, Unit* caster, Spell* spell) const
         range = RangeEntry->RangeMax[0];
     if (caster)
         if (Player* modOwner = caster->GetSpellModOwner())
-            modOwner->ApplySpellMod(Id, SPELLMOD_RANGE, range, spell);
+            modOwner->ApplySpellMod(ID, SPELLMOD_RANGE, range, spell);
     return range;
 }
 
@@ -2811,7 +2811,7 @@ int32 SpellInfo::CalcPowerCost(Unit const* caster, SpellSchoolMask schoolMask, S
         // Else drain all power
         if (PowerType < MAX_POWERS)
             return caster->GetPower(Powers(PowerType));
-        LOG_ERROR("spells", "SpellInfo::CalcPowerCost: Unknown power type '{}' in spell {}", PowerType, Id);
+        LOG_ERROR("spells", "SpellInfo::CalcPowerCost: Unknown power type '{}' in spell {}", PowerType, ID);
         return 0;
     }
 
@@ -2840,7 +2840,7 @@ int32 SpellInfo::CalcPowerCost(Unit const* caster, SpellSchoolMask schoolMask, S
                 LOG_DEBUG("spells.aura", "CalculateManaCost: Not implemented yet!");
                 break;
             default:
-                LOG_ERROR("spells", "CalculateManaCost: Unknown power type '{}' in spell {}", PowerType, Id);
+                LOG_ERROR("spells", "CalculateManaCost: Unknown power type '{}' in spell {}", PowerType, ID);
                 return 0;
         }
     }
@@ -2853,7 +2853,7 @@ int32 SpellInfo::CalcPowerCost(Unit const* caster, SpellSchoolMask schoolMask, S
     {
         uint32 speed = 0;
         if (SpellShapeshiftFormEntry const* ss = sSpellShapeshiftFormStore.LookupEntry(caster->GetShapeshiftForm()))
-            speed = ss->attackSpeed;
+            speed = ss->AttackSpeed;
         else
         {
             WeaponAttackType slot = BASE_ATTACK;
@@ -2868,16 +2868,16 @@ int32 SpellInfo::CalcPowerCost(Unit const* caster, SpellSchoolMask schoolMask, S
 
     // Apply cost mod by spell
     if (Player* modOwner = caster->GetSpellModOwner())
-        modOwner->ApplySpellMod(Id, SPELLMOD_COST, powerCost, spell);
+        modOwner->ApplySpellMod(ID, SPELLMOD_COST, powerCost, spell);
 
     if (!caster->IsControlledByPlayer())
     {
         if (HasAttribute(SPELL_ATTR0_SCALES_WITH_CREATURE_LEVEL))
         {
-            GtNPCManaCostScalerEntry const* spellScaler = sGtNPCManaCostScalerStore.LookupEntry(SpellLevel - 1);
-            GtNPCManaCostScalerEntry const* casterScaler = sGtNPCManaCostScalerStore.LookupEntry(caster->GetLevel() - 1);
+            GtNPCManaCostScalerEntry const* spellScaler = sGtNPCManaCostScalerStore.LookupEntry(SpellLevel);
+            GtNPCManaCostScalerEntry const* casterScaler = sGtNPCManaCostScalerStore.LookupEntry(caster->GetLevel());
             if (spellScaler && casterScaler)
-                powerCost *= casterScaler->ratio / spellScaler->ratio;
+                powerCost *= casterScaler->Ratio / spellScaler->Ratio;
         }
     }
 
@@ -2979,7 +2979,7 @@ bool SpellInfo::IsRankOf(SpellInfo const* spellInfo) const
 
 bool SpellInfo::IsDifferentRankOf(SpellInfo const* spellInfo) const
 {
-    if (Id == spellInfo->Id)
+    if (ID == spellInfo->ID)
         return false;
     return IsRankOf(spellInfo);
 }
@@ -3134,7 +3134,7 @@ bool SpellInfo::_IsPositiveEffect(uint8 effIndex, bool deep) const
                             return false;                       // but all single stun aura spells is negative
                         break;
                     case SPELL_AURA_MOD_PACIFY_SILENCE:
-                        if (Id == 24740)             // Wisp Costume
+                        if (ID == 24740)             // Wisp Costume
                             return true;
                         return false;
                     case SPELL_AURA_MOD_ROOT:

@@ -31,14 +31,14 @@ public:
     {
         static ChatCommandTable cheatCommandTable =
         {
-            { "god",       HandleGodModeCheatCommand,   SEC_GAMEMASTER, Console::No },
-            { "casttime",  HandleCasttimeCheatCommand,  SEC_GAMEMASTER, Console::No },
-            { "cooldown",  HandleCoolDownCheatCommand,  SEC_GAMEMASTER, Console::No },
-            { "power",     HandlePowerCheatCommand,     SEC_GAMEMASTER, Console::No },
-            { "waterwalk", HandleWaterWalkCheatCommand, SEC_GAMEMASTER, Console::No },
-            { "status",    HandleCheatStatusCommand,    SEC_GAMEMASTER, Console::No },
-            { "taxi",      HandleTaxiCheatCommand,      SEC_GAMEMASTER, Console::No },
-            { "explore",   HandleExploreCheatCommand,   SEC_GAMEMASTER, Console::No }
+            { "god",       HandleGodModeCheatCommand,   SEC_GAME_MASTER, Console::No },
+            { "casttime",  HandleCasttimeCheatCommand,  SEC_GAME_MASTER, Console::No },
+            { "cooldown",  HandleCoolDownCheatCommand,  SEC_GAME_MASTER, Console::No },
+            { "power",     HandlePowerCheatCommand,     SEC_GAME_MASTER, Console::No },
+            { "waterwalk", HandleWaterWalkCheatCommand, SEC_GAME_MASTER, Console::No },
+            { "status",    HandleCheatStatusCommand,    SEC_GAME_MASTER, Console::No },
+            { "taxi",      HandleTaxiCheatCommand,      SEC_GAME_MASTER, Console::No },
+            { "explore",   HandleExploreCheatCommand,   SEC_GAME_MASTER, Console::No }
         };
 
         static ChatCommandTable commandTable =

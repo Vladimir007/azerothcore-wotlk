@@ -525,10 +525,8 @@ public:
 
     [[nodiscard]] InstanceScript* GetInstanceScript() const;
 
-    [[nodiscard]] std::string const& GetName() const { return m_name; }
+    [[nodiscard]] const std::string& GetName() const { return m_name; }
     void SetName(std::string const& newname) { m_name = newname; }
-
-    [[nodiscard]] virtual std::string const& GetNameForLocaleIdx(LocaleConstant /*locale_idx*/) const { return m_name; }
 
     float GetDistance(WorldObject const* obj) const;
     [[nodiscard]] float GetDistance(const Position& pos) const;
@@ -639,7 +637,7 @@ public:
 
     [[nodiscard]] Creature*   FindNearestCreature(uint32 entry, float range, bool alive = true) const;
     [[nodiscard]] GameObject* FindNearestGameObject(uint32 entry, float range, bool onlySpawned = false) const;
-    [[nodiscard]] GameObject* FindNearestGameObjectOfType(GameobjectTypes type, float range) const;
+    [[nodiscard]] GameObject* FindNearestGameObjectOfType(GameObjectTypes type, float range) const;
 
     [[nodiscard]] Player* SelectNearestPlayer(float distance = 0) const;
     void GetGameObjectListWithEntryInGrid(std::list<GameObject*>& lList, uint32 uiEntry, float fMaxSearchRange) const;

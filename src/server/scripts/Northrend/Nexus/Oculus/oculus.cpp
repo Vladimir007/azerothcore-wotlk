@@ -130,7 +130,7 @@ public:
                 }
                 if (resetPosition)
                 {
-                    me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                    me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                     switch (me->GetEntry())
                     {
                     case NPC_VERDISA:
@@ -159,7 +159,7 @@ public:
             {
                 Talk(SAY_BELGARISTRASZ);
             }
-            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
         }
     };
 
@@ -400,7 +400,7 @@ public:
         void SpellHitTarget(Unit* target, SpellInfo const* spell) override
         {
             for( uint8 i = 0; i < 8; ++i )
-                if (me->m_spells[i] == spell->Id)
+                if (me->m_spells[i] == spell->ID)
                 {
                     if (target && target->IsAlive() && !target->CanFly() && target->IsHostileTo(me) && !spell->IsTargetingArea())
                     {

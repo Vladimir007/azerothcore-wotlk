@@ -198,7 +198,7 @@ public:
                 creature->SetSpeed(MOVE_RUN, 1.1);
                 if (GetTeamIdInInstance() == TEAM_ALLIANCE)
                     creature->UpdateEntry(NPC_JAINA_PART1);
-                creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                 creature->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
                 break;
             case NPC_DARK_RANGER_LORALEN:
@@ -280,12 +280,12 @@ public:
                 {
                     creature->SetSheath(SHEATH_STATE_MELEE);
                     creature->SetUInt32Value(UNIT_NPC_EMOTESTATE, GetTeamIdInInstance() == TEAM_ALLIANCE ? EMOTE_ONESHOT_ATTACK2HTIGHT : EMOTE_ONESHOT_ATTACK1H);
-                    creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                    creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                     creature->CastSpell(creature, GetTeamIdInInstance() == TEAM_ALLIANCE ? SPELL_JAINA_ICE_BARRIER : SPELL_SYLVANAS_CLOAK_OF_DARKNESS, true);
                 }
                 else if (GetBossState(DATA_LICH_KING) != DONE)
                 {
-                    creature->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                    creature->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                     creature->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     creature->UpdatePosition(LeaderEscapePos, true);
                     creature->StopMovingOnCurrentPos();
@@ -491,7 +491,7 @@ public:
                     leader->GetMotionMaster()->MoveIdle();
                     leader->UpdatePosition(LeaderEscapePos, true);
                     leader->StopMovingOnCurrentPos();
-                    leader->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                    leader->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                     leader->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
                     leader->SetHealth(leader->GetMaxHealth() / 20);
                     leader->AI()->Reset();
@@ -514,7 +514,7 @@ public:
                     lichKing->setActive(false);
                     lichKing->RemoveUnitMovementFlag(MOVEMENTFLAG_WALKING);
                     lichKing->SetUInt32Value(UNIT_NPC_EMOTESTATE, EMOTE_ONESHOT_NONE);
-                    lichKing->SetSpeed(MOVE_RUN, lichKing->GetCreatureTemplate()->speed_run);
+                    lichKing->SetSpeed(MOVE_RUN, lichKing->GetCreatureTemplate()->SpeedRun);
                 }
                 _isLichKingFightActive = false;
                 SetBossState(DATA_LICH_KING, FAIL);
@@ -564,7 +564,7 @@ public:
                     case 6:
                         if (Creature* quelDelar = GetCreature(NPC_QUEL_DELAR))
                         {
-                            quelDelar->SetSpeed(MOVE_RUN, quelDelar->GetCreatureTemplate()->speed_run);
+                            quelDelar->SetSpeed(MOVE_RUN, quelDelar->GetCreatureTemplate()->SpeedRun);
                             quelDelar->GetMotionMaster()->MoveLand(0, quelDelar->GetPositionX(), quelDelar->GetPositionY(), 707.70f, 7.0f);
                         }
                         break;
@@ -1085,7 +1085,7 @@ private:
                 break;
             case 11:
                 if (Creature* leader = GetCreature(NPC_SYLVANAS_PART2))
-                    leader->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                    leader->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                 ++_outroStep;
                 _outroTimer = 300 * 1000;
                 break;

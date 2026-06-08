@@ -945,7 +945,7 @@ class spell_class_call_handler : public SpellScript
                 if (!player || player->IsClass(CLASS_DEATH_KNIGHT)) // ignore all death knights from whatever spell, for some reason the condition below is not working x.x
                     return true;
 
-                auto it = classCallSpells.find(spellInfo->Id);
+                auto it = classCallSpells.find(spellInfo->ID);
                 if (it != classCallSpells.end()) // should never happen but only to be sure.
                     return target->ToPlayer()->getClass() != it->second;
 

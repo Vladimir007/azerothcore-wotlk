@@ -583,14 +583,14 @@ struct boss_thorim : public BossAI
 
     void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_LIGHTNING_ORB_CHARGER)
+        if (spellInfo->ID == SPELL_LIGHTNING_ORB_CHARGER)
         {
             me->SetOrientation(me->GetAngle(caster));
             me->CastSpell(caster, SPELL_LIGHTNING_CHARGE_DAMAGE, true);
             me->CastSpell(me, SPELL_LIGHTNING_CHARGE_BUFF, true);
             events.RescheduleEvent(EVENT_THORIM_LIGHTNING_CHARGE, 10s, 0, EVENT_PHASE_RING);
         }
-        else if (spellInfo->Id == SPELL_TELEPORT)
+        else if (spellInfo->ID == SPELL_TELEPORT)
         {
             me->DespawnOrUnsummon();
             instance->SetData(EVENT_KEEPER_TELEPORTED, DONE);
@@ -599,7 +599,7 @@ struct boss_thorim : public BossAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_LIGHTNING_CHARGE_DAMAGE && target->IsPlayer())
+        if (spellInfo->ID == SPELL_LIGHTNING_CHARGE_DAMAGE && target->IsPlayer())
             _hitByLightning = true;
     }
 
@@ -982,9 +982,9 @@ struct boss_thorim_pillar : public NullCreatureAI
 
         void SpellHit(Unit*, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_CHARGE_ORB)
+            if (spellInfo->ID == SPELL_CHARGE_ORB)
                 me->CastSpell(me, SPELL_LIGHTNING_PILLAR_P1, true);
-            else if (spellInfo->Id == SPELL_LIGHTNING_PILLAR_P2)
+            else if (spellInfo->ID == SPELL_LIGHTNING_PILLAR_P2)
             {
                 if (Creature* cr = me->FindNearestCreature(NPC_THUNDER_ORB, 100))
                     cr->CastSpell(cr, SPELL_LIGHTNING_ORB_VISUAL, true);
@@ -1293,9 +1293,9 @@ struct boss_thorim_runic_colossus : public ScriptedAI
 
         void SpellHit(Unit*, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_RUNIC_SMASH_LEFT || spellInfo->Id == SPELL_RUNIC_SMASH_RIGHT)
+            if (spellInfo->ID == SPELL_RUNIC_SMASH_LEFT || spellInfo->ID == SPELL_RUNIC_SMASH_RIGHT)
             {
-                _leftHand = spellInfo->Id == SPELL_RUNIC_SMASH_LEFT;
+                _leftHand = spellInfo->ID == SPELL_RUNIC_SMASH_LEFT;
                 events.RescheduleEvent(EVENT_RC_RUNIC_SMASH_TRIGGER, 1s);
             }
         }

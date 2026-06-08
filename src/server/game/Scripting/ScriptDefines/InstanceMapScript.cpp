@@ -38,7 +38,7 @@ void InstanceMapScript::checkValidity()
 
     if (GetEntry() && !GetEntry()->IsDungeon())
     {
-        LOG_ERROR("maps.script", "InstanceMapScript for map {} is invalid.", GetEntry()->MapID);
+        LOG_ERROR("maps.script", "InstanceMapScript for map {} is invalid.", GetEntry()->ID);
     }
 }
 

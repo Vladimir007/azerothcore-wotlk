@@ -112,9 +112,9 @@ AC_API_EXPORT CreatureFlagsExtra EnumUtils<CreatureFlagsExtra>::FromIndex(std::s
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<CreatureFlagsExtra>::ToIndex(CreatureFlagsExtra value)
+AC_API_EXPORT std::size_t EnumUtils<CreatureFlagsExtra>::ToIndex(CreatureFlagsExtra index)
 {
-    switch (value)
+    switch (index)
     {
         case CREATURE_FLAG_EXTRA_INSTANCE_BIND: return 0;
         case CREATURE_FLAG_EXTRA_CIVILIAN: return 1;

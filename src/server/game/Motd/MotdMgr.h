@@ -32,9 +32,6 @@ public:
     /// Set a new Message of the Day
     void SetMotd(std::string motd, LocaleConstant locale);
 
-    /// Load Message of the Day
-    void LoadMotd();
-
     /// Get the current Message of the Day
     char const* GetMotd(LocaleConstant locale);
 
@@ -42,9 +39,6 @@ public:
     WorldPacket const* GetMotdPacket(LocaleConstant locale);
 
 private:
-    // Loads all available localized motd for the realm
-    void LoadMotdLocale();
-
     // Create a worldpacket for a given motd localization
     WorldPacket CreateWorldPacket(std::string motd);
 };

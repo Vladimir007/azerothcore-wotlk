@@ -1,23 +1,6 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "ArenaSeasonMgr.h"
-#include "ArenaTeamMgr.h"
 #include "ArenaSeasonRewardsDistributor.h"
+#include "ArenaTeamMgr.h"
 #include "BattlegroundMgr.h"
 #include "GameEventMgr.h"
 #include "MapMgr.h"
@@ -31,14 +14,14 @@ ArenaSeasonMgr* ArenaSeasonMgr::instance()
 
 void ArenaSeasonMgr::LoadRewards()
 {
-    uint32 oldMSTime = getMSTime();
+    const uint32 oldMSTime = getMSTime();
 
     std::unordered_map<std::string, ArenaSeasonRewardGroupCriteriaType> stringToArenaSeasonRewardGroupCriteriaType = {
-        {"pct", ArenaSeasonRewardGroupCriteriaType::ARENA_SEASON_REWARD_CRITERIA_TYPE_PERCENT_VALUE},
-        {"abs", ArenaSeasonRewardGroupCriteriaType::ARENA_SEASON_REWARD_CRITERIA_TYPE_ABSOLUTE_VALUE}
+        {"pct", ARENA_SEASON_REWARD_CRITERIA_TYPE_PERCENT_VALUE},
+        {"abs", ARENA_SEASON_REWARD_CRITERIA_TYPE_ABSOLUTE_VALUE}
     };
 
-    QueryResult result = WorldDatabase.Query("SELECT id, arena_season, criteria_type, min_criteria, max_criteria, reward_mail_template_id, reward_mail_subject, reward_mail_body, gold_reward FROM arena_season_reward_group");
+    QueryResult result = WorldDatabase.Query("SELECT id, arena_season, criteria_type, min_criteria, max_criteria, mail_template, mail_subject, mail_body, gold_reward FROM world_arena_season_reward_group");
 
     if (!result)
     {
@@ -51,7 +34,7 @@ void ArenaSeasonMgr::LoadRewards()
 
     do
     {
-        Field* fields = result->Fetch();
+        const Field* fields = result->Fetch();
         uint32 id = fields[0].Get<uint32>();
 
         ArenaSeasonRewardGroup group;
@@ -68,11 +51,11 @@ void ArenaSeasonMgr::LoadRewards()
     } while (result->NextRow());
 
     std::unordered_map<std::string, ArenaSeasonRewardType> stringToArenaSeasonRewardType = {
-        {"achievement", ArenaSeasonRewardType::ARENA_SEASON_REWARD_TYPE_ACHIEVEMENT},
-        {"item", ArenaSeasonRewardType::ARENA_SEASON_REWARD_TYPE_ITEM}
+        {"achievement", ARENA_SEASON_REWARD_TYPE_ACHIEVEMENT},
+        {"item", ARENA_SEASON_REWARD_TYPE_ITEM}
     };
 
-    result = WorldDatabase.Query("SELECT group_id, type, entry FROM arena_season_reward");
+    result = WorldDatabase.Query("SELECT group, type, entry FROM world_arena_season_reward");
 
     if (!result)
     {
@@ -83,7 +66,7 @@ void ArenaSeasonMgr::LoadRewards()
 
     do
     {
-        Field* fields = result->Fetch();
+        const Field* fields = result->Fetch();
         uint32 groupId = fields[0].Get<uint32>();
 
         ArenaSeasonReward reward;
@@ -99,33 +82,33 @@ void ArenaSeasonMgr::LoadRewards()
 
     } while (result->NextRow());
 
-    for (auto const& itr : groupsMap)
-        _arenaSeasonRewardGroupsStore[itr.second.season].push_back(itr.second);
+    for (const auto& val : groupsMap | std::views::values)
+        _arenaSeasonRewardGroupsStore[val.season].push_back(val);
 
-    LOG_INFO("server.loading", ">> Loaded {} arena season rewards in {} ms", (uint32)groupsMap.size(), GetMSTimeDiffToNow(oldMSTime));
+    LOG_INFO("server.loading", ">> Loaded {} arena season rewards in {} ms", static_cast<uint32>(groupsMap.size()), GetMSTimeDiffToNow(oldMSTime));
     LOG_INFO("server.loading", " ");
 }
 
 void ArenaSeasonMgr::LoadActiveSeason()
 {
-    QueryResult result = CharacterDatabase.Query("SELECT season_id, season_state FROM active_arena_season");
+    const QueryResult result = CharacterDatabase.Query("SELECT season_id, season_state FROM active_arena_season");
     ASSERT(result, "active_arena_season can't be empty");
 
-    Field* fields = result->Fetch();
+    const Field* fields = result->Fetch();
     _currentSeason      = fields[0].Get<uint8>();
     _currentSeasonState = static_cast<ArenaSeasonState>(fields[1].Get<uint8>());
 
-    uint16 eventID = GameEventForArenaSeason(_currentSeason);
+    const uint16 eventID = GameEventForArenaSeason(_currentSeason);
     sGameEventMgr->StartEvent(eventID, true);
 
     LOG_INFO("server.loading", "Arena Season {} loaded...", _currentSeason);
     LOG_INFO("server.loading", " ");
 }
 
-void ArenaSeasonMgr::RewardTeamsForTheSeason(std::shared_ptr<ArenaTeamFilter> teamsFilter)
+void ArenaSeasonMgr::RewardTeamsForTheSeason(const std::shared_ptr<ArenaTeamFilter>& teamsFilter)
 {
-    ArenaSeasonTeamRewarderImpl rewarder = ArenaSeasonTeamRewarderImpl();
-    ArenaSeasonRewardDistributor distributor = ArenaSeasonRewardDistributor(&rewarder);
+    auto rewarder = ArenaSeasonTeamRewarderImpl();
+    auto distributor = ArenaSeasonRewardDistributor(&rewarder);
     std::vector<ArenaSeasonRewardGroup> rewards = _arenaSeasonRewardGroupsStore[GetCurrentSeason()];
     ArenaTeamMgr::ArenaTeamContainer filteredTeams = teamsFilter->Filter(sArenaTeamMgr->GetArenaTeams());
     distributor.DistributeRewards(filteredTeams, rewards);
@@ -133,8 +116,7 @@ void ArenaSeasonMgr::RewardTeamsForTheSeason(std::shared_ptr<ArenaTeamFilter> te
 
 bool ArenaSeasonMgr::CanDeleteArenaTeams()
 {
-    std::vector<ArenaSeasonRewardGroup> rewards = _arenaSeasonRewardGroupsStore[GetCurrentSeason()];
-    if (rewards.empty())
+    if (_arenaSeasonRewardGroupsStore[GetCurrentSeason()].empty())
         return false;
 
     for (auto const& bg : sBattlegroundMgr->GetActiveBattlegrounds())
@@ -150,59 +132,53 @@ void ArenaSeasonMgr::DeleteArenaTeams()
         return;
 
     // Cleanup queue first.
-    std::vector<BattlegroundQueueTypeId> arenasQueueTypes = {BATTLEGROUND_QUEUE_2v2, BATTLEGROUND_QUEUE_3v3, BATTLEGROUND_QUEUE_5v5};
-    for (BattlegroundQueueTypeId queueType : arenasQueueTypes)
+    std::vector arenasQueueTypes = {BATTLEGROUND_QUEUE_2v2, BATTLEGROUND_QUEUE_3v3, BATTLEGROUND_QUEUE_5v5};
+    for (const BattlegroundQueueTypeId queueType : arenasQueueTypes)
     {
-        auto queue = sBattlegroundMgr->GetBattlegroundQueue(queueType);
-        for (auto const& [playerGUID, other] : queue.m_QueuedPlayers)
+        for (auto queue = sBattlegroundMgr->GetBattlegroundQueue(queueType); const auto& playerGUID : queue.m_QueuedPlayers | std::views::keys)
             queue.RemovePlayer(playerGUID, true);
     }
 
     sArenaTeamMgr->DeleteAllArenaTeams();
 }
 
-void ArenaSeasonMgr::ChangeCurrentSeason(uint8 season)
+void ArenaSeasonMgr::ChangeCurrentSeason(const uint8 season)
 {
     if (_currentSeason == season)
         return;
 
-    uint16 currentEventID = GameEventForArenaSeason(_currentSeason);
+    const uint16 currentEventID = GameEventForArenaSeason(_currentSeason);
     sGameEventMgr->StopEvent(currentEventID, true);
 
-    uint16 newEventID = GameEventForArenaSeason(season);
+    const uint16 newEventID = GameEventForArenaSeason(season);
     sGameEventMgr->StartEvent(newEventID, true);
 
     _currentSeason = season;
     _currentSeasonState = ARENA_SEASON_STATE_IN_PROGRESS;
-
-    CharacterDatabase.Execute("UPDATE active_arena_season SET season_id = {}, season_state = {}", _currentSeason, _currentSeasonState);
-
+    CharacterDatabase.Execute("UPDATE active_arena_season SET season_id=$1, season_state=$2", _currentSeason, _currentSeasonState);
     BroadcastUpdatedWorldState();
 }
 
-void ArenaSeasonMgr::SetSeasonState(ArenaSeasonState state)
+void ArenaSeasonMgr::SetSeasonState(const ArenaSeasonState state)
 {
     if (_currentSeasonState == state)
         return;
-
     _currentSeasonState = state;
-
-    CharacterDatabase.Execute("UPDATE active_arena_season SET season_state = {}", _currentSeasonState);
-
+    CharacterDatabase.Execute("UPDATE active_arena_season SET season_state=$1", _currentSeasonState);
     BroadcastUpdatedWorldState();
 }
 
 uint16 ArenaSeasonMgr::GameEventForArenaSeason(uint8 season)
 {
-    QueryResult result = WorldDatabase.Query("SELECT eventEntry FROM game_event_arena_seasons WHERE season = '{}'", season);
+    const QueryResult result = WorldDatabase.Query("SELECT event FROM world_game_event_arena_season WHERE season=$1", season);
 
     if (!result)
     {
-        LOG_ERROR("arenaseasonmgr", "ArenaSeason ({}) must be an existant Arena Season", season);
+        LOG_ERROR("ArenaSeasonMgr", "ArenaSeason ({}) must be an existent Arena Season", season);
         return 0;
     }
 
-    Field* fields = result->Fetch();
+    const Field* fields = result->Fetch();
     return fields[0].Get<uint16>();
 }
 

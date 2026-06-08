@@ -224,9 +224,9 @@ AC_API_EXPORT InventoryResult EnumUtils<InventoryResult>::FromIndex(std::size_t 
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<InventoryResult>::ToIndex(InventoryResult value)
+AC_API_EXPORT std::size_t EnumUtils<InventoryResult>::ToIndex(InventoryResult index)
 {
-    switch (value)
+    switch (index)
     {
         case EQUIP_ERR_OK: return 0;
         case EQUIP_ERR_CANT_EQUIP_LEVEL_I: return 1;
@@ -363,9 +363,9 @@ AC_API_EXPORT BuyResult EnumUtils<BuyResult>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<BuyResult>::ToIndex(BuyResult value)
+AC_API_EXPORT std::size_t EnumUtils<BuyResult>::ToIndex(BuyResult index)
 {
-    switch (value)
+    switch (index)
     {
         case BUY_ERR_CANT_FIND_ITEM: return 0;
         case BUY_ERR_ITEM_ALREADY_SOLD: return 1;
@@ -423,9 +423,9 @@ AC_API_EXPORT SellResult EnumUtils<SellResult>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<SellResult>::ToIndex(SellResult value)
+AC_API_EXPORT std::size_t EnumUtils<SellResult>::ToIndex(SellResult index)
 {
-    switch (value)
+    switch (index)
     {
         case SELL_ERR_CANT_FIND_ITEM: return 0;
         case SELL_ERR_CANT_SELL_ITEM: return 1;

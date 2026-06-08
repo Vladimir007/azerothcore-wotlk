@@ -147,7 +147,7 @@ struct boss_ossirian : public BossAI
     {
         for (uint32 weakness : spellWeakness)
         {
-            if (spell->Id == weakness)
+            if (spell->ID == weakness)
             {
                 me->RemoveAurasDueToSpell(SPELL_STRENGTH_OF_OSSIRIAN);
             }

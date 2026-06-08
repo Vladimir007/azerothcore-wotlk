@@ -54,11 +54,7 @@ MapMgr* MapMgr::instance()
 
 void MapMgr::Initialize()
 {
-    int num_threads(sWorld->getIntConfig(CONFIG_NUMTHREADS));
-
-    // Start mtmaps if needed
-    if (num_threads > 0)
-        m_updater.activate(num_threads);
+    m_updater.activate();
 }
 
 void MapMgr::InitializeVisibilityDistanceInfo()
@@ -81,14 +77,14 @@ Map* MapMgr::CreateBaseMap(uint32 id)
             MapEntry const* entry = sMapStore.LookupEntry(id);
             ASSERT(entry);
 
-            if (entry->Instanceable())
+            if (entry->InstanceAble())
                 map = new MapInstanced(id);
             else
                 map = new Map(id, 0, REGULAR_DIFFICULTY);
 
             i_maps[id] = map;
 
-            if (!entry->Instanceable())
+            if (!entry->InstanceAble())
             {
                 map->LoadRespawnTimes();
                 map->LoadCorpseData();
@@ -148,7 +144,7 @@ Map::EnterState MapMgr::PlayerCannotEnter(uint32 mapid, Player* player, bool log
     Difficulty targetDifficulty, requestedDifficulty;
     targetDifficulty = requestedDifficulty = player->GetDifficulty(entry->IsRaid());
     // Get the highest available difficulty if current setting is higher than the instance allows
-    MapDifficulty const* mapDiff = GetDownscaledMapDifficultyData(entry->MapID, targetDifficulty);
+    MapDifficulty const* mapDiff = GetDownscaledMapDifficultyData(entry->ID, targetDifficulty);
     if (!mapDiff)
     {
         player->SendTransferAborted(mapid, TRANSFER_ABORT_DIFFICULTY, requestedDifficulty);
@@ -159,7 +155,7 @@ Map::EnterState MapMgr::PlayerCannotEnter(uint32 mapid, Player* player, bool log
     if (player->IsGameMaster())
         return Map::CAN_ENTER;
 
-    char const* mapName = entry->name[player->GetSession()->GetSessionDbcLocale()];
+    const std::string mapName = entry->Name;
 
     if (!sScriptMgr->OnPlayerCanEnterMap(player, entry, instance, mapDiff, loginCheck))
         return Map::CANNOT_ENTER_UNSPECIFIED_REASON;

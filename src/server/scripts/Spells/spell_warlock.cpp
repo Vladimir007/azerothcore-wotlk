@@ -148,7 +148,7 @@ class spell_warl_shadowflame : public SpellScript
     void HandleSchoolDMG(SpellEffIndex /*effIndex*/)
     {
         if (Unit* target = GetHitUnit())
-            GetCaster()->CastSpell(target, (GetSpellInfo()->Id == 47897 ? 47960 : 61291), true);
+            GetCaster()->CastSpell(target, (GetSpellInfo()->ID == 47897 ? 47960 : 61291), true);
     }
 
     void Register() override
@@ -526,7 +526,7 @@ class spell_warl_banish : public SpellScript
         if (Unit* target = GetHitUnit())
         {
             // Casting Banish on a banished target will remove applied aura
-            if (Aura* banishAura = target->GetAura(GetSpellInfo()->Id, GetCaster()->GetGUID()))
+            if (Aura* banishAura = target->GetAura(GetSpellInfo()->ID, GetCaster()->GetGUID()))
             {
                 banishAura->Remove();
             }
@@ -563,7 +563,7 @@ class spell_warl_demonic_empowerment : public SpellScript
             if (targetCreature->IsPet())
             {
                 CreatureTemplate const* ci = sObjectMgr->GetCreatureTemplate(targetCreature->GetEntry());
-                switch (ci->family)
+                switch (ci->Family)
                 {
                     case CREATURE_FAMILY_SUCCUBUS:
                         targetCreature->CastSpell(targetCreature, SPELL_WARLOCK_DEMONIC_EMPOWERMENT_SUCCUBUS, true);

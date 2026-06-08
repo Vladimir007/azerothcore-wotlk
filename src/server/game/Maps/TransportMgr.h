@@ -64,7 +64,7 @@ struct KeyFrame
     uint32 NextArriveTime;
 
     bool IsTeleportFrame() const { return Teleport; }
-    bool IsStopFrame() const { return Node->actionFlag == 2; }
+    bool IsStopFrame() const { return Node->ActionFlag == 2; }
 };
 
 struct TransportTemplate
@@ -100,7 +100,7 @@ typedef std::map<uint32, TransportAnimation> TransportAnimationContainer;
 
 class TransportMgr
 {
-    friend void LoadDBCStores(std::string const&);
+    friend void LoadDBCStores();
 
 public:
     static TransportMgr* instance();
@@ -164,4 +164,4 @@ private:
 
 #define sTransportMgr TransportMgr::instance()
 
-#endif // TRANSPORTMGR_H
+#endif

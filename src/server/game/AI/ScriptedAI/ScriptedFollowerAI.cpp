@@ -62,7 +62,7 @@ bool FollowerAI::AssistPlayerInCombatAgainst(Unit* who)
         return false;
 
     //experimental (unknown) flag not present
-    if (!(me->GetCreatureTemplate()->type_flags & CREATURE_TYPE_FLAG_CAN_ASSIST))
+    if (!(me->GetCreatureTemplate()->TypeFlags & CREATURE_TYPE_FLAG_CAN_ASSIST))
         return false;
 
     //not a player
@@ -137,8 +137,8 @@ void FollowerAI::JustRespawned()
     if (!me->IsCombatMovementAllowed())
         me->SetCombatMovement(true);
 
-    if (me->GetFaction() != me->GetCreatureTemplate()->faction)
-        me->SetFaction(me->GetCreatureTemplate()->faction);
+    if (me->GetFaction() != me->GetCreatureTemplate()->Faction)
+        me->SetFaction(me->GetCreatureTemplate()->Faction);
 
     Reset();
 }

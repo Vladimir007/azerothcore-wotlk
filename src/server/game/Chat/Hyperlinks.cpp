@@ -111,16 +111,9 @@ struct LinkValidator
 template <>
 struct LinkValidator<LinkTags::achievement>
 {
-    static bool IsTextValid(AchievementLinkData const& data, std::string_view text)
+    static bool IsTextValid(AchievementLinkData const& data, const std::string_view text)
     {
-        if (text.empty())
-            return false;
-
-        for (uint8 i = 0; i < TOTAL_LOCALES; ++i)
-            if (text == data.Achievement->name[i])
-                return true;
-
-        return false;
+        return !text.empty() && text == data.Achievement->Name;
     }
 
     static bool IsColorValid(AchievementLinkData const&, HyperlinkColor c)
@@ -132,42 +125,26 @@ struct LinkValidator<LinkTags::achievement>
 template <>
 struct LinkValidator<LinkTags::item>
 {
-    static bool IsTextValid(ItemLinkData const& data, std::string_view text)
+    static bool IsTextValid(const ItemLinkData& data, const std::string_view text)
     {
-        ItemLocale const* locale = sObjectMgr->GetItemLocale(data.Item->ItemId);
-
-        std::array<char const*, 16> const* randomSuffixes = nullptr;
-
+        std::string randomSuffix;
         if (data.RandomProperty)
-            randomSuffixes = &data.RandomProperty->Name;
+            randomSuffix = data.RandomProperty->Name;
         else if (data.RandomSuffix)
-            randomSuffixes = &data.RandomSuffix->Name;
-
+            randomSuffix = data.RandomSuffix->Name;
         if (data.IsBuggedInspectLink) /* DBC lookup will have failed on the client, so the link should've arrived without suffix */
-            randomSuffixes = nullptr;
+            randomSuffix = "";
 
-        for (uint8 i = 0; i < TOTAL_LOCALES; ++i)
-        {
-            if (!locale && i != DEFAULT_LOCALE)
-                continue;
-
-            std::string_view name = (i == DEFAULT_LOCALE) ? data.Item->Name1 : ObjectMgr::GetLocaleString(locale->Name, i);
-            if (name.empty())
-                continue;
-
-            if (randomSuffixes)
-            {
-                std::string_view randomSuffix((*randomSuffixes)[i]);
-                if ((!randomSuffix.empty()) &&
-                  (text.length() == (name.length() + 1 + randomSuffix.length())) &&
-                  (text.substr(0, name.length()) == name) &&
-                  (text[name.length()] == ' ') &&
-                  (text.substr(name.length() + 1) == randomSuffix))
-                    return true;
-            }
-            else if (text == name)
-                return true;
-        }
+        const std::string_view name = data.Item->Name1;
+        if (name.empty())
+            return false;
+        if (randomSuffix.empty() && text == name)
+            return true;
+        if (text.length() == name.length() + 1 + randomSuffix.length() &&
+            text.substr(0, name.length()) == name &&
+            text[name.length()] == ' ' &&
+            text.substr(name.length() + 1) == randomSuffix)
+            return true;
         return false;
     }
 
@@ -180,37 +157,18 @@ struct LinkValidator<LinkTags::item>
 template <>
 struct LinkValidator<LinkTags::quest>
 {
-    static bool IsTextValid(QuestLinkData const& data, std::string_view text)
+    static bool IsTextValid(const QuestLinkData& data, const std::string_view text)
     {
         if (text.empty())
             return false;
-
-        if (text == data.Quest->GetTitle())
-            return true;
-
-        QuestLocale const* locale = sObjectMgr->GetQuestLocale(data.Quest->GetQuestId());
-        if (!locale)
-            return false;
-
-        for (uint8 i = 0; i < TOTAL_LOCALES; ++i)
-        {
-            if (i == DEFAULT_LOCALE)
-                continue;
-
-            std::string_view name = ObjectMgr::GetLocaleString(locale->Title, i);
-            if (!name.empty() && (text == name))
-                return true;
-        }
-
-        return false;
+        return text == data.Quest->GetTitle();
     }
 
-    static bool IsColorValid(QuestLinkData const&, HyperlinkColor c)
+    static bool IsColorValid(const QuestLinkData&, const HyperlinkColor c)
     {
         for (uint8 i = 0; i < MAX_QUEST_DIFFICULTY; ++i)
             if (c == QuestDifficultyColors[i])
                 return true;
-
         return false;
     }
 };
@@ -218,15 +176,12 @@ struct LinkValidator<LinkTags::quest>
 template <>
 struct LinkValidator<LinkTags::spell>
 {
-    static bool IsTextValid(SpellInfo const* info, std::string_view text)
+    static bool IsTextValid(SpellInfo const* info, const std::string_view text)
     {
-        for (uint8 i = 0; i < TOTAL_LOCALES; ++i)
-            if (text == info->SpellName[i])
-                return true;
-        return false;
+        return text == info->SpellName;
     }
 
-    static bool IsColorValid(SpellInfo const*, HyperlinkColor c)
+    static bool IsColorValid(SpellInfo const*, const HyperlinkColor c)
     {
         return c == CHAT_LINK_COLOR_SPELL;
     }
@@ -240,7 +195,7 @@ struct LinkValidator<LinkTags::enchant>
         if (LinkValidator<LinkTags::spell>::IsTextValid(info, text))
             return true;
 
-        SkillLineAbilityMapBounds bounds = sSpellMgr->GetSkillLineAbilityMapBounds(info->Id);
+        SkillLineAbilityMapBounds bounds = sSpellMgr->GetSkillLineAbilityMapBounds(info->ID);
         if (bounds.first == bounds.second)
             return false;
 
@@ -250,17 +205,14 @@ struct LinkValidator<LinkTags::enchant>
             if (!skill)
                 return false;
 
-            for (uint8 i = 0; i < TOTAL_LOCALES; ++i)
-            {
-                std::string_view skillName = skill->name[i];
-                std::string_view spellName = info->SpellName[i];
-                // alternate form [Skill Name: Spell Name]
-                if ((text.length() == (skillName.length() + 2 + spellName.length())) &&
-                    (text.substr(0, skillName.length()) == skillName) &&
-                    (text.substr(skillName.length(), 2) == ": ") &&
-                    (text.substr(skillName.length() + 2) == spellName))
-                    return true;
-            }
+            std::string_view skillName = skill->Name;
+            std::string_view spellName = info->SpellName;
+            // alternate form [Skill Name: Spell Name]
+            if (text.length() == skillName.length() + 2 + spellName.length() &&
+                text.substr(0, skillName.length()) == skillName &&
+                text.substr(skillName.length(), 2) == ": " &&
+                text.substr(skillName.length() + 2) == spellName)
+                return true;
         }
         return false;
     }
@@ -276,7 +228,7 @@ struct LinkValidator<LinkTags::glyph>
 {
     static bool IsTextValid(GlyphLinkData const& data, std::string_view text)
     {
-        if (SpellInfo const* info = sSpellMgr->GetSpellInfo(data.Glyph->SpellId))
+        if (SpellInfo const* info = sSpellMgr->GetSpellInfo(data.Glyph->SpellID))
             return LinkValidator<LinkTags::spell>::IsTextValid(info, text);
 
         return false;

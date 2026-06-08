@@ -110,7 +110,7 @@ void BattlegroundEY::StartingEventOpenDoors()
     _bgEvents.ScheduleEvent(BG_EY_EVENT_CHECK_CPOINTS, 0ms);
 }
 
-void BattlegroundEY::AddPoints(TeamId teamId, uint32 points)
+void BattlegroundEY::AddPoints(TeamID teamId, uint32 points)
 {
     uint8 honorRewards = uint8(m_TeamScores[teamId] / _honorTics);
     m_TeamScores[teamId] += points;
@@ -160,7 +160,7 @@ void BattlegroundEY::UpdatePointsState()
         _capturePointInfo[point]._barStatus += std::max<int8>(std::min<int8>(_capturePointInfo[point]._playersCount[TEAM_ALLIANCE] - _capturePointInfo[point]._playersCount[TEAM_HORDE], BG_EY_POINT_MAX_CAPTURERS_COUNT), -BG_EY_POINT_MAX_CAPTURERS_COUNT);
         _capturePointInfo[point]._barStatus = std::max<int8>(std::min<int8>(_capturePointInfo[point]._barStatus, BG_EY_PROGRESS_BAR_ALI_CONTROLLED), BG_EY_PROGRESS_BAR_HORDE_CONTROLLED);
 
-        TeamId pointOwnerTeamId = TEAM_NEUTRAL;
+        TeamID pointOwnerTeamId = TEAM_NEUTRAL;
         if (_capturePointInfo[point]._barStatus <= BG_EY_PROGRESS_BAR_NEUTRAL_LOW)
             pointOwnerTeamId = TEAM_HORDE;
         else if (_capturePointInfo[point]._barStatus >= BG_EY_PROGRESS_BAR_NEUTRAL_HIGH)
@@ -177,7 +177,7 @@ void BattlegroundEY::UpdatePointsState()
     }
 }
 
-void BattlegroundEY::EndBattleground(TeamId winnerTeamId)
+void BattlegroundEY::EndBattleground(TeamID winnerTeamId)
 {
     RewardHonorToTeam(GetBonusHonorFromKill(1), winnerTeamId);
     RewardHonorToTeam(GetBonusHonorFromKill(1), TEAM_ALLIANCE);
@@ -453,7 +453,7 @@ void BattlegroundEY::EventPlayerClickedOnFlag(Player* player, GameObject* gameOb
 
 void BattlegroundEY::EventTeamLostPoint(Player* player, uint32 point)
 {
-    TeamId oldTeamId = _capturePointInfo[point]._ownerTeamId;
+    TeamID oldTeamId = _capturePointInfo[point]._ownerTeamId;
     if (oldTeamId == TEAM_ALLIANCE)
     {
         _ownedPointsCount[TEAM_ALLIANCE]--;
@@ -488,7 +488,7 @@ void BattlegroundEY::EventTeamLostPoint(Player* player, uint32 point)
     }, 500ms);
 }
 
-void BattlegroundEY::EventTeamCapturedPoint(Player* player, TeamId teamId, uint32 point)
+void BattlegroundEY::EventTeamCapturedPoint(Player* player, TeamID teamId, uint32 point)
 {
     SpawnBGObject(m_CapturingPointTypes[point].DespawnNeutralObjectType, RESPAWN_ONE_DAY);
     SpawnBGObject(m_CapturingPointTypes[point].DespawnNeutralObjectType + 1, RESPAWN_ONE_DAY);
@@ -628,7 +628,7 @@ GraveyardStruct const* BattlegroundEY::GetClosestGraveyard(Player* player)
     return nearestEntry;
 }
 
-bool BattlegroundEY::AllNodesConrolledByTeam(TeamId teamId) const
+bool BattlegroundEY::AllNodesConrolledByTeam(TeamID teamId) const
 {
     uint32 count = 0;
     for (uint8 i = 0; i < EY_POINTS_MAX; ++i)
@@ -638,7 +638,7 @@ bool BattlegroundEY::AllNodesConrolledByTeam(TeamId teamId) const
     return count == EY_POINTS_MAX;
 }
 
-TeamId BattlegroundEY::GetPrematureWinner()
+TeamID BattlegroundEY::GetPrematureWinner()
 {
     if (GetTeamScore(TEAM_ALLIANCE) > GetTeamScore(TEAM_HORDE))
         return TEAM_ALLIANCE;

@@ -106,7 +106,7 @@ public:
 
         void SpellHitTarget(Unit*  /*caster*/, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_TRANSFORMATION)
+            if (spellInfo->ID == SPELL_TRANSFORMATION)
             {
                 me->RemoveAurasDueToSpell(SPELL_MOJO_FRENZY);
                 events.CancelEvent(EVENT_TRANSFORMATION);

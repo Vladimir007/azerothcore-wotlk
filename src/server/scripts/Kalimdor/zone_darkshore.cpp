@@ -209,7 +209,7 @@ public:
 
         void SpellHit(Unit* /*pCaster*/, SpellInfo const* pSpell) override
         {
-            if (HasFollowState(STATE_FOLLOW_INPROGRESS | STATE_FOLLOW_PAUSED) && pSpell->Id == SPELL_AWAKEN)
+            if (HasFollowState(STATE_FOLLOW_INPROGRESS | STATE_FOLLOW_PAUSED) && pSpell->ID == SPELL_AWAKEN)
                 ClearSleeping();
         }
 
@@ -452,7 +452,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_BEAR_CAPTURED_IN_TRAP)
+            if (spellInfo->ID == SPELL_BEAR_CAPTURED_IN_TRAP)
             {
                 if (GameObject* trap = me->FindNearestGameObject(OBJECT_BEAR_TRAP, 5.0f))
                 {
@@ -473,7 +473,7 @@ public:
                 }
             }
 
-            if (spellInfo->Id == SPELL_THARNARIUMS_HEAL)
+            if (spellInfo->ID == SPELL_THARNARIUMS_HEAL)
             {
                 me->HandleEmoteCommand(EMOTE_ONESHOT_ATTACK1H); // EMOTE_ONESHOT_WOUND
             }

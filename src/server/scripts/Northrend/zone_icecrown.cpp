@@ -121,7 +121,7 @@ public:
 
         void JustReachedHome() override
         {
-            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
         }
 
         void ResetData()
@@ -130,7 +130,7 @@ public:
             summons.DespawnAll();
             playerGUID.Clear();
             currentQuest = 0;
-            me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER | UNIT_NPC_FLAG_GOSSIP);
+            me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER | UNIT_NPC_FLAG_GOSSIP);
         }
 
         void JustSummoned(Creature* creature) override
@@ -175,7 +175,7 @@ public:
         {
             events.ScheduleEvent(EVENT_VALHALAS_FIRST, 6s);
             events.ScheduleEvent(EVENT_VALHALAS_CHECK_PLAYER, 30s);
-            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
             currentQuest = questId;
             playerGUID = guid;
         }
@@ -183,7 +183,7 @@ public:
         void EndBattle()
         {
             ResetData();
-            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
             me->GetMotionMaster()->MoveTargetedHome();
         }
 
@@ -324,7 +324,7 @@ public:
         npc_battle_at_valhalasAI* vAI = CAST_AI(npc_battle_at_valhalas::npc_battle_at_valhalasAI, creature->AI());
         vAI->ResetData();
 
-        creature->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+        creature->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
         if (vAI)
             vAI->StartBattle(player->GetGUID(), quest->GetQuestId());
 
@@ -576,7 +576,7 @@ public:
                     events.ScheduleEvent(EVENT_SCENE_10, 3s);
                     break;
                 case EVENT_SCENE_10:
-                    me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_QUESTGIVER);
+                    me->ReplaceAllNpcFlags(UNIT_NPC_FLAG_QUEST_GIVER);
                     Talk(SAY_ARETE_6);
                     me->DespawnOrUnsummon(60s);
                     break;
@@ -1082,7 +1082,7 @@ class spell_switch_infragreen_bomber_station : public SpellScript
         if (!kit || !charmer)
             return;
 
-        uint8 seatNumber = GetSeatNumber(GetSpellInfo()->Id);
+        uint8 seatNumber = GetSeatNumber(GetSpellInfo()->ID);
         SeatMap::iterator itr = kit->GetSeatIteratorForPassenger(GetCaster());
         if (itr == kit->Seats.end())
             return;
@@ -1569,12 +1569,12 @@ public:
             switch (me->GetEntry())
             {
                 case NPC_CHARGE_TARGET:
-                    if (spell->Id == SPELL_PLAYER_CHARGE)
+                    if (spell->ID == SPELL_PLAYER_CHARGE)
                         if (isVulnerable)
                             DoCast(caster, SPELL_CHARGE_CREDIT, true);
                     break;
                 case NPC_MELEE_TARGET:
-                    if (spell->Id == SPELL_PLAYER_THRUST)
+                    if (spell->ID == SPELL_PLAYER_THRUST)
                     {
                         DoCast(caster, SPELL_MELEE_CREDIT, true);
 
@@ -1583,13 +1583,13 @@ public:
                     }
                     break;
                 case NPC_RANGED_TARGET:
-                    if (spell->Id == SPELL_PLAYER_BREAK_SHIELD)
+                    if (spell->ID == SPELL_PLAYER_BREAK_SHIELD)
                         if (isVulnerable)
                             DoCast(caster, SPELL_RANGED_CREDIT, true);
                     break;
             }
 
-            if (spell->Id == SPELL_PLAYER_BREAK_SHIELD)
+            if (spell->ID == SPELL_PLAYER_BREAK_SHIELD)
                 if (!me->HasAura(SPELL_CHARGE_DEFEND) && !me->HasAura(SPELL_RANGED_DEFEND))
                     isVulnerable = true;
         }
@@ -2070,7 +2070,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_EXPLOSION:
                     DoCast(me, SPELL_IMMOLATION);

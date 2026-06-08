@@ -57,17 +57,6 @@ public:
             on ? setting.RemoveFlag(ANNOUNCER_FLAG_DISABLE_ARENA_QUEUE) : setting.AddFlag(ANNOUNCER_FLAG_DISABLE_ARENA_QUEUE);
             player->UpdatePlayerSetting(AzerothcorePSSource, SETTING_ANNOUNCER_FLAGS, setting.value);
         }
-        else if (type == "autobroadcast")
-        {
-            if (player->GetLevel() < sWorld->getIntConfig(CONFIG_AUTOBROADCAST_MIN_LEVEL_DISABLE))
-            {
-                handler->SetSentErrorMessage(true);
-                handler->PSendSysMessage(LANG_CMD_AUTOBROADCAST_LVL_ERROR, sWorld->getIntConfig(CONFIG_AUTOBROADCAST_MIN_LEVEL_DISABLE));
-            }
-
-            on ? setting.RemoveFlag(ANNOUNCER_FLAG_DISABLE_AUTOBROADCAST) : setting.AddFlag(ANNOUNCER_FLAG_DISABLE_AUTOBROADCAST);
-            player->UpdatePlayerSetting(AzerothcorePSSource, SETTING_ANNOUNCER_FLAGS, setting.value);
-        }
 
         handler->SetSentErrorMessage(false);
         handler->PSendSysMessage(on ? LANG_CMD_SETTINGS_ANNOUNCER_ON : LANG_CMD_SETTINGS_ANNOUNCER_OFF, type);

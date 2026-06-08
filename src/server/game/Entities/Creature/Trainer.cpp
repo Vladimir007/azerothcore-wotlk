@@ -1,20 +1,3 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify it
- * under the terms of the GNU Affero General Public License as published by the
- * Free Software Foundation; either version 3 of the License, or (at your
- * option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "Trainer.h"
 #include "Creature.h"
 #include "NPCPackets.h"
@@ -26,80 +9,81 @@ namespace Trainer
 {
     bool Spell::IsCastable() const
     {
-        return sSpellMgr->AssertSpellInfo(SpellId)->HasEffect(SPELL_EFFECT_LEARN_SPELL);
+        return sSpellMgr->AssertSpellInfo(SpellID)->HasEffect(SPELL_EFFECT_LEARN_SPELL);
     }
 
-    Trainer::Trainer(uint32 trainerId, Type type, uint32 requirement, std::string greeting, std::vector<Spell> spells) : _trainerId(trainerId), _type(type), _requirement(requirement), _spells(std::move(spells))
+    Trainer::Trainer(const uint32 trainerID, const Type type, const uint32 requirement, std::string greeting, std::vector<Spell> spells):
+        _trainerID(trainerID), _type(type), _requirement(requirement), _spells(std::move(spells))
     {
-        _greeting[DEFAULT_LOCALE] = std::move(greeting);
+        _greeting = std::move(greeting);
     }
 
-    void Trainer::SendSpells(Creature* npc, Player* player, LocaleConstant locale) const
+    void Trainer::SendSpells(const Creature* npc, const Player* player) const
     {
-        float reputationDiscount = player->GetReputationPriceDiscount(npc);
+        const float reputationDiscount = player->GetReputationPriceDiscount(npc);
 
         WorldPackets::NPC::TrainerList trainerList;
         trainerList.TrainerGUID = npc->GetGUID();
         trainerList.TrainerType = AsUnderlyingType(_type);
-        trainerList.Greeting = GetGreeting(locale);
+        trainerList.Greeting = _greeting;
         trainerList.Spells.reserve(_spells.size());
-        for (Spell const& trainerSpell : _spells)
+        for (const Spell& trainerSpell : _spells)
         {
-            if (!player->IsSpellFitByClassAndRace(trainerSpell.SpellId))
+            if (!player->IsSpellFitByClassAndRace(trainerSpell.SpellID))
                 continue;
 
-            SpellInfo const* trainerSpellInfo = sSpellMgr->AssertSpellInfo(trainerSpell.SpellId);
+            const SpellInfo* trainerSpellInfo = sSpellMgr->AssertSpellInfo(trainerSpell.SpellID);
 
             bool primaryProfessionFirstRank = false;
-            for (SpellEffectInfo const& spellEffectInfo : trainerSpellInfo->GetEffects())
+            for (const SpellEffectInfo& spellEffectInfo : trainerSpellInfo->GetEffects())
             {
                 if (!spellEffectInfo.IsEffect(SPELL_EFFECT_LEARN_SPELL))
                     continue;
 
-                SpellInfo const* learnedSpellInfo = sSpellMgr->GetSpellInfo(spellEffectInfo.TriggerSpell);
+                const SpellInfo* learnedSpellInfo = sSpellMgr->GetSpellInfo(spellEffectInfo.TriggerSpell);
                 if (learnedSpellInfo && learnedSpellInfo->IsPrimaryProfessionFirstRank())
                     primaryProfessionFirstRank = true;
             }
 
             trainerList.Spells.emplace_back();
             WorldPackets::NPC::TrainerListSpell& trainerListSpell = trainerList.Spells.back();
-            trainerListSpell.SpellID = trainerSpell.SpellId;
+            trainerListSpell.SpellID = trainerSpell.SpellID;
             trainerListSpell.Usable = AsUnderlyingType(GetSpellState(player, &trainerSpell));
-            trainerListSpell.MoneyCost = int32(trainerSpell.MoneyCost * reputationDiscount);
+            trainerListSpell.MoneyCost = static_cast<int32>(trainerSpell.MoneyCost * reputationDiscount);
             trainerListSpell.PointCost[0] = 0; // spells don't cost talent points
             trainerListSpell.PointCost[1] = (primaryProfessionFirstRank ? 1 : 0);
             trainerListSpell.ReqLevel = trainerSpell.ReqLevel;
             trainerListSpell.ReqSkillLine = trainerSpell.ReqSkillLine;
             trainerListSpell.ReqSkillRank = trainerSpell.ReqSkillRank;
-            std::copy(trainerSpell.ReqAbility.begin(), trainerSpell.ReqAbility.end(), trainerListSpell.ReqAbility.begin());
+            std::ranges::copy(trainerSpell.ReqAbility, trainerListSpell.ReqAbility.begin());
         }
 
         player->SendDirectMessage(trainerList.Write());
     }
 
-    void Trainer::TeachSpell(Creature* npc, Player* player, uint32 spellId)
+    void Trainer::TeachSpell(Creature* npc, Player* player, const uint32 spellID)
     {
         if (!IsTrainerValidForPlayer(player))
             return;
 
-        Spell const* trainerSpell = GetSpell(spellId);
+        const Spell* trainerSpell = GetSpell(spellID);
         if (!trainerSpell)
         {
-            SendTeachFailure(npc, player, spellId, FailReason::Unavailable);
+            SendTeachFailure(npc, player, spellID, FailReason::Unavailable);
             return;
         }
 
         if (!CanTeachSpell(player, trainerSpell))
         {
-            SendTeachFailure(npc, player, spellId, FailReason::NotEnoughSkill);
+            SendTeachFailure(npc, player, spellID, FailReason::NotEnoughSkill);
             return;
         }
 
-        float reputationDiscount = player->GetReputationPriceDiscount(npc);
-        int32 moneyCost = int32(trainerSpell->MoneyCost * reputationDiscount);
+        const float reputationDiscount = player->GetReputationPriceDiscount(npc);
+        const int32 moneyCost = static_cast<int32>(trainerSpell->MoneyCost * reputationDiscount);
         if (!player->HasEnoughMoney(moneyCost))
         {
-            SendTeachFailure(npc, player, spellId, FailReason::NotEnoughMoney);
+            SendTeachFailure(npc, player, spellID, FailReason::NotEnoughMoney);
             return;
         }
 
@@ -108,42 +92,35 @@ namespace Trainer
         npc->SendPlaySpellVisual(179); // 53 SpellCastDirected
         npc->SendPlaySpellImpact(player->GetGUID(), 362); // 113 EmoteSalute
 
-        // learn explicitly or cast explicitly
+        // Learn explicitly or cast explicitly
         if (trainerSpell->IsCastable())
-            player->CastSpell(player, trainerSpell->SpellId, true);
+            player->CastSpell(player, trainerSpell->SpellID, true);
         else
-            player->learnSpell(trainerSpell->SpellId, false);
+            player->learnSpell(trainerSpell->SpellID, false);
 
-        SendTeachSucceeded(npc, player, spellId);
+        SendTeachSucceeded(npc, player, spellID);
     }
 
-    Spell const* Trainer::GetSpell(uint32 spellId) const
+    const Spell* Trainer::GetSpell(uint32 spellID) const
     {
-        auto itr = std::find_if(_spells.begin(), _spells.end(), [spellId](Spell const& trainerSpell)
-        {
-            return trainerSpell.SpellId == spellId;
-        });
-
-        if (itr != _spells.end())
-            return &(*itr);
-
-        return nullptr;
+        const auto itr = std::ranges::find_if(_spells, [spellID](const Spell& trainerSpell) { return trainerSpell.SpellID == spellID; });
+        if (itr == _spells.end())
+            return nullptr;
+        return &*itr;
     }
 
-    bool Trainer::CanTeachSpell(Player const* player, Spell const* trainerSpell) const
+    bool Trainer::CanTeachSpell(const Player* player, const Spell* trainerSpell)
     {
-        SpellState state = GetSpellState(player, trainerSpell);
-        if (state != SpellState::Available)
+        if (const SpellState state = GetSpellState(player, trainerSpell); state != SpellState::Available)
             return false;
 
-        SpellInfo const* trainerSpellInfo = sSpellMgr->AssertSpellInfo(trainerSpell->SpellId);
-
-        for (SpellEffectInfo const& spellEffectInfo : trainerSpellInfo->GetEffects())
+        const SpellInfo* trainerSpellInfo = sSpellMgr->AssertSpellInfo(trainerSpell->SpellID);
+        for (const SpellEffectInfo& spellEffectInfo : trainerSpellInfo->GetEffects())
         {
             if (!spellEffectInfo.IsEffect(SPELL_EFFECT_LEARN_SPELL))
                 continue;
 
-            SpellInfo const* learnedSpellInfo = sSpellMgr->GetSpellInfo(spellEffectInfo.TriggerSpell);
+            const SpellInfo* learnedSpellInfo = sSpellMgr->GetSpellInfo(spellEffectInfo.TriggerSpell);
             if (learnedSpellInfo && learnedSpellInfo->IsPrimaryProfessionFirstRank() && !player->GetFreePrimaryProfessionPoints())
                 return false;
         }
@@ -151,31 +128,31 @@ namespace Trainer
         return true;
     }
 
-    SpellState Trainer::GetSpellState(Player const* player, Spell const* trainerSpell) const
+    SpellState Trainer::GetSpellState(const Player* player, const Spell* trainerSpell)
     {
-        if (player->HasSpell(trainerSpell->SpellId))
+        if (player->HasSpell(trainerSpell->SpellID))
             return SpellState::Known;
 
-        // check race/class requirement
-        if (!player->IsSpellFitByClassAndRace(trainerSpell->SpellId))
+        // Check race/class requirement
+        if (!player->IsSpellFitByClassAndRace(trainerSpell->SpellID))
             return SpellState::Unavailable;
 
-        // check skill requirement
+        // Check skill requirement
         if (trainerSpell->ReqSkillLine && player->GetBaseSkillValue(trainerSpell->ReqSkillLine) < trainerSpell->ReqSkillRank)
             return SpellState::Unavailable;
 
-        for (int32 reqAbility : trainerSpell->ReqAbility)
+        for (const int32 reqAbility : trainerSpell->ReqAbility)
             if (reqAbility && !player->HasSpell(reqAbility))
                 return SpellState::Unavailable;
 
-        // check level requirement
+        // Check level requirement
         if (player->GetLevel() < trainerSpell->ReqLevel)
             return SpellState::Unavailable;
 
-        // check ranks
+        // Check ranks
         bool hasLearnSpellEffect = false;
         bool knowsAllLearnedSpells = true;
-        for (SpellEffectInfo const& spellEffectInfo : sSpellMgr->AssertSpellInfo(trainerSpell->SpellId)->GetEffects())
+        for (const SpellEffectInfo& spellEffectInfo : sSpellMgr->AssertSpellInfo(trainerSpell->SpellID)->GetEffects())
         {
             if (!spellEffectInfo.IsEffect(SPELL_EFFECT_LEARN_SPELL))
                 continue;
@@ -184,29 +161,29 @@ namespace Trainer
             if (!player->HasSpell(spellEffectInfo.TriggerSpell))
                 knowsAllLearnedSpells = false;
 
-            if (uint32 previousRankSpellId = sSpellMgr->GetPrevSpellInChain(spellEffectInfo.TriggerSpell))
+            if (const uint32 previousRankSpellId = sSpellMgr->GetPrevSpellInChain(spellEffectInfo.TriggerSpell))
                 if (!player->HasSpell(previousRankSpellId))
                     return SpellState::Unavailable;
         }
 
         if (!hasLearnSpellEffect)
         {
-            if (uint32 previousRankSpellId = sSpellMgr->GetPrevSpellInChain(trainerSpell->SpellId))
+            if (const uint32 previousRankSpellId = sSpellMgr->GetPrevSpellInChain(trainerSpell->SpellID))
                 if (!player->HasSpell(previousRankSpellId))
                     return SpellState::Unavailable;
         }
         else if (knowsAllLearnedSpells)
             return SpellState::Known;
 
-        // check additional spell requirement
-        for (auto const& requirePair : sSpellMgr->GetSpellsRequiredForSpellBounds(trainerSpell->SpellId))
+        // Check additional spell requirement
+        for (const auto& requirePair : sSpellMgr->GetSpellsRequiredForSpellBounds(trainerSpell->SpellID))
             if (!player->HasSpell(requirePair.second))
                 return SpellState::Unavailable;
 
         return SpellState::Available;
     }
 
-    bool Trainer::IsTrainerValidForPlayer(Player const* player) const
+    bool Trainer::IsTrainerValidForPlayer(const Player* player) const
     {
         if (!GetTrainerRequirement())
             return true;
@@ -215,13 +192,13 @@ namespace Trainer
         {
             case Type::Class:
             case Type::Pet:
-                // check class for class trainers
+                // Check class for class trainers
                 return player->getClass() == GetTrainerRequirement();
             case Type::Mount:
-                // check race for mount trainers
+                // Check race for mount trainers
                 return player->getRace() == GetTrainerRequirement();
-            case Type::Tradeskill:
-                // check spell for profession trainers
+            case Type::TradeSkill:
+                // Check spell for profession trainers
                 return player->HasSpell(GetTrainerRequirement());
             default:
                 break;
@@ -230,33 +207,20 @@ namespace Trainer
         return true;
     }
 
-    void Trainer::SendTeachFailure(Creature const* npc, Player const* player, uint32 spellId, FailReason reason) const
+    void Trainer::SendTeachFailure(const Creature* npc, const Player* player, const uint32 spellID, const FailReason reason)
     {
         WorldPackets::NPC::TrainerBuyFailed trainerBuyFailed;
         trainerBuyFailed.TrainerGUID = npc->GetGUID();
-        trainerBuyFailed.SpellID = spellId;
+        trainerBuyFailed.SpellID = spellID;
         trainerBuyFailed.TrainerFailedReason = AsUnderlyingType(reason);
         player->SendDirectMessage(trainerBuyFailed.Write());
     }
 
-    void Trainer::SendTeachSucceeded(Creature const* npc, Player const* player, uint32 spellId) const
+    void Trainer::SendTeachSucceeded(Creature const* npc, Player const* player, const uint32 spellID)
     {
         WorldPackets::NPC::TrainerBuySucceeded trainerBuySucceeded;
         trainerBuySucceeded.TrainerGUID = npc->GetGUID();
-        trainerBuySucceeded.SpellID = spellId;
+        trainerBuySucceeded.SpellID = spellID;
         player->SendDirectMessage(trainerBuySucceeded.Write());
-    }
-
-    std::string const& Trainer::GetGreeting(LocaleConstant locale) const
-    {
-        if (_greeting[locale].empty())
-            return _greeting[DEFAULT_LOCALE];
-
-        return _greeting[locale];
-    }
-
-    void Trainer::AddGreetingLocale(LocaleConstant locale, std::string greeting)
-    {
-        _greeting[locale] = std::move(greeting);
     }
 }

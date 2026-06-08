@@ -31,8 +31,8 @@ struct QEmote
 
 struct GossipTextOption
 {
-    std::string Text_0;
-    std::string Text_1;
+    std::string Text0;
+    std::string Text1;
     uint32 BroadcastTextID;
     uint32 Language;
     float Probability;
@@ -44,18 +44,5 @@ struct GossipTextOption
 struct GossipText
 {
     GossipTextOption Options[MAX_GOSSIP_TEXT_OPTIONS];
-};
-
-struct PageTextLocale
-{
-    std::vector<std::string> Text;
-};
-
-struct NpcTextLocale
-{
-    NpcTextLocale() { Text_0.resize(8); Text_1.resize(8); }
-
-    std::vector<std::vector<std::string>> Text_0;
-    std::vector<std::vector<std::string>> Text_1;
 };
 #endif

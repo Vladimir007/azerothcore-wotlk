@@ -31,7 +31,7 @@ void WorldSession::HandleDismissControlledVehicle(WorldPacket& recvData)
 
     if (!vehicleGUID)                                       // something wrong here...
     {
-        recvData.rfinish();                                // prevent warnings spam
+        recvData.rFinish();                                // prevent warnings spam
         return;
     }
 
@@ -41,7 +41,7 @@ void WorldSession::HandleDismissControlledVehicle(WorldPacket& recvData)
     // pussywizard: typical check for incomming movement packets
     if (!_player->m_mover || !_player->m_mover->IsInWorld() || _player->m_mover->IsDuringRemoveFromWorld() || guid != _player->m_mover->GetGUID())
     {
-        recvData.rfinish(); // prevent warnings spam
+        recvData.rFinish(); // prevent warnings spam
         _player->ExitVehicle();
         return;
     }
@@ -65,16 +65,16 @@ void WorldSession::HandleChangeSeatsOnControlledVehicle(WorldPacket& recvData)
     Unit* vehicle_base = GetPlayer()->GetVehicleBase();
     if (!vehicle_base)
     {
-        recvData.rfinish();                                // prevent warnings spam
+        recvData.rFinish();                                // prevent warnings spam
         return;
     }
 
     VehicleSeatEntry const* seat = GetPlayer()->GetVehicle()->GetSeatForPassenger(GetPlayer());
     if (!seat->CanSwitchFromSeat())
     {
-        recvData.rfinish();                                // prevent warnings spam
+        recvData.rFinish();                                // prevent warnings spam
         LOG_ERROR("network.opcode", "HandleChangeSeatsOnControlledVehicle, Opcode: {}, Player {} tried to switch seats but current seatflags {} don't permit that.",
-                       recvData.GetOpcode(), GetPlayer()->GetGUID().ToString(), seat->m_flags);
+                       recvData.GetOpcode(), GetPlayer()->GetGUID().ToString(), seat->Flags);
         return;
     }
 
@@ -94,7 +94,7 @@ void WorldSession::HandleChangeSeatsOnControlledVehicle(WorldPacket& recvData)
                 // pussywizard:
                 if (vehicle_base->GetGUID() != guid)
                 {
-                    recvData.rfinish(); // prevent warnings spam
+                    recvData.rFinish(); // prevent warnings spam
                     return;
                 }
 
@@ -167,7 +167,7 @@ void WorldSession::HandleEjectPassenger(WorldPacket& data)
     Vehicle* vehicle = _player->GetVehicleKit();
     if (!vehicle)
     {
-        data.rfinish();                                     // prevent warnings spam
+        data.rFinish();                                     // prevent warnings spam
         LOG_ERROR("network.opcode", "HandleEjectPassenger: Player {} is not in a vehicle!", GetPlayer()->GetGUID().ToString());
         return;
     }
@@ -238,7 +238,7 @@ void WorldSession::HandleRequestVehicleExit(WorldPacket& /*recvData*/)
                 GetPlayer()->ExitVehicle();
             else
                 LOG_ERROR("network.opcode", "Player {} tried to exit vehicle, but seatflags {} (ID: {}) don't permit that.",
-                               GetPlayer()->GetGUID().ToString(), seat->m_ID, seat->m_flags);
+                               GetPlayer()->GetGUID().ToString(), seat->ID, seat->Flags);
         }
     }
 }

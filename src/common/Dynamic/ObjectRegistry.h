@@ -1,29 +1,11 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-#ifndef ACORE_OBJECTREGISTRY_H
-#define ACORE_OBJECTREGISTRY_H
+#ifndef NCORE_OBJECT_REGISTRY_H
+#define NCORE_OBJECT_REGISTRY_H
 
 #include <map>
 #include <memory>
 #include <string>
 
-/** ObjectRegistry holds all registry item of the same type
- */
+/// ObjectRegistry holds all registry item of the same type
 template<class T, class Key = std::string>
 class ObjectRegistry final
 {
@@ -39,22 +21,20 @@ public:
         return itr->second.get();
     }
 
-    static ObjectRegistry<T, Key>* instance()
+    static ObjectRegistry* instance()
     {
-        static ObjectRegistry<T, Key>* instance = new ObjectRegistry<T, Key>();
+        static ObjectRegistry* instance = new ObjectRegistry();
         return instance;
     }
 
     /// Inserts a registry item
-    bool InsertItem(T* obj, Key const& key, bool force = false)
+    bool InsertItem(T* obj, Key const& key, const bool force = false)
     {
         auto itr = _registeredObjects.find(key);
         if (itr != _registeredObjects.end())
         {
             if (!force)
-            {
                 return false;
-            }
             _registeredObjects.erase(itr);
         }
 
@@ -65,7 +45,7 @@ public:
     /// Returns true if registry contains an item
     bool HasItem(Key const& key) const
     {
-        return (_registeredObjects.count(key) > 0);
+        return _registeredObjects.contains(key);
     }
 
     /// Return the map of registered items
@@ -77,9 +57,8 @@ public:
 private:
     RegistryMapType _registeredObjects;
 
-    // non instanceable, only static
-    ObjectRegistry() { }
-    ~ObjectRegistry() { }
+    ObjectRegistry() {}
+    ~ObjectRegistry() {}
 };
 
 #endif

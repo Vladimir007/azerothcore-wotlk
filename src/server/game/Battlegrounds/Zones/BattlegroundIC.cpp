@@ -298,7 +298,7 @@ void BattlegroundIC::StartingEventOpenDoors()
         GetBGObject(BG_IC_TeleporterEffects[i].type)->SetGoState(GO_STATE_ACTIVE);
 }
 
-bool BattlegroundIC::AllNodesConrolledByTeam(TeamId teamId) const
+bool BattlegroundIC::AllNodesConrolledByTeam(TeamID teamId) const
 {
     uint32 count = 0;
     ICNodeState controlledState = teamId == TEAM_ALLIANCE ? NODE_STATE_CONTROLLED_A : NODE_STATE_CONTROLLED_H;
@@ -311,7 +311,7 @@ bool BattlegroundIC::AllNodesConrolledByTeam(TeamId teamId) const
     return count == NODE_TYPE_WORKSHOP;
 }
 
-bool BattlegroundIC::IsResourceGlutAllowed(TeamId teamId) const
+bool BattlegroundIC::IsResourceGlutAllowed(TeamID teamId) const
 {
     ICNodeState controlledState = teamId == TEAM_ALLIANCE ? NODE_STATE_CONTROLLED_A : NODE_STATE_CONTROLLED_H;
     return nodePoint[NODE_TYPE_QUARRY].nodeState == controlledState && nodePoint[NODE_TYPE_REFINERY].nodeState == controlledState;
@@ -977,7 +977,7 @@ void BattlegroundIC::DestroyGate(Player*  /*player*/, GameObject* go)
 
     uint32 textId;
     ChatMsg msgType;
-    TeamId teamId = TEAM_ALLIANCE;
+    TeamID teamId = TEAM_ALLIANCE;
 
     switch (go->GetEntry())
     {

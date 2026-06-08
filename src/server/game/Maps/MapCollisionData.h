@@ -69,7 +69,7 @@ protected:
     MMAP::ManagedNavMeshQuery _navMeshQuery;
 };
 
-// Map collision data holders (dynamic&static vmap, mmaps)
+// Map collision data holders (dynamic&static vMap, mMaps)
 class MapCollisionData
 {
 public:

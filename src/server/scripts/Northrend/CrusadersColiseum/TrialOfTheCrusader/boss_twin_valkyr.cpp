@@ -750,7 +750,7 @@ class spell_valkyr_essence_aura : public AuraScript
             {
                 uint32 auraId = 0;
                 uint32 empoweredId = 0;
-                switch (se->Id)
+                switch (se->ID)
                 {
                     case 65686:
                         auraId = 67590;

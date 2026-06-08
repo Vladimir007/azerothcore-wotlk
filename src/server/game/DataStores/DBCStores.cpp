@@ -1,24 +1,8 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "DBCStores.h"
+
+#include <map>
+
 #include "BattlegroundMgr.h"
-#include "DBCFileLoader.h"
-#include "DBCfmt.h"
 #include "Errors.h"
 #include "LFGMgr.h"
 #include "Log.h"
@@ -26,431 +10,361 @@
 #include "SpellMgr.h"
 #include "TransportMgr.h"
 #include "World.h"
-#include <map>
 
 typedef std::map<uint16, uint32> AreaFlagByAreaID;
 typedef std::map<uint32, uint32> AreaFlagByMapID;
-
-typedef std::tuple<int16, int8, int32> WMOAreaTableKey;
-typedef std::map<WMOAreaTableKey, WMOAreaTableEntry const*> WMOAreaInfoByTripple;
-
-DBCStorage <AreaTableEntry> sAreaTableStore(AreaTableEntryfmt);
-DBCStorage <AreaGroupEntry> sAreaGroupStore(AreaGroupEntryfmt);
-DBCStorage <AreaPOIEntry> sAreaPOIStore(AreaPOIEntryfmt);
-
-static WMOAreaInfoByTripple sWMOAreaInfoByTripple;
-
-DBCStorage <AchievementEntry> sAchievementStore(Achievementfmt);
-DBCStorage <AchievementCategoryEntry> sAchievementCategoryStore(AchievementCategoryfmt);
-DBCStorage <AchievementCriteriaEntry> sAchievementCriteriaStore(AchievementCriteriafmt);
-DBCStorage <AuctionHouseEntry> sAuctionHouseStore(AuctionHouseEntryfmt);
-DBCStorage <BankBagSlotPricesEntry> sBankBagSlotPricesStore(BankBagSlotPricesEntryfmt);
-DBCStorage <BattlemasterListEntry> sBattlemasterListStore(BattlemasterListEntryfmt);
-DBCStorage <BarberShopStyleEntry> sBarberShopStyleStore(BarberShopStyleEntryfmt);
-DBCStorage <CharStartOutfitEntry> sCharStartOutfitStore(CharStartOutfitEntryfmt);
-std::map<uint32, CharStartOutfitEntry const*> sCharStartOutfitMap;
-DBCStorage <CharTitlesEntry> sCharTitlesStore(CharTitlesEntryfmt);
-DBCStorage <ChatChannelsEntry> sChatChannelsStore(ChatChannelsEntryfmt);
-DBCStorage <ChrClassesEntry> sChrClassesStore(ChrClassesEntryfmt);
-DBCStorage <ChrRacesEntry> sChrRacesStore(ChrRacesEntryfmt);
-DBCStorage <CinematicCameraEntry> sCinematicCameraStore(CinematicCameraEntryfmt);
-DBCStorage <CinematicSequencesEntry> sCinematicSequencesStore(CinematicSequencesEntryfmt);
-DBCStorage <CreatureDisplayInfoEntry> sCreatureDisplayInfoStore(CreatureDisplayInfofmt);
-DBCStorage <CreatureDisplayInfoExtraEntry> sCreatureDisplayInfoExtraStore(CreatureDisplayInfoExtrafmt);
-DBCStorage <CreatureFamilyEntry> sCreatureFamilyStore(CreatureFamilyfmt);
-DBCStorage <CreatureModelDataEntry> sCreatureModelDataStore(CreatureModelDatafmt);
-DBCStorage <CreatureSpellDataEntry> sCreatureSpellDataStore(CreatureSpellDatafmt);
-DBCStorage <CreatureTypeEntry> sCreatureTypeStore(CreatureTypefmt);
-DBCStorage <CurrencyTypesEntry> sCurrencyTypesStore(CurrencyTypesfmt);
-
-DBCStorage <DestructibleModelDataEntry> sDestructibleModelDataStore(DestructibleModelDatafmt);
-DBCStorage <DungeonEncounterEntry> sDungeonEncounterStore(DungeonEncounterfmt);
-DBCStorage <DurabilityQualityEntry> sDurabilityQualityStore(DurabilityQualityfmt);
-DBCStorage <DurabilityCostsEntry> sDurabilityCostsStore(DurabilityCostsfmt);
-
-DBCStorage <EmotesEntry> sEmotesStore(EmotesEntryfmt);
-DBCStorage <EmotesTextEntry> sEmotesTextStore(EmotesTextEntryfmt);
-
 typedef std::map<uint32, SimpleFactionsList> FactionTeamMap;
+typedef std::tuple<uint16, uint8, int32> WMOAreaTableKey;
+typedef std::map<WMOAreaTableKey, const WMOAreaTableEntry*> WMOAreaInfoByTriple;
+typedef std::list<std::string> StoreProblemList;
+typedef std::map<uint32, TalentSpellPos> TalentSpellPosMap;
+
+static WMOAreaInfoByTriple sWMOAreaInfoByTriple;
 static FactionTeamMap sFactionTeamMap;
-DBCStorage <FactionEntry> sFactionStore(FactionEntryfmt);
-DBCStorage <FactionTemplateEntry> sFactionTemplateStore(FactionTemplateEntryfmt);
+static uint32 sTalentTabPages[MAX_CLASSES][3];  // Store absolute bit position for first rank for talent inspect
 
-DBCStorage <GameObjectArtKitEntry> sGameObjectArtKitStore(GameObjectArtKitfmt);
+std::map<uint32, const CharStartOutfitEntry*> sCharStartOutfitMap;
 
-DBCStorage <GameObjectDisplayInfoEntry> sGameObjectDisplayInfoStore(GameObjectDisplayInfofmt);
-DBCStorage <GemPropertiesEntry> sGemPropertiesStore(GemPropertiesEntryfmt);
-DBCStorage <GlyphPropertiesEntry> sGlyphPropertiesStore(GlyphPropertiesfmt);
-DBCStorage <GlyphSlotEntry> sGlyphSlotStore(GlyphSlotfmt);
+DBCStorage<AchievementEntry>                   sAchievementStore;
+DBCStorage<AchievementCategoryEntry>           sAchievementCategoryStore;
+DBCStorage<AchievementCriteriaEntry>           sAchievementCriteriaStore;
+DBCStorage<AreaTableEntry>                     sAreaTableStore;
+DBCStorage<AreaGroupEntry>                     sAreaGroupStore;
+DBCStorage<AuctionHouseEntry>                  sAuctionHouseStore;
+DBCStorage<BankBagSlotPricesEntry>             sBankBagSlotPricesStore;
+DBCStorage<BattlemasterListEntry>              sBattlemasterListStore;
+DBCStorage<BarberShopStyleEntry>               sBarberShopStyleStore;
+DBCStorage<CharStartOutfitEntry>               sCharStartOutfitStore;
+DBCStorage<CharTitlesEntry>                    sCharTitlesStore;
+DBCStorage<ChatChannelsEntry>                  sChatChannelsStore;
+DBCStorage<ChrClassesEntry>                    sChrClassesStore;
+DBCStorage<ChrRacesEntry>                      sChrRacesStore;
+DBCStorage<CinematicCameraEntry>               sCinematicCameraStore;
+DBCStorage<CinematicSequencesEntry>            sCinematicSequencesStore;
+DBCStorage<CreatureDisplayInfoEntry>           sCreatureDisplayInfoStore;
+DBCStorage<CreatureDisplayInfoExtraEntry>      sCreatureDisplayInfoExtraStore;
+DBCStorage<CreatureFamilyEntry>                sCreatureFamilyStore;
+DBCStorage<CreatureModelDataEntry>             sCreatureModelDataStore;
+DBCStorage<CreatureSpellDataEntry>             sCreatureSpellDataStore;
+DBCStorage<CreatureTypeEntry>                  sCreatureTypeStore;
+DBCStorage<CurrencyTypesEntry>                 sCurrencyTypesStore;
+DBCStorage<DestructibleModelDataEntry>         sDestructibleModelDataStore;
+DBCStorage<DungeonEncounterEntry>              sDungeonEncounterStore;
+DBCStorage<DurabilityQualityEntry>             sDurabilityQualityStore;
+DBCStorage<DurabilityCostsEntry>               sDurabilityCostsStore;
+DBCStorage<EmotesEntry>                        sEmotesStore;
+DBCStorage<EmotesTextEntry>                    sEmotesTextStore;
+DBCStorage<FactionEntry>                       sFactionStore;
+DBCStorage<FactionTemplateEntry>               sFactionTemplateStore;
+DBCStorage<GameObjectArtKitEntry>              sGameObjectArtKitStore;
+DBCStorage<GameObjectDisplayInfoEntry>         sGameObjectDisplayInfoStore;
+DBCStorage<GemPropertiesEntry>                 sGemPropertiesStore;
+DBCStorage<GlyphPropertiesEntry>               sGlyphPropertiesStore;
+DBCStorage<GlyphSlotEntry>                     sGlyphSlotStore;
+DBCStorage<GtBarberShopCostBaseEntry>          sGtBarberShopCostBaseStore;
+DBCStorage<GtCombatRatingsEntry>               sGtCombatRatingsStore;
+DBCStorage<GtChanceToMeleeCritBaseEntry>       sGtChanceToMeleeCritBaseStore;
+DBCStorage<GtChanceToMeleeCritEntry>           sGtChanceToMeleeCritStore;
+DBCStorage<GtChanceToSpellCritBaseEntry>       sGtChanceToSpellCritBaseStore;
+DBCStorage<GtChanceToSpellCritEntry>           sGtChanceToSpellCritStore;
+DBCStorage<GtNPCManaCostScalerEntry>           sGtNPCManaCostScalerStore;
+DBCStorage<GtOCTClassCombatRatingScalarEntry>  sGtOCTClassCombatRatingScalarStore;
+DBCStorage<GtOCTRegenHPEntry>                  sGtOCTRegenHPStore;
+DBCStorage<GtRegenHPPerSptEntry>               sGtRegenHPPerSptStore;
+DBCStorage<GtRegenMPPerSptEntry>               sGtRegenMPPerSptStore;
+DBCStorage<HolidaysEntry>                      sHolidaysStore;
+DBCStorage<ItemEntry>                          sItemStore;
+DBCStorage<ItemBagFamilyEntry>                 sItemBagFamilyStore;
+DBCStorage<ItemExtendedCostEntry>              sItemExtendedCostStore;
+DBCStorage<ItemLimitCategoryEntry>             sItemLimitCategoryStore;
+DBCStorage<ItemRandomPropertiesEntry>          sItemRandomPropertiesStore;
+DBCStorage<ItemRandomSuffixEntry>              sItemRandomSuffixStore;
+DBCStorage<ItemSetEntry>                       sItemSetStore;
+DBCStorage<LFGDungeonEntry>                    sLFGDungeonStore;
+DBCStorage<LightEntry>                         sLightStore;
+DBCStorage<LiquidTypeEntry>                    sLiquidTypeStore;
+DBCStorage<LockEntry>                          sLockStore;
+DBCStorage<MailTemplateEntry>                  sMailTemplateStore;
+DBCStorage<MapEntry>                           sMapStore;
+DBCStorage<MapDifficultyEntry>                 sMapDifficultyStore; // Used only for initialization sMapDifficultyMap at startup.
+DBCStorage<MovieEntry>                         sMovieStore;
+DBCStorage<NamesReservedEntry>                 sNamesReservedStore;
+DBCStorage<NamesProfanityEntry>                sNamesProfanityStore;
+DBCStorage<OverrideSpellDataEntry>             sOverrideSpellDataStore;
+DBCStorage<PowerDisplayEntry>                  sPowerDisplayStore;
+DBCStorage<PvPDifficultyEntry>                 sPvPDifficultyStore;
+DBCStorage<QuestSortEntry>                     sQuestSortStore;
+DBCStorage<QuestXPEntry>                       sQuestXPStore;
+DBCStorage<QuestFactionRewEntry>               sQuestFactionRewardStore;
+DBCStorage<RandomPropertiesPointsEntry>        sRandomPropertiesPointsStore;
+DBCStorage<ScalingStatDistributionEntry>       sScalingStatDistributionStore;
+DBCStorage<ScalingStatValuesEntry>             sScalingStatValuesStore;
+DBCStorage<SkillLineEntry>                     sSkillLineStore;
+DBCStorage<SkillLineAbilityEntry>              sSkillLineAbilityStore;
+DBCStorage<SkillRaceClassInfoEntry>            sSkillRaceClassInfoStore;
+DBCStorage<SkillTiersEntry>                    sSkillTiersStore;
+DBCStorage<SoundEntriesEntry>                  sSoundEntriesStore;
+DBCStorage<SpellItemEnchantmentEntry>          sSpellItemEnchantmentStore;
+DBCStorage<SpellItemEnchantmentConditionEntry> sSpellItemEnchantmentConditionStore;
+DBCStorage<SpellEntry>                         sSpellStore;
+DBCStorage<SpellCastTimesEntry>                sSpellCastTimesStore;
+DBCStorage<SpellCategoryEntry>                 sSpellCategoryStore;
+DBCStorage<SpellDifficultyEntry>               sSpellDifficultyStore;
+DBCStorage<SpellDurationEntry>                 sSpellDurationStore;
+DBCStorage<SpellFocusObjectEntry>              sSpellFocusObjectStore;
+DBCStorage<SpellRadiusEntry>                   sSpellRadiusStore;
+DBCStorage<SpellRangeEntry>                    sSpellRangeStore;
+DBCStorage<SpellRuneCostEntry>                 sSpellRuneCostStore;
+DBCStorage<SpellShapeshiftFormEntry>           sSpellShapeshiftFormStore;
+DBCStorage<SpellVisualEntry>                   sSpellVisualStore;
+DBCStorage<StableSlotPricesEntry>              sStableSlotPricesStore;
+DBCStorage<SummonPropertiesEntry>              sSummonPropertiesStore;
+DBCStorage<TalentEntry>                        sTalentStore;
+DBCStorage<TalentTabEntry>                     sTalentTabStore;
+DBCStorage<TaxiNodesEntry>                     sTaxiNodesStore;
+DBCStorage<TaxiPathEntry>                      sTaxiPathStore;  // Used only for initialization sTaxiPathSetBySource at startup.
+DBCStorage<TaxiPathNodeEntry>                  sTaxiPathNodeStore;  // Used only for initialization sTaxiPathNodeStore at startup.
+DBCStorage<TeamContributionPointsEntry>        sTeamContributionPointsStore;
+DBCStorage<TotemCategoryEntry>                 sTotemCategoryStore;
+DBCStorage<TransportAnimationEntry>            sTransportAnimationStore;
+DBCStorage<TransportRotationEntry>             sTransportRotationStore;
+DBCStorage<VehicleEntry>                       sVehicleStore;
+DBCStorage<VehicleSeatEntry>                   sVehicleSeatStore;
+DBCStorage<WMOAreaTableEntry>                  sWMOAreaTableStore;
+DBCStorage<WorldMapAreaEntry>                  sWorldMapAreaStore;
+DBCStorage<WorldMapOverlayEntry>               sWorldMapOverlayStore;
 
-DBCStorage <GtBarberShopCostBaseEntry>    sGtBarberShopCostBaseStore(GtBarberShopCostBasefmt);
-DBCStorage <GtCombatRatingsEntry>         sGtCombatRatingsStore(GtCombatRatingsfmt);
-DBCStorage <GtChanceToMeleeCritBaseEntry> sGtChanceToMeleeCritBaseStore(GtChanceToMeleeCritBasefmt);
-DBCStorage <GtChanceToMeleeCritEntry>     sGtChanceToMeleeCritStore(GtChanceToMeleeCritfmt);
-DBCStorage <GtChanceToSpellCritBaseEntry> sGtChanceToSpellCritBaseStore(GtChanceToSpellCritBasefmt);
-DBCStorage <GtChanceToSpellCritEntry>     sGtChanceToSpellCritStore(GtChanceToSpellCritfmt);
-DBCStorage <GtNPCManaCostScalerEntry>     sGtNPCManaCostScalerStore(GtNPCManaCostScalerfmt);
-DBCStorage <GtOCTClassCombatRatingScalarEntry> sGtOCTClassCombatRatingScalarStore(GtOCTClassCombatRatingScalarfmt);
-DBCStorage <GtOCTRegenHPEntry>            sGtOCTRegenHPStore(GtOCTRegenHPfmt);
-//DBCStorage <GtOCTRegenMPEntry>            sGtOCTRegenMPStore(GtOCTRegenMPfmt);  -- not used currently
-DBCStorage <GtRegenHPPerSptEntry>         sGtRegenHPPerSptStore(GtRegenHPPerSptfmt);
-DBCStorage <GtRegenMPPerSptEntry>         sGtRegenMPPerSptStore(GtRegenMPPerSptfmt);
-
-DBCStorage <HolidaysEntry>                sHolidaysStore(Holidaysfmt);
-
-DBCStorage <ItemEntry>                    sItemStore(Itemfmt);
-DBCStorage <ItemBagFamilyEntry>           sItemBagFamilyStore(ItemBagFamilyfmt);
-//DBCStorage <ItemCondExtCostsEntry> sItemCondExtCostsStore(ItemCondExtCostsEntryfmt);
-DBCStorage <ItemDisplayInfoEntry> sItemDisplayInfoStore(ItemDisplayTemplateEntryfmt);
-DBCStorage <ItemExtendedCostEntry> sItemExtendedCostStore(ItemExtendedCostEntryfmt);
-DBCStorage <ItemLimitCategoryEntry> sItemLimitCategoryStore(ItemLimitCategoryEntryfmt);
-DBCStorage <ItemRandomPropertiesEntry> sItemRandomPropertiesStore(ItemRandomPropertiesfmt);
-DBCStorage <ItemRandomSuffixEntry> sItemRandomSuffixStore(ItemRandomSuffixfmt);
-DBCStorage <ItemSetEntry> sItemSetStore(ItemSetEntryfmt);
-
-DBCStorage <LFGDungeonEntry> sLFGDungeonStore(LFGDungeonEntryfmt);
-DBCStorage <LightEntry> sLightStore(LightEntryfmt);
-DBCStorage <LiquidTypeEntry> sLiquidTypeStore(LiquidTypefmt);
-DBCStorage <LockEntry> sLockStore(LockEntryfmt);
-
-DBCStorage <MailTemplateEntry> sMailTemplateStore(MailTemplateEntryfmt);
-DBCStorage <MapEntry> sMapStore(MapEntryfmt);
-
-// DBC used only for initialization sMapDifficultyMap at startup.
-DBCStorage <MapDifficultyEntry> sMapDifficultyStore(MapDifficultyEntryfmt); // only for loading
 MapDifficultyMap sMapDifficultyMap;
-
-DBCStorage <MovieEntry> sMovieStore(MovieEntryfmt);
-
-DBCStorage <NamesReservedEntry> sNamesReservedStore(NamesReservedfmt);
-DBCStorage <NamesProfanityEntry> sNamesProfanityStore(NamesProfanityfmt);
-
-DBCStorage <OverrideSpellDataEntry> sOverrideSpellDataStore(OverrideSpellDatafmt);
-
-DBCStorage <PowerDisplayEntry> sPowerDisplayStore(PowerDisplayfmt);
-DBCStorage <PvPDifficultyEntry> sPvPDifficultyStore(PvPDifficultyfmt);
-
-DBCStorage <QuestSortEntry> sQuestSortStore(QuestSortEntryfmt);
-DBCStorage <QuestXPEntry>   sQuestXPStore(QuestXPfmt);
-DBCStorage <QuestFactionRewEntry>  sQuestFactionRewardStore(QuestFactionRewardfmt);
-DBCStorage <RandomPropertiesPointsEntry> sRandomPropertiesPointsStore(RandomPropertiesPointsfmt);
-DBCStorage <ScalingStatDistributionEntry> sScalingStatDistributionStore(ScalingStatDistributionfmt);
-DBCStorage <ScalingStatValuesEntry> sScalingStatValuesStore(ScalingStatValuesfmt);
-
-DBCStorage <SkillLineEntry> sSkillLineStore(SkillLinefmt);
-DBCStorage <SkillLineAbilityEntry> sSkillLineAbilityStore(SkillLineAbilityfmt);
 SkillLineAbilityIndexBySkillLine sSkillLineAbilityIndexBySkillLine;
-DBCStorage <SkillRaceClassInfoEntry> sSkillRaceClassInfoStore(SkillRaceClassInfofmt);
 SkillRaceClassInfoMap SkillRaceClassInfoBySkill;
-DBCStorage <SkillTiersEntry> sSkillTiersStore(SkillTiersfmt);
-
-DBCStorage <SoundEntriesEntry> sSoundEntriesStore(SoundEntriesfmt);
-
-DBCStorage <SpellItemEnchantmentEntry> sSpellItemEnchantmentStore(SpellItemEnchantmentfmt);
-DBCStorage <SpellItemEnchantmentConditionEntry> sSpellItemEnchantmentConditionStore(SpellItemEnchantmentConditionfmt);
-DBCStorage <SpellEntry> sSpellStore(SpellEntryfmt);
 SpellCategoryStore sSpellsByCategoryStore;
 PetFamilySpellsStore sPetFamilySpellsStore;
-
-DBCStorage <SpellCastTimesEntry> sSpellCastTimesStore(SpellCastTimefmt);
-DBCStorage <SpellCategoryEntry> sSpellCategoryStore(SpellCategoryfmt);
-DBCStorage <SpellDifficultyEntry> sSpellDifficultyStore(SpellDifficultyfmt);
-DBCStorage <SpellDurationEntry> sSpellDurationStore(SpellDurationfmt);
-DBCStorage <SpellFocusObjectEntry> sSpellFocusObjectStore(SpellFocusObjectfmt);
-DBCStorage <SpellRadiusEntry> sSpellRadiusStore(SpellRadiusfmt);
-DBCStorage <SpellRangeEntry> sSpellRangeStore(SpellRangefmt);
-DBCStorage <SpellRuneCostEntry> sSpellRuneCostStore(SpellRuneCostfmt);
-DBCStorage <SpellShapeshiftFormEntry> sSpellShapeshiftFormStore(SpellShapeshiftFormEntryfmt);
-DBCStorage <SpellVisualEntry> sSpellVisualStore(SpellVisualfmt);
-DBCStorage <StableSlotPricesEntry> sStableSlotPricesStore(StableSlotPricesfmt);
-DBCStorage <SummonPropertiesEntry> sSummonPropertiesStore(SummonPropertiesfmt);
-DBCStorage <TalentEntry> sTalentStore(TalentEntryfmt);
 TalentSpellPosMap sTalentSpellPosMap;
 std::unordered_set<uint32> sPetTalentSpells;
-DBCStorage <TalentTabEntry> sTalentTabStore(TalentTabEntryfmt);
 
-// store absolute bit position for first rank for talent inspect
-static uint32 sTalentTabPages[MAX_CLASSES][3];
-
-DBCStorage <TaxiNodesEntry> sTaxiNodesStore(TaxiNodesEntryfmt);
 TaxiMask sTaxiNodesMask;
 TaxiMask sOldContinentsNodesMask;
 TaxiMask sHordeTaxiNodesMask;
 TaxiMask sAllianceTaxiNodesMask;
 TaxiMask sDeathKnightTaxiNodesMask;
 
-// DBC used only for initialization sTaxiPathSetBySource at startup.
 TaxiPathSetBySource sTaxiPathSetBySource;
-DBCStorage <TaxiPathEntry> sTaxiPathStore(TaxiPathEntryfmt);
-
-// DBC used only for initialization sTaxiPathNodeStore at startup.
 TaxiPathNodesByPath sTaxiPathNodesByPath;
-static DBCStorage <TaxiPathNodeEntry> sTaxiPathNodeStore(TaxiPathNodeEntryfmt);
-
-DBCStorage <TeamContributionPointsEntry> sTeamContributionPointsStore(TeamContributionPointsfmt);
-DBCStorage <TotemCategoryEntry> sTotemCategoryStore(TotemCategoryEntryfmt);
-DBCStorage <TransportAnimationEntry> sTransportAnimationStore(TransportAnimationfmt);
-DBCStorage <TransportRotationEntry> sTransportRotationStore(TransportRotationfmt);
-DBCStorage <VehicleEntry> sVehicleStore(VehicleEntryfmt);
-DBCStorage <VehicleSeatEntry> sVehicleSeatStore(VehicleSeatEntryfmt);
-DBCStorage <WMOAreaTableEntry> sWMOAreaTableStore(WMOAreaTableEntryfmt);
-DBCStorage <WorldMapAreaEntry> sWorldMapAreaStore(WorldMapAreaEntryfmt);
-DBCStorage <WorldMapOverlayEntry> sWorldMapOverlayStore(WorldMapOverlayEntryfmt);
-
-typedef std::list<std::string> StoreProblemList;
 
 uint32 DBCFileCount = 0;
 
-static bool LoadDBC_assert_print(uint32 fsize, uint32 rsize, const std::string& filename)
-{
-    LOG_ERROR("dbc", "Size of '{}' set by format string ({}) not equal size of C++ structure ({}).", filename, fsize, rsize);
-
-    // ASSERT must fail after function call
-    return false;
-}
-
 template<class T>
-inline void LoadDBC(uint32& availableDbcLocales, StoreProblemList& errors, DBCStorage<T>& storage, std::string const& dbcPath, std::string const& filename, char const* dbTable = nullptr)
+void LoadDBC(DBCStorage<T>& storage, const std::string& table, const std::string& fields, const std::string& ordering="id")
 {
-    // compatibility format and C++ structure sizes
-    ASSERT(DBCFileLoader::GetFormatRecordSize(storage.GetFormat()) == sizeof(T) || LoadDBC_assert_print(DBCFileLoader::GetFormatRecordSize(storage.GetFormat()), sizeof(T), filename));
-
     ++DBCFileCount;
-    std::string dbcFilename = dbcPath + filename;
-    bool existDBData = false;
-
-    if (storage.Load(dbcFilename.c_str()))
-    {
-        for (uint8 i = 0; i < TOTAL_LOCALES; ++i)
-        {
-            if (!(availableDbcLocales & (1 << i)))
-                continue;
-
-            std::string localizedName(dbcPath);
-            localizedName.append(localeNames[i]);
-            localizedName.push_back('/');
-            localizedName.append(filename);
-
-            if (!storage.LoadStringsFrom(localizedName.c_str()))
-                availableDbcLocales &= ~(1 << i);             // mark as not available for speedup next checks
-        }
-    }
-
-    if (dbTable)
-        storage.LoadFromDB(dbTable, storage.GetFormat());
-
-    if (storage.GetNumRows())
-        existDBData = true;
-
-    if (!existDBData)
-    {
-        // sort problematic dbc to (1) non compatible and (2) non-existed
-        if (FILE* f = fopen(dbcFilename.c_str(), "rb"))
-        {
-            std::ostringstream stream;
-            stream << dbcFilename << " exists, and has " << storage.GetFieldCount() << " field(s) (expected " << strlen(storage.GetFormat()) << "). Extracted file might be from wrong client version or a database-update has been forgotten.";
-            std::string buf = stream.str();
-            errors.push_back(buf);
-            fclose(f);
-        }
-        else
-            errors.push_back(dbcFilename);
-    }
+    storage.Load(table, fields, ordering);
 }
 
-void LoadDBCStores(const std::string& dataPath)
+void LoadDBCStores()
 {
-    uint32 oldMSTime = getMSTime();
+    const uint32 oldMSTime = getMSTime();
 
-    std::string dbcPath = dataPath + "dbc/";
+    LoadDBC(sAchievementStore, "dbc_achievement", "id, faction, map, name, category, points, flags, min_criteria_demanded, linked_achievement");
+    LoadDBC(sAchievementCategoryStore, "dbc_achievement_category", "id, parent");
+    LoadDBC(sAchievementCriteriaStore, "dbc_achievement_criterion",
+        "id, achievement, type, required_asset, required_amount, start_type, start_asset, "
+        "fail_type, fail_asset, flags, timer_type, timer_asset, timer_time");
+    LoadDBC(sAreaTableStore, "dbc_area",
+        "id, map, parent, explore_flag, flags, area_level, name, faction_group, liquid_water, liquid_ocean, liquid_magma, liquid_slime");
+    LoadDBC(sAreaGroupStore, "dbc_area_group", "id, areas, group_next");
+    LoadDBC(sAuctionHouseStore, "dbc_auction_house", "id, faction, deposit_rate, auction_cut");
+    LoadDBC(sBankBagSlotPricesStore, "dbc_bank_bag_slot_price", "id, price");
+    LoadDBC(sBarberShopStyleStore, "dbc_barber_shop_style", "id, type, race, gender, data");
+    LoadDBC(sBattlemasterListStore, "dbc_battlemaster", "id, maps, instance_type, name, max_group_size, holiday_world_state");
+    LoadDBC(sCharStartOutfitStore, "dbc_character_start_outfit", "id, race, character_class, gender, items");
+    LoadDBC(sCharTitlesStore, "dbc_character_title", "id, name_male, name_female, bit_index");
+    LoadDBC(sChatChannelsStore, "dbc_chat_channel", "id, flags, name");
+    LoadDBC(sChrClassesStore, "dbc_character_class", "id, power_type, spell_class_set, cinematic_sequence, required_expansion");
+    LoadDBC(sChrRacesStore, "dbc_character_race",
+        "id, flags, faction_template, male_display, female_display, base_language, cinematic_sequence, team, required_expansion");
+    LoadDBC(sCinematicCameraStore, "dbc_cinematic_camera", "id, file, voiceover, origin, rotation");
+    LoadDBC(sCinematicSequencesStore, "dbc_cinematic_sequence", "id, cameras");
+    LoadDBC(sCreatureDisplayInfoStore, "dbc_creature_display_info", "id, creature_model, extra_display_info, scale");
+    LoadDBC(sCreatureDisplayInfoExtraStore, "dbc_creature_display_info_extra", "id, race");
+    LoadDBC(sCreatureFamilyStore, "dbc_creature_family",
+        "id, min_scale, min_scale_level, max_scale, max_scale_level, skill_line1, skill_line2, pet_food_mask, pet_talent_type, name");
+    LoadDBC(sCreatureModelDataStore, "dbc_creature_model_data", "id, flags, model_scale, collision_width, collision_height, mount_height");
+    LoadDBC(sCreatureSpellDataStore, "dbc_creature_spell_data", "id, spells");
+    LoadDBC(sCreatureTypeStore, "dbc_creature_type", "id");
+    LoadDBC(sCurrencyTypesStore, "dbc_currency_type", "item, bit_index", "item");
+    LoadDBC(sDestructibleModelDataStore, "dbc_destructible_model_data", "id, state1_wmo, state2_wmo, state3_wmo, repair_ground_fx");
+    LoadDBC(sDungeonEncounterStore, "dbc_dungeon_encounter", "id, map, difficulty, bit, name");
+    LoadDBC(sDurabilityCostsStore, "dbc_durability_cost", "id, weapon_subclass_cost, armor_subclass_cost");
+    LoadDBC(sDurabilityQualityStore, "dbc_durability_quality", "id, quality");
+    LoadDBC(sEmotesStore, "dbc_emote", "id, flags, spec_proc, spec_proc_param");
+    LoadDBC(sEmotesTextStore, "dbc_emote_texts", "id, emote");
+    LoadDBC(sFactionStore, "dbc_faction",
+        "id, reputation_index, reputation_race_mask, reputation_class_mask, reputation_base, "
+        "reputation_flags, parent, spillover_rate_in, spillover_rate_out, spillover_max_rank_in, name");
+    LoadDBC(sFactionTemplateStore, "dbc_faction_template", "id, faction, flags, faction_group, friend_group, enemy_group, enemies, friends");
+    LoadDBC(sGameObjectArtKitStore, "dbc_game_object_art_kit", "id");
+    LoadDBC(sGameObjectDisplayInfoStore, "dbc_game_object_display_info", "id, geo_box_min, geo_box_max");
+    LoadDBC(sGemPropertiesStore, "dbc_gem_properties", "id, enchantment, type");
+    LoadDBC(sGlyphPropertiesStore, "dbc_glyph_properties", "id, spell, type_flags");
+    LoadDBC(sGlyphSlotStore, "dbc_glyph_slot", "id, type, order");
+    LoadDBC(sGtBarberShopCostBaseStore, "dbc_barber_shop_cost_base", "id, cost");
+    LoadDBC(sGtCombatRatingsStore, "dbc_combat_rating", "id, ratio");
+    LoadDBC(sGtChanceToMeleeCritBaseStore, "dbc_chance_to_melee_crit_base", "id, base");
+    LoadDBC(sGtChanceToMeleeCritStore, "dbc_chance_to_melee_crit", "id, ratio");
+    LoadDBC(sGtChanceToSpellCritBaseStore, "dbc_chance_to_spell_crit_base", "id, base");
+    LoadDBC(sGtChanceToSpellCritStore, "dbc_chance_to_spell_crit", "id, ratio");
+    LoadDBC(sGtNPCManaCostScalerStore, "dbc_npc_mana_cost_scaler", "id, ratio");
+    LoadDBC(sGtOCTClassCombatRatingScalarStore, "dbc_oct_class_combat_rating_scalar", "id, ratio");
+    LoadDBC(sGtOCTRegenHPStore, "dbc_oct_regen_hp", "id, ratio");
+    LoadDBC(sGtRegenHPPerSptStore, "dbc_regen_hp_per_spirit", "id, ratio");
+    LoadDBC(sGtRegenMPPerSptStore, "dbc_regen_mp_per_spirit", "id, ratio");
+    LoadDBC(sHolidaysStore, "dbc_holiday",
+        "id, stage_durations, dates, region, looping, calendar_flags, texture_filename, priority, filter_type");
+    LoadDBC(sItemStore, "dbc_item",
+        "id, item_class, item_subclass, sound_override_subclass, material, display_info, inventory_type, sheath_type");
+    LoadDBC(sItemBagFamilyStore, "dbc_item_bag_family", "id");
+    LoadDBC(sItemExtendedCostStore, "dbc_item_extended_cost",
+        "id, honor_points, arena_points, arena_bracket, required_items, required_items_counts, required_arena_rating");
+    LoadDBC(sItemLimitCategoryStore, "dbc_item_limit_category", "id, quantity, type");
+    LoadDBC(sItemRandomPropertiesStore, "dbc_item_random_property", "id, suffix, spell_item_enchantment");
+    LoadDBC(sItemRandomSuffixStore, "dbc_item_random_suffix", "id, name, enchantments, allocation_pct");
+    LoadDBC(sItemSetStore, "dbc_item_set", "id, name, items, set_spells, set_thresholds, required_skill, required_skill_rank");
+    LoadDBC(sLFGDungeonStore, "dbc_lfg_dungeon",
+        "id, name, level_min, level_max, target_level, target_level_min, target_level_max, map, difficulty, flags, type, expansion, group");
+    LoadDBC(sLightStore, "dbc_light", "id, map, position");
+    LoadDBC(sLiquidTypeStore, "dbc_liquid", "id, type, spell");
+    LoadDBC(sLockStore, "dbc_lock", "id, types, indexes, skills");
+    LoadDBC(sMailTemplateStore, "dbc_mail_template", "id, body");
+    LoadDBC(sMapStore, "dbc_map", "id, type, flags, name, area, entrance_map, entrance_position, expansion, max_players");
+    LoadDBC(sMapDifficultyStore, "dbc_map_difficulty", "id, map, difficulty, message, raid_duration, max_players");
+    LoadDBC(sMovieStore, "dbc_movie", "id");
+    LoadDBC(sNamesReservedStore, "dbc_name_reserved", "id, pattern");
+    LoadDBC(sNamesProfanityStore, "dbc_name_profanity", "id, name");
+    LoadDBC(sOverrideSpellDataStore, "dbc_override_spell_data", "id, spells");
+    LoadDBC(sPowerDisplayStore, "dbc_power_display", "id, type");
+    LoadDBC(sPvPDifficultyStore, "dbc_pvp_difficulty", "id, map, bracket, min_level, max_level, difficulty");
+    LoadDBC(sQuestFactionRewardStore, "dbc_quest_faction_reward", "id, values");
+    LoadDBC(sQuestSortStore, "dbc_quest_sort", "id");
+    LoadDBC(sQuestXPStore, "dbc_quest_xp", "id, values");
+    LoadDBC(sRandomPropertiesPointsStore, "dbc_rand_prop_points", "id, epic, superior, good");
+    LoadDBC(sScalingStatDistributionStore, "dbc_scaling_stat_distribution", "id, types, bonuses, max_level");
+    LoadDBC(sScalingStatValuesStore, "dbc_scaling_stat_values",
+        "level, multiplier, shoulder_modifiers, dps_modifiers, spell_power, primary_mul, tertiary_mul, armor_modifiers", "level");
+    LoadDBC(sSkillLineStore, "dbc_skill_line", "id, category, name, can_link");
+    LoadDBC(sSkillLineAbilityStore, "dbc_skill_line_ability",
+        "id, skill_line, spell, race_mask, class_mask, min_skill_line_rank, superseded_by_spell, "
+        "acquire_method, trivial_skill_line_rank_high, trivial_skill_line_rank_low");
+    LoadDBC(sSkillRaceClassInfoStore, "dbc_skill_race_class_info", "id, skill_line, race_mask, class_mask, flags, skill_tier");
+    LoadDBC(sSkillTiersStore, "dbc_skill_tier", "id, values");
+    LoadDBC(sSoundEntriesStore, "dbc_sound", "id");
+    LoadDBC(sSpellStore, "dbc_spell",
+        "id, spell_category, dispel_type, mechanic, "
+        "attributes0, attributes1, attributes2, attributes3, attributes4, attributes5, attributes6, attributes7, "
+        "stances, excluded_stances, target, target_creature_type, spell_focus_object, facing_caster_flags, "
+        "caster_aura_state, target_aura_state, caster_aura_state_exclude, target_aura_state_exclude, "
+        "caster_aura_spell, target_aura_spell, caster_aura_spell_exclude, target_aura_spell_exclude, "
+        "cast_time, cooldown, cooldown_category, interrupt, aura_interrupt, channel_interrupt, "
+        "proc_flags, proc_chance, proc_charges, max_level, min_level, level, duration, power_type, "
+        "mana_cost, mana_cost_per_level, mana_per_second, mana_per_second_per_level, "
+        "range, speed, max_stacks, totem0, totem1, reagents, reagents_counts, "
+        "equipped_item_class, equipped_item_subclass, equipped_item_inventory_type_mask, "
+        "effects_type, effects_die_sides, effects_real_points_per_level, effects_base_points, effects_mechanic, "
+        "effects_implicit_targets_a, effects_implicit_targets_b, effects_radius, "
+        "effects_apply_aura, effects_aura_period, effects_amplitude, effects_chain_targets, "
+        "effects_item, effects_misc_value_a, effects_misc_value_b, effects_trigger_spell, effects_points_per_combo_point, "
+        "effects_class_mask_a, effects_class_mask_b, effects_class_mask_c, "
+        "effects_chain_amplitude, effects_bonus_multiplier, "
+        "visual1, visual2, icon, icon_active, priority, name, subtitle, mana_cost_percentage, "
+        "start_recovery_category, start_recovery_time, max_target_level, "
+        "class_set, class_mask_a, class_mask_b, class_mask_c, "
+        "max_affected_targets, defense_type, prevention_type, "
+        "totem_category_a, totem_category_b, required_area_group, school_mask, rune_cost");
 
-    StoreProblemList bad_dbc_files;
-    uint32 availableDbcLocales = 0xFFFFFFFF;
+    LoadDBC(sSpellCastTimesStore, "dbc_spell_cast_time", "id, cast_time_base");
+    LoadDBC(sSpellCategoryStore, "dbc_spell_category", "id, flags");
+    LoadDBC(sSpellDifficultyStore, "dbc_spell_difficulty", "id, normal_10man, normal_25man, heroic_10man, heroic_25man");
+    LoadDBC(sSpellDurationStore, "dbc_spell_duration", "id, duration, duration_per_level, max_duration");
+    LoadDBC(sSpellFocusObjectStore, "dbc_spell_focus_object", "id");
+    LoadDBC(sSpellItemEnchantmentStore, "dbc_spell_item_enchantment",
+        "id, charges, types, min_amounts, param0, param1, param2, item_visual, flags, "
+        "source_item, condition, required_skill, required_skill_rank, required_level");
+    LoadDBC(sSpellItemEnchantmentConditionStore, "dbc_spell_item_enchantment_condition", "id, socket_color, operator, value_types, values");
+    LoadDBC(sSpellRadiusStore, "dbc_spell_radius", "id, radius, radius_per_level, radius_max");
+    LoadDBC(sSpellRangeStore, "dbc_spell_range", "id, min_range_hostile, min_range_friend, max_range_hostile, max_range_friend, flags");
+    LoadDBC(sSpellRuneCostStore, "dbc_spell_rune_cost", "id, blood_rune_cost, unholy_rune_cost, frost_rune_cost, rune_power_gain");
+    LoadDBC(sSpellShapeshiftFormStore, "dbc_spell_shapeshift_form", "id, flags, creature_type, attack_speed, displays, preset_spells");
+    LoadDBC(sSpellVisualStore, "dbc_spell_visual", "id, has_missile, missile_model");
+    LoadDBC(sStableSlotPricesStore, "dbc_stable_spot_price", "id, cost");
+    LoadDBC(sSummonPropertiesStore, "dbc_summon_properties", "id, category, faction, type, slot, flags");
+    LoadDBC(sTalentStore, "dbc_talent", "id, talent_tab, row, col, spell_ranks, prereq_talents, prereq_ranks, one_point");
+    LoadDBC(sTalentTabStore, "dbc_talent_tab", "id, class_mask, pet_talent_mask, tab_page");
+    LoadDBC(sTaxiNodesStore, "dbc_taxi_node", "id, map, position, name, mount_creature_alliance, mount_creature_horde");
+    LoadDBC(sTaxiPathStore, "dbc_taxi_path", "id, from_node, to_node, cost");
+    LoadDBC(sTaxiPathNodeStore, "dbc_taxi_path_node", "id, path, node_index, map, position, flags, delay, arrival_event, departure_event");
+    LoadDBC(sTeamContributionPointsStore, "dbc_team_contribution_points", "id, value");
+    LoadDBC(sTotemCategoryStore, "dbc_totem_category", "id, category, category_mask");
+    LoadDBC(sTransportAnimationStore, "dbc_transport_animation", "id, transport, time_index, position");
+    LoadDBC(sTransportRotationStore, "dbc_transport_rotation", "id, game_object, time_index, rotation");
+    LoadDBC(sVehicleStore, "dbc_vehicle", "id, flags, seats, power_display");
+    LoadDBC(sVehicleSeatStore, "dbc_vehicle_seat", "id, flags, flags_b, attachment_offset");
+    LoadDBC(sWMOAreaTableStore, "dbc_wmo_area", "id, root_id, name_set, group_id, flags, area_table");
+    LoadDBC(sWorldMapAreaStore, "dbc_world_map_area WHERE area_table > 0",
+        "area_table, map, pos_left, pos_right, pos_top, pos_bottom, display_map", "area_table");
+    LoadDBC(sWorldMapOverlayStore, "dbc_world_map_overlay", "id, areas");
 
-#define LOAD_DBC(store, file, dbtable) LoadDBC(availableDbcLocales, bad_dbc_files, store, dbcPath, file, dbtable)
-
-    LOAD_DBC(sAreaTableStore,                       "AreaTable.dbc",                        "areatable_dbc");
-    LOAD_DBC(sAchievementStore,                     "Achievement.dbc",                      "achievement_dbc");
-    LOAD_DBC(sAchievementCategoryStore,             "Achievement_Category.dbc",             "achievement_category_dbc");
-    LOAD_DBC(sAchievementCriteriaStore,             "Achievement_Criteria.dbc",             "achievement_criteria_dbc");
-    LOAD_DBC(sAreaGroupStore,                       "AreaGroup.dbc",                        "areagroup_dbc");
-    LOAD_DBC(sAreaPOIStore,                         "AreaPOI.dbc",                          "areapoi_dbc");
-    LOAD_DBC(sAuctionHouseStore,                    "AuctionHouse.dbc",                     "auctionhouse_dbc");
-    LOAD_DBC(sBankBagSlotPricesStore,               "BankBagSlotPrices.dbc",                "bankbagslotprices_dbc");
-    LOAD_DBC(sBattlemasterListStore,                "BattlemasterList.dbc",                 "battlemasterlist_dbc");
-    LOAD_DBC(sBarberShopStyleStore,                 "BarberShopStyle.dbc",                  "barbershopstyle_dbc");
-    LOAD_DBC(sCharStartOutfitStore,                 "CharStartOutfit.dbc",                  "charstartoutfit_dbc");
-    LOAD_DBC(sCharTitlesStore,                      "CharTitles.dbc",                       "chartitles_dbc");
-    LOAD_DBC(sChatChannelsStore,                    "ChatChannels.dbc",                     "chatchannels_dbc");
-    LOAD_DBC(sChrClassesStore,                      "ChrClasses.dbc",                       "chrclasses_dbc");
-    LOAD_DBC(sChrRacesStore,                        "ChrRaces.dbc",                         "chrraces_dbc");
-    LOAD_DBC(sCinematicCameraStore,                 "CinematicCamera.dbc",                  "cinematiccamera_dbc");
-    LOAD_DBC(sCinematicSequencesStore,              "CinematicSequences.dbc",               "cinematicsequences_dbc");
-    LOAD_DBC(sCreatureDisplayInfoStore,             "CreatureDisplayInfo.dbc",              "creaturedisplayinfo_dbc");
-    LOAD_DBC(sCreatureDisplayInfoExtraStore,        "CreatureDisplayInfoExtra.dbc",         "creaturedisplayinfoextra_dbc");
-    LOAD_DBC(sCreatureFamilyStore,                  "CreatureFamily.dbc",                   "creaturefamily_dbc");
-    LOAD_DBC(sCreatureModelDataStore,               "CreatureModelData.dbc",                "creaturemodeldata_dbc");
-    LOAD_DBC(sCreatureSpellDataStore,               "CreatureSpellData.dbc",                "creaturespelldata_dbc");
-    LOAD_DBC(sCreatureTypeStore,                    "CreatureType.dbc",                     "creaturetype_dbc");
-    LOAD_DBC(sCurrencyTypesStore,                   "CurrencyTypes.dbc",                    "currencytypes_dbc");
-    LOAD_DBC(sDestructibleModelDataStore,           "DestructibleModelData.dbc",            "destructiblemodeldata_dbc");
-    LOAD_DBC(sDungeonEncounterStore,                "DungeonEncounter.dbc",                 "dungeonencounter_dbc");
-    LOAD_DBC(sDurabilityCostsStore,                 "DurabilityCosts.dbc",                  "durabilitycosts_dbc");
-    LOAD_DBC(sDurabilityQualityStore,               "DurabilityQuality.dbc",                "durabilityquality_dbc");
-    LOAD_DBC(sEmotesStore,                          "Emotes.dbc",                           "emotes_dbc");
-    LOAD_DBC(sEmotesTextStore,                      "EmotesText.dbc",                       "emotestext_dbc");
-    LOAD_DBC(sFactionStore,                         "Faction.dbc",                          "faction_dbc");
-    LOAD_DBC(sFactionTemplateStore,                 "FactionTemplate.dbc",                  "factiontemplate_dbc");
-    LOAD_DBC(sGameObjectArtKitStore,                "GameObjectArtKit.dbc",                 "gameobjectartkit_dbc");
-    LOAD_DBC(sGameObjectDisplayInfoStore,           "GameObjectDisplayInfo.dbc",            "gameobjectdisplayinfo_dbc");
-    LOAD_DBC(sGemPropertiesStore,                   "GemProperties.dbc",                    "gemproperties_dbc");
-    LOAD_DBC(sGlyphPropertiesStore,                 "GlyphProperties.dbc",                  "glyphproperties_dbc");
-    LOAD_DBC(sGlyphSlotStore,                       "GlyphSlot.dbc",                        "glyphslot_dbc");
-    LOAD_DBC(sGtBarberShopCostBaseStore,            "gtBarberShopCostBase.dbc",             "gtbarbershopcostbase_dbc");
-    LOAD_DBC(sGtCombatRatingsStore,                 "gtCombatRatings.dbc",                  "gtcombatratings_dbc");
-    LOAD_DBC(sGtChanceToMeleeCritBaseStore,         "gtChanceToMeleeCritBase.dbc",          "gtchancetomeleecritbase_dbc");
-    LOAD_DBC(sGtChanceToMeleeCritStore,             "gtChanceToMeleeCrit.dbc",              "gtchancetomeleecrit_dbc");
-    LOAD_DBC(sGtChanceToSpellCritBaseStore,         "gtChanceToSpellCritBase.dbc",          "gtchancetospellcritbase_dbc");
-    LOAD_DBC(sGtChanceToSpellCritStore,             "gtChanceToSpellCrit.dbc",              "gtchancetospellcrit_dbc");
-    LOAD_DBC(sGtNPCManaCostScalerStore,             "gtNPCManaCostScaler.dbc",              "gtnpcmanacostscaler_dbc");
-    LOAD_DBC(sGtOCTClassCombatRatingScalarStore,    "gtOCTClassCombatRatingScalar.dbc",     "gtoctclasscombatratingscalar_dbc");
-    LOAD_DBC(sGtOCTRegenHPStore,                    "gtOCTRegenHP.dbc",                     "gtoctregenhp_dbc");
-    //LOAD_DBC(sGtOCTRegenMPStore,                  "gtOCTRegenMP.dbc",                     "gtoctregenmp_dbc");       -- not used currently
-    LOAD_DBC(sGtRegenHPPerSptStore,                 "gtRegenHPPerSpt.dbc",                  "gtregenhpperspt_dbc");
-    LOAD_DBC(sGtRegenMPPerSptStore,                 "gtRegenMPPerSpt.dbc",                  "gtregenmpperspt_dbc");
-    LOAD_DBC(sHolidaysStore,                        "Holidays.dbc",                         "holidays_dbc");
-    LOAD_DBC(sItemStore,                            "Item.dbc",                             "item_dbc");
-    LOAD_DBC(sItemBagFamilyStore,                   "ItemBagFamily.dbc",                    "itembagfamily_dbc");
-    LOAD_DBC(sItemDisplayInfoStore,                 "ItemDisplayInfo.dbc",                  "itemdisplayinfo_dbc");
-    //LOAD_DBC(sItemCondExtCostsStore,              "ItemCondExtCosts.dbc",                 "itemcondextcosts_dbc");
-    LOAD_DBC(sItemExtendedCostStore,                "ItemExtendedCost.dbc",                 "itemextendedcost_dbc");
-    LOAD_DBC(sItemLimitCategoryStore,               "ItemLimitCategory.dbc",                "itemlimitcategory_dbc");
-    LOAD_DBC(sItemRandomPropertiesStore,            "ItemRandomProperties.dbc",             "itemrandomproperties_dbc");
-    LOAD_DBC(sItemRandomSuffixStore,                "ItemRandomSuffix.dbc",                 "itemrandomsuffix_dbc");
-    LOAD_DBC(sItemSetStore,                         "ItemSet.dbc",                          "itemset_dbc");
-    LOAD_DBC(sLFGDungeonStore,                      "LFGDungeons.dbc",                      "lfgdungeons_dbc");
-    LOAD_DBC(sLightStore,                           "Light.dbc",                            "light_dbc");
-    LOAD_DBC(sLiquidTypeStore,                      "LiquidType.dbc",                       "liquidtype_dbc");
-    LOAD_DBC(sLockStore,                            "Lock.dbc",                             "lock_dbc");
-    LOAD_DBC(sMailTemplateStore,                    "MailTemplate.dbc",                     "mailtemplate_dbc");
-    LOAD_DBC(sMapStore,                             "Map.dbc",                              "map_dbc");
-    LOAD_DBC(sMapDifficultyStore,                   "MapDifficulty.dbc",                    "mapdifficulty_dbc");
-    LOAD_DBC(sMovieStore,                           "Movie.dbc",                            "movie_dbc");
-    LOAD_DBC(sNamesReservedStore,                   "NamesReserved.dbc",                    "namesreserved_dbc");
-    LOAD_DBC(sNamesProfanityStore,                  "NamesProfanity.dbc",                   "namesprofanity_dbc");
-    LOAD_DBC(sOverrideSpellDataStore,               "OverrideSpellData.dbc",                "overridespelldata_dbc");
-    LOAD_DBC(sPowerDisplayStore,                    "PowerDisplay.dbc",                     "powerdisplay_dbc");
-    LOAD_DBC(sPvPDifficultyStore,                   "PvpDifficulty.dbc",                    "pvpdifficulty_dbc");
-    LOAD_DBC(sQuestXPStore,                         "QuestXP.dbc",                          "questxp_dbc");
-    LOAD_DBC(sQuestFactionRewardStore,              "QuestFactionReward.dbc",               "questfactionreward_dbc");
-    LOAD_DBC(sQuestSortStore,                       "QuestSort.dbc",                        "questsort_dbc");
-    LOAD_DBC(sRandomPropertiesPointsStore,          "RandPropPoints.dbc",                   "randproppoints_dbc");
-    LOAD_DBC(sScalingStatDistributionStore,         "ScalingStatDistribution.dbc",          "scalingstatdistribution_dbc");
-    LOAD_DBC(sScalingStatValuesStore,               "ScalingStatValues.dbc",                "scalingstatvalues_dbc");
-    LOAD_DBC(sSkillLineStore,                       "SkillLine.dbc",                        "skillline_dbc");
-    LOAD_DBC(sSkillLineAbilityStore,                "SkillLineAbility.dbc",                 "skilllineability_dbc");
-    LOAD_DBC(sSkillRaceClassInfoStore,              "SkillRaceClassInfo.dbc",               "skillraceclassinfo_dbc");
-    LOAD_DBC(sSkillTiersStore,                      "SkillTiers.dbc",                       "skilltiers_dbc");
-    LOAD_DBC(sSoundEntriesStore,                    "SoundEntries.dbc",                     "soundentries_dbc");
-    LOAD_DBC(sSpellStore,                           "Spell.dbc",                            "spell_dbc");
-    LOAD_DBC(sSpellCastTimesStore,                  "SpellCastTimes.dbc",                   "spellcasttimes_dbc");
-    LOAD_DBC(sSpellCategoryStore,                   "SpellCategory.dbc",                    "spellcategory_dbc");
-    LOAD_DBC(sSpellDifficultyStore,                 "SpellDifficulty.dbc",                  "spelldifficulty_dbc");
-    LOAD_DBC(sSpellDurationStore,                   "SpellDuration.dbc",                    "spellduration_dbc");
-    LOAD_DBC(sSpellFocusObjectStore,                "SpellFocusObject.dbc",                 "spellfocusobject_dbc");
-    LOAD_DBC(sSpellItemEnchantmentStore,            "SpellItemEnchantment.dbc",             "spellitemenchantment_dbc");
-    LOAD_DBC(sSpellItemEnchantmentConditionStore,   "SpellItemEnchantmentCondition.dbc",    "spellitemenchantmentcondition_dbc");
-    LOAD_DBC(sSpellRadiusStore,                     "SpellRadius.dbc",                      "spellradius_dbc");
-    LOAD_DBC(sSpellRangeStore,                      "SpellRange.dbc",                       "spellrange_dbc");
-    LOAD_DBC(sSpellRuneCostStore,                   "SpellRuneCost.dbc",                    "spellrunecost_dbc");
-    LOAD_DBC(sSpellShapeshiftFormStore,             "SpellShapeshiftForm.dbc",              "spellshapeshiftform_dbc");
-    LOAD_DBC(sSpellVisualStore,                     "SpellVisual.dbc",                      "spellvisual_dbc");
-    LOAD_DBC(sStableSlotPricesStore,                "StableSlotPrices.dbc",                 "stableslotprices_dbc");
-    LOAD_DBC(sSummonPropertiesStore,                "SummonProperties.dbc",                 "summonproperties_dbc");
-    LOAD_DBC(sTalentStore,                          "Talent.dbc",                           "talent_dbc");
-    LOAD_DBC(sTalentTabStore,                       "TalentTab.dbc",                        "talenttab_dbc");
-    LOAD_DBC(sTaxiNodesStore,                       "TaxiNodes.dbc",                        "taxinodes_dbc");
-    LOAD_DBC(sTaxiPathStore,                        "TaxiPath.dbc",                         "taxipath_dbc");
-    LOAD_DBC(sTaxiPathNodeStore,                    "TaxiPathNode.dbc",                     "taxipathnode_dbc");
-    LOAD_DBC(sTeamContributionPointsStore,          "TeamContributionPoints.dbc",           "teamcontributionpoints_dbc");
-    LOAD_DBC(sTotemCategoryStore,                   "TotemCategory.dbc",                    "totemcategory_dbc");
-    LOAD_DBC(sTransportAnimationStore,              "TransportAnimation.dbc",               "transportanimation_dbc");
-    LOAD_DBC(sTransportRotationStore,               "TransportRotation.dbc",                "transportrotation_dbc");
-    LOAD_DBC(sVehicleStore,                         "Vehicle.dbc",                          "vehicle_dbc");
-    LOAD_DBC(sVehicleSeatStore,                     "VehicleSeat.dbc",                      "vehicleseat_dbc");
-    LOAD_DBC(sWMOAreaTableStore,                    "WMOAreaTable.dbc",                     "wmoareatable_dbc");
-    LOAD_DBC(sWorldMapAreaStore,                    "WorldMapArea.dbc",                     "worldmaparea_dbc");
-    LOAD_DBC(sWorldMapOverlayStore,                 "WorldMapOverlay.dbc",                  "worldmapoverlay_dbc");
-
-#undef LOAD_DBC
-
-    for (CharStartOutfitEntry const* outfit : sCharStartOutfitStore)
+    for (const CharStartOutfitEntry* outfit : sCharStartOutfitStore)
         sCharStartOutfitMap[outfit->Race | (outfit->Class << 8) | (outfit->Gender << 16)] = outfit;
 
     for (FactionEntry const* faction : sFactionStore)
     {
-        if (faction->team)
+        if (faction->Team)
         {
-            SimpleFactionsList& flist = sFactionTeamMap[faction->team];
+            SimpleFactionsList& flist = sFactionTeamMap[faction->Team];
             flist.push_back(faction->ID);
         }
     }
 
     for (GameObjectDisplayInfoEntry const* info : sGameObjectDisplayInfoStore)
     {
-        if (info->maxX < info->minX)
-            std::swap(*(float*)(&info->maxX), *(float*)(&info->minX));
-
-        if (info->maxY < info->minY)
-            std::swap(*(float*)(&info->maxY), *(float*)(&info->minY));
-
-        if (info->maxZ < info->minZ)
-            std::swap(*(float*)(&info->maxZ), *(float*)(&info->minZ));
+        if (info->MaxX < info->MinX)
+            std::swap(*const_cast<float*>(&info->MaxX), *const_cast<float*>(&info->MinX));
+        if (info->MaxY < info->MinY)
+            std::swap(*const_cast<float*>(&info->MaxY), *const_cast<float*>(&info->MinY));
+        if (info->MaxZ < info->MinZ)
+            std::swap(*const_cast<float*>(&info->MaxZ), *const_cast<float*>(&info->MinZ));
     }
 
-    // fill data
-    for (MapDifficultyEntry const* entry : sMapDifficultyStore)
-        sMapDifficultyMap[MAKE_PAIR32(entry->MapId, entry->Difficulty)] = MapDifficulty(entry->resetTime, entry->maxPlayers, entry->areaTriggerText[0] != '\0');
+    for (const MapDifficultyEntry* entry : sMapDifficultyStore)
+        sMapDifficultyMap[MAKE_PAIR32(entry->MapID, entry->Difficulty)] = MapDifficulty(entry->ResetTime, entry->MaxPlayers, !entry->AreaTriggerText.empty());
 
-    for (PvPDifficultyEntry const* entry : sPvPDifficultyStore)
-        if (entry->bracketId > MAX_BATTLEGROUND_BRACKETS)
-            ASSERT(false && "Need update MAX_BATTLEGROUND_BRACKETS by DBC data");
+    for (const PvPDifficultyEntry* entry : sPvPDifficultyStore)
+        if (entry->BracketID > MAX_BATTLEGROUND_BRACKETS)
+            ASSERT(false, "Need update MAX_BATTLEGROUND_BRACKETS by DBC data");
 
-    for (auto i : sSpellStore)
-        if (i->Category)
-            sSpellsByCategoryStore[i->Category].emplace(false, i->Id);
+    for (const auto spell : sSpellStore)
+        if (spell->Category)
+            sSpellsByCategoryStore[spell->Category].emplace(false, spell->ID);
 
     for (SkillRaceClassInfoEntry const* entry : sSkillRaceClassInfoStore)
     {
         if (sSkillLineStore.LookupEntry(entry->SkillID))
-        {
             SkillRaceClassInfoBySkill.emplace(entry->SkillID, entry);
-        }
     }
 
     for (SkillLineAbilityEntry const* skillLine : sSkillLineAbilityStore)
     {
-        SpellEntry const* spellEntry = sSpellStore.LookupEntry(skillLine->Spell);
-        if (spellEntry && spellEntry->Attributes & SPELL_ATTR0_PASSIVE)
+        if (const SpellEntry* spellEntry = sSpellStore.LookupEntry(skillLine->Spell); spellEntry && spellEntry->Attributes & SPELL_ATTR0_PASSIVE)
         {
             for (CreatureFamilyEntry const* cFamily : sCreatureFamilyStore)
             {
-                if (skillLine->SkillLine != cFamily->skillLine[0] && skillLine->SkillLine != cFamily->skillLine[1])
-                {
+                if (skillLine->SkillLine != cFamily->SkillLine[0] && skillLine->SkillLine != cFamily->SkillLine[1])
                     continue;
-                }
-
                 if (spellEntry->SpellLevel)
-                {
                     continue;
-                }
-
                 if (skillLine->AcquireMethod != SKILL_LINE_ABILITY_LEARNED_ON_SKILL_LEARN)
-                {
                     continue;
-                }
 
-                sPetFamilySpellsStore[cFamily->ID].insert(spellEntry->Id);
+                sPetFamilySpellsStore[cFamily->ID].insert(spellEntry->ID);
             }
         }
     }
@@ -458,98 +372,88 @@ void LoadDBCStores(const std::string& dataPath)
     for (SkillLineAbilityEntry const* skillLine : sSkillLineAbilityStore)
         sSkillLineAbilityIndexBySkillLine[skillLine->SkillLine].push_back(skillLine);
 
-    // Create Spelldifficulty searcher
+    // Create SpellDifficulty searcher
     for (SpellDifficultyEntry const* spellDiff : sSpellDifficultyStore)
     {
         SpellDifficultyEntry newEntry;
-
-        memset(newEntry.SpellID, 0, 4 * sizeof(uint32));
 
         for (uint8 x = 0; x < MAX_DIFFICULTY; ++x)
         {
             if (spellDiff->SpellID[x] <= 0 || !sSpellStore.LookupEntry(spellDiff->SpellID[x]))
             {
-                if (spellDiff->SpellID[x] > 0) //don't show error if spell is <= 0, not all modes have spells and there are unknown negative values
-                    LOG_ERROR("sql.sql", "spelldifficulty_dbc: spell {} at field id: {} at spellid {} does not exist in SpellStore (spell.dbc), loaded as 0", spellDiff->SpellID[x], spellDiff->ID, x);
+                if (spellDiff->SpellID[x] > 0) // Don't show error if spell is <= 0, not all modes have spells and there are unknown negative values
+                    LOG_ERROR("sql.sql", "SpellDifficulty.dbc: spell {} at field id: {} at SpellID {} does not exist in SpellStore (spell.dbc), loaded as 0", spellDiff->SpellID[x], spellDiff->ID, x);
 
-                newEntry.SpellID[x] = 0; // spell was <= 0 or invalid, set to 0
+                newEntry.SpellID[x] = 0; // Spell was <= 0 or invalid, set to 0
             }
             else
                 newEntry.SpellID[x] = spellDiff->SpellID[x];
         }
 
-        if (newEntry.SpellID[0] <= 0 || newEntry.SpellID[1] <= 0) // id0-1 must be always set!
+        if (newEntry.SpellID[0] <= 0 || newEntry.SpellID[1] <= 0) // ID 0-1 must be always set!
             continue;
 
         for (uint8 x = 0; x < MAX_DIFFICULTY; ++x)
             if (newEntry.SpellID[x])
-                sSpellMgr->SetSpellDifficultyId(uint32(newEntry.SpellID[x]), spellDiff->ID);
+                sSpellMgr->SetSpellDifficultyId(static_cast<uint32>(newEntry.SpellID[x]), spellDiff->ID);
     }
 
-    // create talent spells set
-    for (TalentEntry const* talentInfo : sTalentStore)
+    // Create talent spells set
+    for (const TalentEntry* talentInfo : sTalentStore)
     {
-        TalentTabEntry const* talentTab = sTalentTabStore.LookupEntry(talentInfo->TalentTab);
+        const TalentTabEntry* talentTab = sTalentTabStore.LookupEntry(talentInfo->TalentTab);
 
         for (uint8 j = 0; j < MAX_TALENT_RANK; ++j)
         {
             if (talentInfo->RankID[j])
             {
-                sTalentSpellPosMap[talentInfo->RankID[j]] = TalentSpellPos(talentInfo->TalentID, j);
+                sTalentSpellPosMap[talentInfo->RankID[j]] = TalentSpellPos(talentInfo->ID, j);
 
-                if (talentTab && talentTab->petTalentMask)
-                {
+                if (talentTab && talentTab->PetTalentMask)
                     sPetTalentSpells.insert(talentInfo->RankID[j]);
-                }
             }
         }
     }
 
-    // prepare fast data access to bit pos of talent ranks for use at inspecting
+    // Prepare fast data access to bit pos of talent ranks for use at inspecting
     {
-        // now have all max ranks (and then bit amount used for store talent ranks in inspect)
-        for (uint32 talentTabId = 1; talentTabId < sTalentTabStore.GetNumRows(); ++talentTabId)
+        // Now have all max ranks (and then bit amount used for store talent ranks in inspect)
+        for (const TalentTabEntry* talentTabInfo : sTalentTabStore)
         {
-            TalentTabEntry const* talentTabInfo = sTalentTabStore.LookupEntry(talentTabId);
-            if (!talentTabInfo)
+            // Prevent memory corruption; otherwise cls will become 12 below
+            if ((talentTabInfo->ClassMask & CLASS_MASK_ALL_PLAYABLE) == 0)
                 continue;
 
-            // prevent memory corruption; otherwise cls will become 12 below
-            if ((talentTabInfo->ClassMask & CLASSMASK_ALL_PLAYABLE) == 0)
-                continue;
-
-            // store class talent tab pages
+            // Store class talent tab pages
             for (uint32 cls = 1; cls < MAX_CLASSES; ++cls)
                 if (talentTabInfo->ClassMask & (1 << (cls - 1)))
-                    sTalentTabPages[cls][talentTabInfo->tabpage] = talentTabId;
+                    sTalentTabPages[cls][talentTabInfo->TabPage] = talentTabInfo->ID;
         }
     }
 
-    for (uint32 i = 1; i < sTaxiPathStore.GetNumRows(); ++i)
-        if (TaxiPathEntry const* entry = sTaxiPathStore.LookupEntry(i))
-            sTaxiPathSetBySource[entry->from][entry->to] = entry;
+    for (const TaxiPathEntry* entry : sTaxiPathStore)
+        sTaxiPathSetBySource[entry->From][entry->To] = entry;
 
     // Calculate path nodes count
-    uint32 pathCount = sTaxiPathStore.GetNumRows();
+    const uint32 pathCount = sTaxiPathStore.GetNumRows();
     std::vector<uint32> pathLength;
-    pathLength.resize(pathCount);                           // 0 and some other indexes not used
+    pathLength.resize(pathCount);  // 0 and some other indexes not used
 
-    for (uint32 i = 1; i < sTaxiPathNodeStore.GetNumRows(); ++i)
-        if (TaxiPathNodeEntry const* entry = sTaxiPathNodeStore.LookupEntry(i))
-            if (pathLength[entry->path] < entry->index + 1)
-                pathLength[entry->path] = entry->index + 1;
+    for (const TaxiPathNodeEntry* entry : sTaxiPathNodeStore)
+        if (pathLength[entry->Path] < entry->Index + 1)
+            pathLength[entry->Path] = entry->Index + 1;
 
     // Set path length
-    sTaxiPathNodesByPath.resize(pathCount);                 // 0 and some other indexes not used
+    sTaxiPathNodesByPath.resize(pathCount);  // 0 and some other indexes not used
     for (uint32 i = 1; i < sTaxiPathNodesByPath.size(); ++i)
         sTaxiPathNodesByPath[i].resize(pathLength[i]);
 
     // fill data
-    for (TaxiPathNodeEntry const* entry : sTaxiPathNodeStore)
-        sTaxiPathNodesByPath[entry->path][entry->index] = entry;
+    for (const TaxiPathNodeEntry* entry : sTaxiPathNodeStore)
+        sTaxiPathNodesByPath[entry->Path][entry->Index] = entry;
 
-    // Initialize global taxinodes mask
-    // include existed nodes that have at least single not spell base (scripted) path
+    // Initialize global TaxiNodes mask
+    // Include existed nodes that have at least single not spell base (scripted) path
     {
         std::set<uint32> spellPaths;
         for (SpellEntry const* sInfo : sSpellStore)
@@ -563,20 +467,19 @@ void LoadDBCStores(const std::string& dataPath)
         sAllianceTaxiNodesMask.fill(0);
         sDeathKnightTaxiNodesMask.fill(0);
 
-        for (uint32 i = 1; i < sTaxiNodesStore.GetNumRows(); ++i)
+        for (const TaxiNodesEntry* node : sTaxiNodesStore)
         {
-            TaxiNodesEntry const* node = sTaxiNodesStore.LookupEntry(i);
             if (!node)
                 continue;
 
-            TaxiPathSetBySource::const_iterator src_i = sTaxiPathSetBySource.find(i);
+            TaxiPathSetBySource::const_iterator src_i = sTaxiPathSetBySource.find(node->ID);
             if (src_i != sTaxiPathSetBySource.end() && !src_i->second.empty())
             {
                 bool ok = false;
-                for (TaxiPathSetForSource::const_iterator dest_i = src_i->second.begin(); dest_i != src_i->second.end(); ++dest_i)
+                for (auto dest_i = src_i->second.begin(); dest_i != src_i->second.end(); ++dest_i)
                 {
-                    // not spell path
-                    if (dest_i->second->price || spellPaths.find(dest_i->second->ID) == spellPaths.end())
+                    // Not spell path
+                    if (dest_i->second->Price || !spellPaths.contains(dest_i->second->ID))
                     {
                         ok = true;
                         break;
@@ -587,27 +490,27 @@ void LoadDBCStores(const std::string& dataPath)
                     continue;
             }
 
-            // valid taxi network node
-            uint8  field   = (uint8)((i - 1) / 32);
-            uint32 submask = 1 << ((i - 1) % 32);
-            sTaxiNodesMask[field] |= submask;
+            // Valid taxi network node
+            const uint8 field = static_cast<uint8>((node->ID - 1) / 32);
+            const uint32 subMask = 1 << ((node->ID - 1) % 32);
+            sTaxiNodesMask[field] |= subMask;
 
             if (node->MountCreatureID[0] && node->MountCreatureID[0] != 32981)
-                sHordeTaxiNodesMask[field] |= submask;
+                sHordeTaxiNodesMask[field] |= subMask;
 
             if (node->MountCreatureID[1] && node->MountCreatureID[1] != 32981)
-                sAllianceTaxiNodesMask[field] |= submask;
+                sAllianceTaxiNodesMask[field] |= subMask;
 
             if (node->MountCreatureID[0] == 32981 || node->MountCreatureID[1] == 32981)
-                sDeathKnightTaxiNodesMask[field] |= submask;
+                sDeathKnightTaxiNodesMask[field] |= subMask;
 
-            // old continent node (+ nodes virtually at old continents, check explicitly to avoid loading map files for zone info)
-            if (node->map_id < 2 || i == 82 || i == 83 || i == 93 || i == 94)
-                sOldContinentsNodesMask[field] |= submask;
+            // Old continent node (+ nodes virtually at old continents, check explicitly to avoid loading map files for zone info)
+            if (node->MapID < 2 || node->ID == 82 || node->ID == 83 || node->ID == 93 || node->ID == 94)
+                sOldContinentsNodesMask[field] |= subMask;
 
             // fix DK node at Ebon Hold and Shadow Vault flight master
-            if (i == 315 || i == 333)
-                ((TaxiNodesEntry*)node)->MountCreatureID[1] = 32981;
+            if (node->ID == 315 || node->ID == 333)
+                const_cast<TaxiNodesEntry*>(node)->MountCreatureID[1] = 32981;
         }
     }
 
@@ -618,23 +521,7 @@ void LoadDBCStores(const std::string& dataPath)
         sTransportMgr->AddPathRotationToTransport(rot->TransportEntry, rot->TimeSeg, rot);
 
     for (WMOAreaTableEntry const* entry : sWMOAreaTableStore)
-        sWMOAreaInfoByTripple[WMOAreaTableKey(entry->rootId, entry->adtId, entry->groupId)] = entry;
-
-    // error checks
-    if (bad_dbc_files.size() >= DBCFileCount)
-    {
-        LOG_ERROR("dbc", "Incorrect DataDir value in worldserver.conf or ALL required *.dbc files ({}) not found by path: {}dbc", DBCFileCount, dataPath);
-        exit(1);
-    }
-    else if (!bad_dbc_files.empty())
-    {
-        std::string str;
-        for (StoreProblemList::iterator i = bad_dbc_files.begin(); i != bad_dbc_files.end(); ++i)
-            str += *i + "\n";
-
-        LOG_ERROR("dbc", "Some required *.dbc files ({} from {}) not found or not compatible:\n{}", (uint32)bad_dbc_files.size(), DBCFileCount, str);
-        exit(1);
-    }
+        sWMOAreaInfoByTriple[WMOAreaTableKey(entry->RootID, entry->AdtID, entry->GroupID)] = entry;
 
     // Check loaded DBC files proper version
     if (!sAreaTableStore.LookupEntry(4987)             ||       // last area added in 3.3.5a
@@ -653,75 +540,69 @@ void LoadDBCStores(const std::string& dataPath)
     LOG_INFO("server.loading", " ");
 }
 
-SimpleFactionsList const* GetFactionTeamList(uint32 faction)
+const SimpleFactionsList* GetFactionTeamList(const uint32 faction)
 {
-    FactionTeamMap::const_iterator itr = sFactionTeamMap.find(faction);
-    if (itr != sFactionTeamMap.end())
-        return &itr->second;
-
-    return nullptr;
-}
-
-char const* GetPetName(uint32 petfamily, uint32 dbclang)
-{
-    if (!petfamily)
+    const FactionTeamMap::const_iterator itr = sFactionTeamMap.find(faction);
+    if (itr == sFactionTeamMap.end())
         return nullptr;
-
-    CreatureFamilyEntry const* pet_family = sCreatureFamilyStore.LookupEntry(petfamily);
-    if (!pet_family)
-        return nullptr;
-
-    return pet_family->Name[dbclang];
-}
-
-TalentSpellPos const* GetTalentSpellPos(uint32 spellId)
-{
-    TalentSpellPosMap::const_iterator itr = sTalentSpellPosMap.find(spellId);
-    if (itr == sTalentSpellPosMap.end())
-        return nullptr;
-
     return &itr->second;
 }
 
-uint32 GetTalentSpellCost(uint32 spellId)
+std::string GetPetName(const uint32 petFamily)
 {
-    if (TalentSpellPos const* pos = GetTalentSpellPos(spellId))
-        return pos->rank + 1;
+    if (!petFamily)
+        return nullptr;
 
+    const CreatureFamilyEntry* pet_family = sCreatureFamilyStore.LookupEntry(petFamily);
+    if (!pet_family)
+        return nullptr;
+
+    return pet_family->Name;
+}
+
+const TalentSpellPos* GetTalentSpellPos(const uint32 spellID)
+{
+    const TalentSpellPosMap::const_iterator itr = sTalentSpellPosMap.find(spellID);
+    if (itr == sTalentSpellPosMap.end())
+        return nullptr;
+    return &itr->second;
+}
+
+uint32 GetTalentSpellCost(const uint32 spellId)
+{
+    if (const TalentSpellPos* pos = GetTalentSpellPos(spellId))
+        return pos->Rank + 1;
     return 0;
 }
 
-WMOAreaTableEntry const* GetWMOAreaTableEntryByTripple(int32 rootid, int32 adtid, int32 groupid)
+const WMOAreaTableEntry* GetWMOAreaTableEntryByTriple(const int32 rootID, const int32 adtID, const int32 groupID)
 {
-    auto i = sWMOAreaInfoByTripple.find(WMOAreaTableKey(int16(rootid), int8(adtid), groupid));
-    if (i != sWMOAreaInfoByTripple.end())
-        return i->second;
-
-    return nullptr;
+    const auto entry = sWMOAreaInfoByTriple.find(WMOAreaTableKey(static_cast<uint16>(rootID), static_cast<uint8>(adtID), groupID));
+    return entry == sWMOAreaInfoByTriple.end() ? nullptr : entry->second;
 }
 
-uint32 GetVirtualMapForMapAndZone(uint32 mapid, uint32 zoneId)
+uint32 GetVirtualMapForMapAndZone(const uint32 mapID, const uint32 zoneID)
 {
-    if (mapid != MAP_OUTLAND && mapid != MAP_NORTHREND)                        // speed for most cases
-        return mapid;
+    if (mapID != MAP_OUTLAND && mapID != MAP_NORTHREND) // Speed for most cases
+        return mapID;
 
-    if (WorldMapAreaEntry const* wma = sWorldMapAreaStore.LookupEntry(zoneId))
-        return wma->virtual_map_id >= 0 ? wma->virtual_map_id : wma->map_id;
+    if (WorldMapAreaEntry const* wma = sWorldMapAreaStore.LookupEntry(zoneID))
+        return wma->VirtualMapID >= 0 ? wma->VirtualMapID : wma->MapID;
 
-    return mapid;
+    return mapID;
 }
 
-ContentLevels GetContentLevelsForMapAndZone(uint32 mapid, uint32 zoneId)
+ContentLevels GetContentLevelsForMapAndZone(uint32 mapID, const uint32 zoneID)
 {
-    mapid = GetVirtualMapForMapAndZone(mapid, zoneId);
-    if (mapid < 2)
+    mapID = GetVirtualMapForMapAndZone(mapID, zoneID);
+    if (mapID < 2)
         return CONTENT_1_60;
 
-    MapEntry const* mapEntry = sMapStore.LookupEntry(mapid);
+    const MapEntry* mapEntry = sMapStore.LookupEntry(mapID);
     if (!mapEntry)
         return CONTENT_1_60;
 
-    switch (mapEntry->Expansion())
+    switch (mapEntry->Expansion)
     {
         default:
             return CONTENT_1_60;
@@ -732,193 +613,175 @@ ContentLevels GetContentLevelsForMapAndZone(uint32 mapid, uint32 zoneId)
     }
 }
 
-void Zone2MapCoordinates(float& x, float& y, uint32 zone)
+void Zone2MapCoordinates(float& x, float& y, const uint32 zone)
 {
-    WorldMapAreaEntry const* maEntry = sWorldMapAreaStore.LookupEntry(zone);
+    const WorldMapAreaEntry* maEntry = sWorldMapAreaStore.LookupEntry(zone);
 
-    // if not listed then map coordinates (instance)
+    // If not listed then map coordinates (instance)
     if (!maEntry)
         return;
 
-    std::swap(x, y);                                         // at client map coords swapped
-    x = x * ((maEntry->x2 - maEntry->x1) / 100) + maEntry->x1;
-    y = y * ((maEntry->y2 - maEntry->y1) / 100) + maEntry->y1; // client y coord from top to down
+    std::swap(x, y);  // At client map coords swapped
+    x = x * ((maEntry->BottomCoord - maEntry->TopCoord) / 100) + maEntry->TopCoord;
+    y = y * ((maEntry->RightCoord - maEntry->LeftCoord) / 100) + maEntry->LeftCoord; // Client y coord from top to down
 }
 
-void Map2ZoneCoordinates(float& x, float& y, uint32 zone)
+void Map2ZoneCoordinates(float& x, float& y, const uint32 zone)
 {
     WorldMapAreaEntry const* maEntry = sWorldMapAreaStore.LookupEntry(zone);
 
-    // if not listed then map coordinates (instance)
+    // If not listed then map coordinates (instance)
     if (!maEntry)
         return;
 
-    x = (x - maEntry->x1) / ((maEntry->x2 - maEntry->x1) / 100);
-    y = (y - maEntry->y1) / ((maEntry->y2 - maEntry->y1) / 100); // client y coord from top to down
-    std::swap(x, y);                                         // client have map coords swapped
+    x = (x - maEntry->TopCoord) / ((maEntry->BottomCoord - maEntry->TopCoord) / 100);
+    y = (y - maEntry->LeftCoord) / ((maEntry->RightCoord - maEntry->LeftCoord) / 100); // Client y coord from top to down
+    std::swap(x, y);  // Client have map coords swapped
 }
 
-MapDifficulty const* GetMapDifficultyData(uint32 mapId, Difficulty difficulty)
+const MapDifficulty* GetMapDifficultyData(const uint32 mapID, const Difficulty difficulty)
 {
-    MapDifficultyMap::const_iterator itr = sMapDifficultyMap.find(MAKE_PAIR32(mapId, difficulty));
+    const MapDifficultyMap::const_iterator itr = sMapDifficultyMap.find(MAKE_PAIR32(mapID, difficulty));
     return itr != sMapDifficultyMap.end() ? &itr->second : nullptr;
 }
 
-MapDifficulty const* GetDownscaledMapDifficultyData(uint32 mapId, Difficulty& difficulty)
+const MapDifficulty* GetDownscaledMapDifficultyData(const uint32 mapID, Difficulty& difficulty)
 {
     uint32 tmpDiff = difficulty;
 
-    MapDifficulty const* mapDiff = GetMapDifficultyData(mapId, Difficulty(tmpDiff));
+    MapDifficulty const* mapDiff = GetMapDifficultyData(mapID, static_cast<Difficulty>(tmpDiff));
     if (!mapDiff)
     {
-        if (tmpDiff > RAID_DIFFICULTY_25MAN_NORMAL) // heroic, downscale to normal
+        if (tmpDiff > RAID_DIFFICULTY_25MAN_NORMAL) // Heroic, downscale to normal
             tmpDiff -= 2;
         else
-            tmpDiff -= 1;   // any non-normal mode for raids like tbc (only one mode)
+            tmpDiff -= 1;   // Any non-normal mode for raids like tbc (only one mode)
 
-        // pull new data
-        mapDiff = GetMapDifficultyData(mapId, Difficulty(tmpDiff)); // we are 10 normal or 25 normal
+        // Pull new data
+        mapDiff = GetMapDifficultyData(mapID, static_cast<Difficulty>(tmpDiff)); // We are 10 normal or 25 normal
         if (!mapDiff)
         {
             tmpDiff -= 1;
-            mapDiff = GetMapDifficultyData(mapId, Difficulty(tmpDiff)); // 10 normal
+            mapDiff = GetMapDifficultyData(mapID, static_cast<Difficulty>(tmpDiff)); // 10 normal
         }
     }
 
-    difficulty = Difficulty(tmpDiff);
+    difficulty = static_cast<Difficulty>(tmpDiff);
 
     return mapDiff;
 }
 
-PvPDifficultyEntry const* GetBattlegroundBracketByLevel(uint32 mapid, uint32 level)
+const PvPDifficultyEntry* GetBattlegroundBracketByLevel(const uint32 mapID, const uint32 level)
 {
-    PvPDifficultyEntry const* maxEntry = nullptr;              // used for level > max listed level case
+    PvPDifficultyEntry const* maxEntry = nullptr;  // Used for level > max listed level case
 
     for (PvPDifficultyEntry const* entry : sPvPDifficultyStore)
     {
-        // skip unrelated and too-high brackets
-        if (entry->mapId != mapid || entry->minLevel > level)
+        // Skip unrelated and too-high brackets
+        if (entry->MapID != mapID || entry->MinLevel > level)
             continue;
 
-        // exactly fit
-        if (entry->maxLevel >= level)
+        // Exactly fit
+        if (entry->MaxLevel >= level)
             return entry;
 
-        // remember for possible out-of-range case (search higher from existed)
-        if (!maxEntry || maxEntry->maxLevel < entry->maxLevel)
+        // Remember for possible out-of-range case (search higher from existed)
+        if (!maxEntry || maxEntry->MaxLevel < entry->MaxLevel)
             maxEntry = entry;
     }
 
     return maxEntry;
 }
 
-PvPDifficultyEntry const* GetBattlegroundBracketById(uint32 mapid, BattlegroundBracketId id)
+const PvPDifficultyEntry* GetBattlegroundBracketById(const uint32 mapID, const BattlegroundBracketID id)
 {
     for (PvPDifficultyEntry const* entry : sPvPDifficultyStore)
-        if (entry->mapId == mapid && entry->GetBracketId() == id)
+        if (entry->MapID == mapID && entry->GetBracketId() == id)
             return entry;
 
     return nullptr;
 }
 
-uint32 const* GetTalentTabPages(uint8 cls)
+const uint32* GetTalentTabPages(const uint8 cls)
 {
     return sTalentTabPages[cls];
 }
 
-bool IsSharedDifficultyMap(uint32 mapid)
+bool IsSharedDifficultyMap(const uint32 mapID)
 {
-    return sWorld->getBoolConfig(CONFIG_INSTANCE_SHARED_ID) && (mapid == 631 || mapid == 724);
+    return sWorld->getBoolConfig(CONFIG_INSTANCE_SHARED_ID) && (mapID == 631 || mapID == 724);
 }
 
-uint32 GetLiquidFlags(uint32 liquidType)
+uint32 GetLiquidFlags(const uint32 liquidType)
 {
     if (LiquidTypeEntry const* liq = sLiquidTypeStore.LookupEntry(liquidType))
         return 1 << liq->Type;
-
     return 0;
 }
 
-CharStartOutfitEntry const* GetCharStartOutfitEntry(uint8 race, uint8 class_, uint8 gender)
+const CharStartOutfitEntry* GetCharStartOutfitEntry(const uint8 race, const uint8 class_, const uint8 gender)
 {
-    std::map<uint32, CharStartOutfitEntry const*>::const_iterator itr = sCharStartOutfitMap.find(race | (class_ << 8) | (gender << 16));
+    const std::map<uint32, CharStartOutfitEntry const*>::const_iterator itr = sCharStartOutfitMap.find(race | (class_ << 8) | (gender << 16));
     if (itr == sCharStartOutfitMap.end())
         return nullptr;
-
     return itr->second;
 }
 
-/// Returns LFGDungeonEntry for a specific map and difficulty. Will return first found entry if multiple dungeons use the same map (such as Scarlet Monastery)
-LFGDungeonEntry const* GetLFGDungeon(uint32 mapId, Difficulty difficulty)
+/// Returns LFGDungeonEntry for a specific map and difficulty.
+/// Will return first found entry if multiple dungeons use the same map (such as Scarlet Monastery)
+const LFGDungeonEntry* GetLFGDungeon(const uint32 mapID, const Difficulty difficulty)
 {
-    for (uint32 i = 0; i < sLFGDungeonStore.GetNumRows(); ++i)
+    for (const LFGDungeonEntry* dungeon : sLFGDungeonStore)
     {
-        LFGDungeonEntry const* dungeon = sLFGDungeonStore.LookupEntry(i);
-        if (!dungeon)
-            continue;
-
-        if (dungeon->MapID == uint32(mapId) && Difficulty(dungeon->Difficulty) == difficulty)
+        if (dungeon->MapID == mapID && static_cast<Difficulty>(dungeon->Difficulty) == difficulty)
             return dungeon;
     }
-
     return nullptr;
 }
 
-LFGDungeonEntry const* GetZoneLFGDungeonEntry(std::string const& zoneName, LocaleConstant locale)
+const LFGDungeonEntry* GetZoneLFGDungeonEntry(const std::string& zoneName)
 {
-    for (LFGDungeonEntry const* dungeon : sLFGDungeonStore)
+    for (const LFGDungeonEntry* dungeon : sLFGDungeonStore)
     {
-        if (dungeon->TypeID == lfg::LFG_TYPE_ZONE && zoneName.find(dungeon->Name[locale]) != std::string::npos)
-        {
+        if (dungeon->TypeID == lfg::LFG_TYPE_ZONE && zoneName.find(dungeon->Name) != std::string::npos)
             return dungeon;
-        }
     }
-
     return nullptr;
 }
 
-uint32 GetDefaultMapLight(uint32 mapId)
+uint32 GetDefaultMapLight(const uint32 mapID)
 {
-    for (int32 i = sLightStore.GetNumRows(); i >= 0; --i)
+    for (const LightEntry* light : sLightStore)
     {
-        LightEntry const* light = sLightStore.LookupEntry(uint32(i));
         if (!light)
             continue;
-
-        if (light->MapId == mapId && light->X == 0.0f && light->Y == 0.0f && light->Z == 0.0f)
-            return light->Id;
+        if (light->MapID == mapID && light->X == 0.0f && light->Y == 0.0f && light->Z == 0.0f)
+            return light->ID;
     }
-
     return 0;
 }
 
-SkillRaceClassInfoEntry const* GetSkillRaceClassInfo(uint32 skill, uint8 race, uint8 class_)
+const SkillRaceClassInfoEntry* GetSkillRaceClassInfo(const uint32 skill, const uint8 race, const uint8 class_)
 {
-    SkillRaceClassInfoBounds bounds = SkillRaceClassInfoBySkill.equal_range(skill);
-    for (SkillRaceClassInfoMap::iterator itr = bounds.first; itr != bounds.second; ++itr)
+    auto [fst, lst] = SkillRaceClassInfoBySkill.equal_range(skill);
+    for (auto itr = fst; itr != lst; ++itr)
     {
         if (itr->second->RaceMask && !(itr->second->RaceMask & (1 << (race - 1))))
-        {
             continue;
-        }
-
         if (itr->second->ClassMask && !(itr->second->ClassMask & (1 << (class_ - 1))))
-        {
             continue;
-        }
 
         return itr->second;
     }
-
     return nullptr;
 }
 
-const std::vector<SkillLineAbilityEntry const*>& GetSkillLineAbilitiesBySkillLine(uint32 skillLine)
+const std::vector<const SkillLineAbilityEntry*>& GetSkillLineAbilitiesBySkillLine(const uint32 skillLine)
 {
-    auto it = sSkillLineAbilityIndexBySkillLine.find(skillLine);
+    const auto it = sSkillLineAbilityIndexBySkillLine.find(skillLine);
     if (it == sSkillLineAbilityIndexBySkillLine.end())
     {
-        static const std::vector<SkillLineAbilityEntry const*> emptyVector;
+        static constexpr std::vector<const SkillLineAbilityEntry*> emptyVector;
         return emptyVector;
     }
     return it->second;

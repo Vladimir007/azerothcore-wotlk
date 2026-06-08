@@ -50,8 +50,8 @@ public:
             { "disband",        HandleArenaDisbandCommand,  SEC_ADMINISTRATOR, Console::Yes },
             { "rename",         HandleArenaRenameCommand,   SEC_ADMINISTRATOR, Console::Yes },
             { "captain",        HandleArenaCaptainCommand,  SEC_ADMINISTRATOR, Console::No  },
-            { "info",           HandleArenaInfoCommand,     SEC_GAMEMASTER,    Console::Yes },
-            { "lookup",         HandleArenaLookupCommand,   SEC_GAMEMASTER,    Console::Yes },
+            { "info",           HandleArenaInfoCommand,     SEC_GAME_MASTER,    Console::Yes },
+            { "lookup",         HandleArenaLookupCommand,   SEC_GAME_MASTER,    Console::Yes },
             { "season",         arenaSeasonCommandTable  }
         };
 

@@ -25,7 +25,6 @@ enum AccountHook
 {
     ACCOUNTHOOK_ON_ACCOUNT_LOGIN,
     ACCOUNTHOOK_ON_BEFORE_ACCOUNT_DELETE,
-    ACCOUNTHOOK_ON_LAST_IP_UPDATE,
     ACCOUNTHOOK_ON_FAILED_ACCOUNT_LOGIN,
     ACCOUNTHOOK_ON_EMAIL_CHANGE,
     ACCOUNTHOOK_ON_FAILED_EMAIL_CHANGE,
@@ -41,29 +40,9 @@ protected:
     AccountScript(const char* name, std::vector<uint16> enabledHooks = std::vector<uint16>());
 
 public:
-    // Called when an account logged in successfully
-    virtual void OnAccountLogin(uint32 /*accountId*/) { }
 
     // Called when an account is about to be deleted
     virtual void OnBeforeAccountDelete(uint32 /*accountId*/) { }
-
-    // Called when an ip logged in successfully
-    virtual void OnLastIpUpdate(uint32 /*accountId*/, std::string /*ip*/) { }
-
-    // Called when an account login failed
-    virtual void OnFailedAccountLogin(uint32 /*accountId*/) { }
-
-    // Called when Email is successfully changed for Account
-    virtual void OnEmailChange(uint32 /*accountId*/) { }
-
-    // Called when Email failed to change for Account
-    virtual void OnFailedEmailChange(uint32 /*accountId*/) { }
-
-    // Called when Password is successfully changed for Account
-    virtual void OnPasswordChange(uint32 /*accountId*/) { }
-
-    // Called when Password failed to change for Account
-    virtual void OnFailedPasswordChange(uint32 /*accountId*/) { }
 
     // Called when creating a character on the Account
     [[nodiscard]] virtual bool CanAccountCreateCharacter(uint32 /*accountId*/, uint8 /*charRace*/, uint8 /*charClass*/) { return true;}

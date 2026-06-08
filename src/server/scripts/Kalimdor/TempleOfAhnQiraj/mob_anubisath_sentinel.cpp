@@ -262,7 +262,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_TRANSFER_POWER)
+            if (spellInfo->ID == SPELL_TRANSFER_POWER)
             {
                 if (Creature* sentinel = target->ToCreature())
                 {

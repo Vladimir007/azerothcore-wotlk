@@ -106,15 +106,15 @@ public:
 
     // Returns true if the state of the objective has changed, in this case, the OutdoorPvP must send a world state ui update.
     virtual bool Update(uint32 diff);
-    virtual void ChangeTeam(TeamId /*oldTeam*/) {}
+    virtual void ChangeTeam(TeamID /*oldTeam*/) {}
     virtual void SendChangePhase();
 
     // Added team to reset capturepoints on sliders after warTime
-    bool SetCapturePointData(GameObject* capturePoint, TeamId team);
+    bool SetCapturePointData(GameObject* capturePoint, TeamID team);
     GameObject* GetCapturePointGo();
     GameObject* GetCapturePointGo(WorldObject* obj);
 
-    TeamId GetTeamId() const { return Team; }
+    TeamID GetTeamId() const { return Team; }
 
 protected:
     bool DelCapturePoint();
@@ -131,7 +131,7 @@ protected:
 
     // The status of the objective
     float Value;
-    TeamId Team;
+    TeamID Team;
 
     // Objective states
     BattlefieldObjectiveStates OldState;
@@ -157,17 +157,17 @@ public:
     virtual ~BfGraveyard() = default;
 
     // Method to changing who controls the graveyard
-    void GiveControlTo(TeamId team);
-    TeamId GetControlTeamId() const { return ControlTeam; }
+    void GiveControlTo(TeamID team);
+    TeamID GetControlTeamId() const { return ControlTeam; }
 
     // Find the nearest graveyard to a player
     float GetDistance(Player* player);
 
     // Initialize the graveyard
-    void Initialize(TeamId startControl, uint32 graveyardId);
+    void Initialize(TeamID startControl, uint32 graveyardId);
 
     // Set spirit service for the graveyard
-    void SetSpirit(Creature* spirit, TeamId team);
+    void SetSpirit(Creature* spirit, TeamID team);
 
     // Add a player to the graveyard
     void AddPlayer(ObjectGuid playerGuid);
@@ -197,7 +197,7 @@ public:
     uint32 GetGraveyardId() const { return GraveyardId; }
 
 protected:
-    TeamId ControlTeam;
+    TeamID ControlTeam;
     uint32 GraveyardId;
     ObjectGuid SpiritGuide[2];
     GuidUnorderedSet ResurrectQueue;
@@ -245,7 +245,7 @@ public:
     uint32 GetTypeId() const { return TypeId; }
     uint32 GetZoneId() const { return ZoneId; }
 
-    void TeamApplyBuff(TeamId team, uint32 spellId, uint32 spellId2 = 0);
+    void TeamApplyBuff(TeamID team, uint32 spellId, uint32 spellId2 = 0);
 
     /// Return true if battle is started, false if battle is not started
     bool IsWarTime() const { return Active; }
@@ -276,19 +276,19 @@ public:
     virtual void UpdateData(uint32 index, int32 pad) { Data32[index] += pad; }
 
     // Battlefield - generic methods
-    TeamId GetDefenderTeam() const { return DefenderTeam; }
-    TeamId GetAttackerTeam() const { return TeamId(1 - DefenderTeam); }
-    TeamId GetOtherTeam(TeamId team) const { return (team == TEAM_HORDE ? TEAM_ALLIANCE : TEAM_HORDE); }
-    void SetDefenderTeam(TeamId team) { DefenderTeam = team; }
+    TeamID GetDefenderTeam() const { return DefenderTeam; }
+    TeamID GetAttackerTeam() const { return TeamID(1 - DefenderTeam); }
+    TeamID GetOtherTeam(TeamID team) const { return (team == TEAM_HORDE ? TEAM_ALLIANCE : TEAM_HORDE); }
+    void SetDefenderTeam(TeamID team) { DefenderTeam = team; }
 
     // Group methods
     /**
      * \brief Find a not full battlefield group, if there is no, create one
      * \param teamId : Id of player team for who we search a group (player->GetTeamId())
      */
-    Group* GetFreeBfRaid(TeamId teamId);
+    Group* GetFreeBfRaid(TeamID teamId);
     /// Return battlefield group where player is.
-    Group* GetGroupPlayer(ObjectGuid guid, TeamId teamId);
+    Group* GetGroupPlayer(ObjectGuid guid, TeamID teamId);
     /// Force player to join a battlefield group
     bool AddOrSetPlayerToCorrectBfGroup(Player* player);
 
@@ -302,8 +302,8 @@ public:
     BfGraveyard* GetGraveyardById(uint32 id) const;
 
     // Misc methods
-    Creature* SpawnCreature(uint32 entry, float x, float y, float z, float o, TeamId teamId);
-    Creature* SpawnCreature(uint32 entry, Position pos, TeamId teamId);
+    Creature* SpawnCreature(uint32 entry, float x, float y, float z, float o, TeamID teamId);
+    Creature* SpawnCreature(uint32 entry, Position pos, TeamID teamId);
     GameObject* SpawnGameObject(uint32 entry, float x, float y, float z, float o);
 
     Creature* GetCreature(ObjectGuid const& guid);
@@ -356,21 +356,21 @@ public:
     void SetTimer(uint32 timer) { Timer = timer; }
 
     // Returns combined count of players in war + invited (per team) for balance checking
-    uint32 GetPlayersInWarCount(TeamId teamId) const { return static_cast<uint32>(PlayersInWar[teamId].size() + InvitedPlayers[teamId].size()); }
+    uint32 GetPlayersInWarCount(TeamID teamId) const { return static_cast<uint32>(PlayersInWar[teamId].size() + InvitedPlayers[teamId].size()); }
     // Returns total count of players in the battlefield zone per team
-    uint32 GetPlayersInZoneCount(TeamId teamId) const { return static_cast<uint32>(Players[teamId].size()); }
+    uint32 GetPlayersInZoneCount(TeamID teamId) const { return static_cast<uint32>(Players[teamId].size()); }
     // Returns the maximum players allowed per team
     uint32 GetMaxPlayersPerTeam() const { return MaxPlayer; }
     /// Returns true if there is still room for another player on the given team in the active war.
-    bool HasWarVacancy(TeamId teamId) const { return GetPlayersInWarCount(teamId) < MaxPlayer; }
+    bool HasWarVacancy(TeamID teamId) const { return GetPlayersInWarCount(teamId) < MaxPlayer; }
 
     /// Returns the set of players waiting in the pre-battle queue (per team, read-only).
-    GuidUnorderedSet const& GetPlayersQueueSet(TeamId teamId) const { return PlayersInQueue[teamId]; }
+    GuidUnorderedSet const& GetPlayersQueueSet(TeamID teamId) const { return PlayersInQueue[teamId]; }
     /// Returns the map of players invited to join the active war, value is invite expiry
     /// timestamp (per team, read-only).
-    PlayerTimerMap const& GetInvitedPlayersMap(TeamId teamId) const { return InvitedPlayers[teamId]; }
+    PlayerTimerMap const& GetInvitedPlayersMap(TeamID teamId) const { return InvitedPlayers[teamId]; }
     /// Returns the set of players actively fighting in the war (per team, read-only).
-    GuidUnorderedSet const& GetPlayersInWarSet(TeamId teamId) const { return PlayersInWar[teamId]; }
+    GuidUnorderedSet const& GetPlayersInWarSet(TeamID teamId) const { return PlayersInWar[teamId]; }
 
     void DoPlaySoundToAll(uint32 soundId);
 
@@ -384,7 +384,7 @@ protected:
     uint32 Timer;                                           // Global timer for event
     bool Enabled;
     bool Active;
-    TeamId DefenderTeam;
+    TeamID DefenderTeam;
 
     // Map of the objectives belonging to this OutdoorPvP
     BfCapturePointVector CapturePoints;
@@ -439,7 +439,7 @@ protected:
 
     void RegisterZone(uint32 zoneId);
     bool HasPlayer(Player* player) const;
-    void TeamCastSpell(TeamId team, int32 spellId);
+    void TeamCastSpell(TeamID team, int32 spellId);
 
     /// Returns true if the player is already tracked as actively in the war or invited to join it.
     bool IsPlayerInWarOrInvited(Player* player) const;
@@ -474,7 +474,7 @@ protected:
     }
 
     template<typename Func>
-    void ForEachPlayerInWar(TeamId team, Func&& fn) const
+    void ForEachPlayerInWar(TeamID team, Func&& fn) const
     {
         for (ObjectGuid const& guid : PlayersInWar[team])
             if (Player* player = ObjectAccessor::FindPlayer(guid))

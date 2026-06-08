@@ -174,7 +174,7 @@ public:
 
         void SpellHitTarget(Unit*  /*target*/, SpellInfo const* spell) override
         {
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_BLACK_KNIGHT_RES:
                     me->SetHealth(me->GetMaxHealth());
@@ -398,7 +398,7 @@ public:
 
         void SpellHit(Unit*  /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_BK_GHOUL_EXPLODE)
+            if (spell->ID == SPELL_BK_GHOUL_EXPLODE)
             {
                 me->RemoveUnitFlag(UNIT_FLAG_STUNNED);
                 me->CastSpell(me, SPELL_EXPLODE, false);

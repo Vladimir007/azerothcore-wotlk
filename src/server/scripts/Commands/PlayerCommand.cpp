@@ -25,11 +25,11 @@ bool Acore::PlayerCommand::HandleLearnSpellCommand(ChatHandler* handler, Player*
 {
     if (!SpellMgr::IsSpellValid(spell))
     {
-        handler->SendErrorMessage(LANG_COMMAND_SPELL_BROKEN, spell->Id);
+        handler->SendErrorMessage(LANG_COMMAND_SPELL_BROKEN, spell->ID);
         return false;
     }
 
-    if (!allRanks && targetPlayer->HasSpell(spell->Id))
+    if (!allRanks && targetPlayer->HasSpell(spell->ID))
     {
         if (targetPlayer == handler->GetPlayer())
         {
@@ -43,11 +43,11 @@ bool Acore::PlayerCommand::HandleLearnSpellCommand(ChatHandler* handler, Player*
         return false;
     }
 
-    targetPlayer->learnSpell(spell->Id, false);
+    targetPlayer->learnSpell(spell->ID, false);
 
     if (allRanks)
     {
-        uint32 spellId = spell->Id;
+        uint32 spellId = spell->ID;
 
         while ((spellId = sSpellMgr->GetNextSpellInChain(spellId)))
         {
@@ -55,7 +55,7 @@ bool Acore::PlayerCommand::HandleLearnSpellCommand(ChatHandler* handler, Player*
         }
     }
 
-    if (GetTalentSpellCost(spell->GetFirstRankSpell()->Id))
+    if (GetTalentSpellCost(spell->GetFirstRankSpell()->ID))
     {
         targetPlayer->SendTalentsInfoData(false);
     }
@@ -65,7 +65,7 @@ bool Acore::PlayerCommand::HandleLearnSpellCommand(ChatHandler* handler, Player*
 
 bool Acore::PlayerCommand::HandleUnlearnSpellCommand(ChatHandler* handler, Player* target, SpellInfo const* spell, Optional<EXACT_SEQUENCE("all")> allRanks)
 {
-    uint32 spellId = spell->Id;
+    uint32 spellId = spell->ID;
 
     if (allRanks)
     {

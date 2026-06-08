@@ -42,7 +42,7 @@ void AddItemsSetItem(Player* player, Item* item)
         return;
     }
 
-    if (set->required_skill_id && player->GetSkillValue(set->required_skill_id) < set->required_skill_value)
+    if (set->RequiredSkillID && player->GetSkillValue(set->RequiredSkillID) < set->RequiredSkillValue)
         return;
 
     ItemSetEffect* eff = nullptr;
@@ -76,15 +76,15 @@ void AddItemsSetItem(Player* player, Item* item)
 
     for (uint32 x = 0; x < MAX_ITEM_SET_SPELLS; ++x)
     {
-        if (!set->spells [x])
+        if (!set->Spells [x])
             continue;
         //not enough for  spell
-        if (set->items_to_triggerspell[x] > eff->item_count)
+        if (set->ItemsToTriggerSpell[x] > eff->item_count)
             continue;
 
         uint32 z = 0;
         for (; z < MAX_ITEM_SET_SPELLS; ++z)
-            if (eff->spells[z] && eff->spells[z]->Id == set->spells[x])
+            if (eff->spells[z] && eff->spells[z]->ID == set->Spells[x])
                 break;
 
         if (z < MAX_ITEM_SET_SPELLS)
@@ -95,10 +95,10 @@ void AddItemsSetItem(Player* player, Item* item)
         {
             if (!eff->spells[y])                             // free slot
             {
-                SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(set->spells[x]);
+                SpellInfo const* spellInfo = sSpellMgr->GetSpellInfo(set->Spells[x]);
                 if (!spellInfo)
                 {
-                    LOG_ERROR("entities.item", "WORLD: unknown spell id {} in items set {} effects", set->spells[x], setid);
+                    LOG_ERROR("entities.item", "WORLD: unknown spell id {} in items set {} effects", set->Spells[x], setid);
                     break;
                 }
 
@@ -146,16 +146,16 @@ void RemoveItemsSetItem(Player* player, ItemTemplate const* proto)
 
     for (uint32 x = 0; x < MAX_ITEM_SET_SPELLS; x++)
     {
-        if (!set->spells[x])
+        if (!set->Spells[x])
             continue;
 
         // enough for spell
-        if (set->items_to_triggerspell[x] <= eff->item_count)
+        if (set->ItemsToTriggerSpell[x] <= eff->item_count)
             continue;
 
         for (uint32 z = 0; z < MAX_ITEM_SET_SPELLS; z++)
         {
-            if (eff->spells[z] && eff->spells[z]->Id == set->spells[x])
+            if (eff->spells[z] && eff->spells[z]->ID == set->Spells[x])
             {
                 // spell can be not active if not fit form requirement
                 player->ApplyEquipSpell(eff->spells[z], nullptr, false);
@@ -824,7 +824,7 @@ bool Item::HasEnchantRequiredSkill(Player const* player) const
     for (uint32 enchant_slot = PERM_ENCHANTMENT_SLOT; enchant_slot < MAX_ENCHANTMENT_SLOT; ++enchant_slot)
         if (uint32 enchant_id = GetEnchantmentId(EnchantmentSlot(enchant_slot)))
             if (SpellItemEnchantmentEntry const* enchantEntry = sSpellItemEnchantmentStore.LookupEntry(enchant_id))
-                if (enchantEntry->requiredSkill && player->GetSkillValue(enchantEntry->requiredSkill) < enchantEntry->requiredSkillValue)
+                if (enchantEntry->RequiredSkill && player->GetSkillValue(enchantEntry->RequiredSkill) < enchantEntry->RequiredSkillValue)
                     return false;
 
     return true;
@@ -838,8 +838,8 @@ uint32 Item::GetEnchantRequiredLevel() const
     for (uint32 enchant_slot = PERM_ENCHANTMENT_SLOT; enchant_slot < MAX_ENCHANTMENT_SLOT; ++enchant_slot)
         if (uint32 enchant_id = GetEnchantmentId(EnchantmentSlot(enchant_slot)))
             if (SpellItemEnchantmentEntry const* enchantEntry = sSpellItemEnchantmentStore.LookupEntry(enchant_id))
-                if (enchantEntry->requiredLevel > level)
-                    level = enchantEntry->requiredLevel;
+                if (enchantEntry->RequiredLevel > level)
+                    level = enchantEntry->RequiredLevel;
 
     return level;
 }
@@ -850,7 +850,7 @@ bool Item::IsBoundByEnchant() const
     for (uint32 enchant_slot = PERM_ENCHANTMENT_SLOT; enchant_slot < MAX_ENCHANTMENT_SLOT; ++enchant_slot)
         if (uint32 enchant_id = GetEnchantmentId(EnchantmentSlot(enchant_slot)))
             if (SpellItemEnchantmentEntry const* enchantEntry = sSpellItemEnchantmentStore.LookupEntry(enchant_id))
-                if (enchantEntry->slot & ENCHANTMENT_CAN_SOULBOUND)
+                if (enchantEntry->Slot & ENCHANTMENT_CAN_SOULBOUND)
                     return true;
     return false;
 }
@@ -859,7 +859,7 @@ bool Item::IsBoundByTempEnchant() const
 {
     if (uint32 enchant_id = GetEnchantmentId(TEMP_ENCHANTMENT_SLOT))
         if (SpellItemEnchantmentEntry const* enchantEntry = sSpellItemEnchantmentStore.LookupEntry(enchant_id))
-            if (enchantEntry->slot & ENCHANTMENT_CAN_SOULBOUND)
+            if (enchantEntry->Slot & ENCHANTMENT_CAN_SOULBOUND)
                 return true;
     return false;
 }
@@ -994,7 +994,7 @@ bool Item::GemsFitSockets() const
             {
                 GemPropertiesEntry const* gemProperty = sGemPropertiesStore.LookupEntry(gemProto->GemProperties);
                 if (gemProperty)
-                    GemColor = gemProperty->color;
+                    GemColor = gemProperty->Color;
             }
         }
 
@@ -1095,7 +1095,7 @@ Item* Item::CreateItem(uint32 item, uint32 count, Player const* player, bool clo
         if (count > pProto->GetMaxStackSize())
             count = pProto->GetMaxStackSize();
 
-        ASSERT_NODEBUGINFO(count != 0 && "pProto->Stackable == 0 but checked at loading already");
+        ASSERT_NO_DEBUG_INFO(count != 0 && "pProto->Stackable == 0 but checked at loading already");
 
         Item* pItem = NewItemOrBag(pProto);
         if (pItem->Create(sObjectMgr->GetGenerator<HighGuid::Item>().Generate(), item, player))

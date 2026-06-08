@@ -50,7 +50,7 @@ void WorldSession::HandleTabardVendorActivateOpcode(WorldPacket& recvData)
     ObjectGuid guid;
     recvData >> guid;
 
-    Creature* unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_TABARDDESIGNER);
+    Creature* unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_TABARD_DESIGNER);
     if (!unit)
     {
         LOG_DEBUG("network", "WORLD: HandleTabardVendorActivateOpcode - Unit ({}) not found or you can not interact with him.", guid.ToString());
@@ -109,7 +109,7 @@ void WorldSession::SendTrainerList(Creature* npc)
         return;
     }
 
-    trainer->SendSpells(npc, _player, GetSessionDbLocaleIndex());
+    trainer->SendSpells(npc, _player);
 }
 
 void WorldSession::HandleTrainerBuySpellOpcode(WorldPackets::NPC::TrainerBuySpell& packet)
@@ -238,7 +238,7 @@ void WorldSession::HandleSpiritHealerActivateOpcode(WorldPacket& recvData)
 
     recvData >> guid;
 
-    Creature* unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_SPIRITHEALER);
+    Creature* unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_SPIRIT_HEALER);
     if (!unit)
     {
         LOG_DEBUG("network", "WORLD: HandleSpiritHealerActivateOpcode - Unit ({}) not found or you can not interact with him.", guid.ToString());

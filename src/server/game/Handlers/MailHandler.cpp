@@ -38,7 +38,7 @@ bool WorldSession::CanOpenMailBox(ObjectGuid guid)
 {
     if (guid == _player->GetGUID())
     {
-        if (_player->GetSession()->GetSecurity() < SEC_MODERATOR)
+        if (!_player->GetSession()->IsGameMaster())
         {
             LOG_ERROR("network.opcode", "{} attempt open mailbox in cheating way.", _player->GetName());
             return false;
@@ -46,7 +46,7 @@ bool WorldSession::CanOpenMailBox(ObjectGuid guid)
     }
     else if (guid.IsGameObject())
     {
-        if (!_player->GetGameObjectIfCanInteractWith(guid, GAMEOBJECT_TYPE_MAILBOX))
+        if (!_player->GetGameObjectIfCanInteractWith(guid, GAME_OBJECT_TYPE_MAILBOX))
             return false;
     }
     else if (guid.IsAnyTypeCreature())
@@ -90,7 +90,7 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
     if (items_count > MAX_MAIL_ITEMS)                       // client limit
     {
         GetPlayer()->SendMailResult(0, MAIL_SEND, MAIL_ERR_TOO_MANY_ATTACHMENTS);
-        recvData.rfinish();                   // set to end to avoid warnings spam
+        recvData.rFinish();                   // set to end to avoid warnings spam
         return;
     }
 
@@ -213,7 +213,7 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
 
     uint32 rc_account = receive ? receive->GetSession()->GetAccountId() : sCharacterCache->GetCharacterAccountIdByGuid(receiverGuid);
 
-    if (/*!accountBound*/ GetAccountId() != rc_account && !sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_MAIL) && player->GetTeamId() != rc_teamId && AccountMgr::IsPlayerAccount(GetSecurity()))
+    if (/*!accountBound*/ GetAccountId() != rc_account && !sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_MAIL) && player->GetTeamId() != rc_teamId && !IsGameMaster())
     {
         player->SendMailResult(0, MAIL_SEND, MAIL_ERR_NOT_YOUR_TEAM);
         return;
@@ -321,8 +321,7 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
 
         if (money >= 10 * GOLD)
         {
-            CleanStringForMysqlQuery(subject);
-            CharacterDatabase.Execute("INSERT INTO log_money VALUES({}, {}, \"{}\", \"{}\", {}, \"{}\", {}, \"{}\", NOW(), {})",
+            CharacterDatabase.Execute("INSERT INTO log_money VALUES($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9)",
                 GetAccountId(), player->GetGUID().GetCounter(), player->GetName(), player->GetSession()->GetRemoteAddress(), rc_account, receiver, money, subject, 5);
         }
     }
@@ -421,7 +420,7 @@ void WorldSession::HandleMailReturnToSender(WorldPacket& recvData)
     {
         for (MailItemInfoVec::iterator itr = m->items.begin(); itr != m->items.end(); ++itr)
         {
-            Item* item = player->GetMItem(itr->item_guid);
+            Item* item = player->GetMItem(itr->itemGUID);
             if (item && !sScriptMgr->OnPlayerCanSendMail(player, ObjectGuid(HighGuid::Player, m->sender), mailbox, m->subject, m->body, m->money, m->COD, item))
             {
                 player->SendMailResult(mailId, MAIL_RETURNED_TO_SENDER, MAIL_ERR_INTERNAL_ERROR);
@@ -460,11 +459,11 @@ void WorldSession::HandleMailReturnToSender(WorldPacket& recvData)
         {
             for (MailItemInfoVec::iterator itr2 = m->items.begin(); itr2 != m->items.end(); ++itr2)
             {
-                Item* item = player->GetMItem(itr2->item_guid);
+                Item* item = player->GetMItem(itr2->itemGUID);
                 if (item)
                     draft.AddItem(item);
 
-                player->RemoveMItem(itr2->item_guid);
+                player->RemoveMItem(itr2->itemGUID);
             }
         }
         draft.AddMoney(m->money).SendReturnToSender(GetAccountId(), m->receiver, m->sender, trans);
@@ -503,7 +502,7 @@ void WorldSession::HandleMailTakeItem(WorldPacket& recvData)
     // verify that the mail has the item to avoid cheaters taking COD items without paying
     bool foundItem = false;
     for (std::vector<MailItemInfo>::const_iterator itr = m->items.begin(); itr != m->items.end(); ++itr)
-        if (itr->item_guid == itemLowGuid)
+        if (itr->itemGUID == itemLowGuid)
         {
             foundItem = true;
             break;
@@ -556,12 +555,11 @@ void WorldSession::HandleMailTakeItem(WorldPacket& recvData)
                     std::string senderName;
                     if (!sCharacterCache->GetCharacterNameByGuid(ObjectGuid(HighGuid::Player, m->sender), senderName))
                     {
-                        senderName = sObjectMgr->GetAcoreStringForDBCLocale(LANG_UNKNOWN);
+                        senderName = sObjectMgr->GetNcoreString(LANG_UNKNOWN);
                     }
-                    std::string subj = m->subject;
-                    CleanStringForMysqlQuery(subj);
-                    CharacterDatabase.Execute("INSERT INTO log_money VALUES({}, {}, \"{}\", \"{}\", {}, \"{}\", {}, \"{}\", NOW(), {})",
-                        GetAccountId(), player->GetGUID().GetCounter(), player->GetName(), player->GetSession()->GetRemoteAddress(), sender_accId, senderName, m->COD, subj, 1);
+                    CharacterDatabase.Execute("INSERT INTO log_money VALUES($1, $2, $3, $4, $5, $6, $7, $8, NOW(), $9)",
+                        GetAccountId(), player->GetGUID().GetCounter(), player->GetName(), player->GetSession()->GetRemoteAddress(),
+                        sender_accId, senderName, m->COD, m->subject, 1);
                 }
             }
 
@@ -663,7 +661,7 @@ void WorldSession::HandleGetMailList(WorldPacket& recvData)
 
         std::size_t next_mail_size = 2 + 4 + 1 + (mail->messageType == MAIL_NORMAL ? 8 : 4) + 4 * 8 + (mail->subject.size() + 1) + (mail->body.size() + 1) + 1 + item_count * (1 + 4 + 4 + MAX_INSPECTED_ENCHANTMENT_SLOT * 3 * 4 + 4 + 4 + 4 + 4 + 4 + 4 + 1);
 
-        if (data.wpos() + next_mail_size > MAX_NETCLIENT_PACKET_SIZE)
+        if (data.wpos() + next_mail_size > MAX_NET_CLIENT_PACKET_SIZE)
         {
             ++realCount;
             continue;
@@ -712,7 +710,7 @@ void WorldSession::HandleGetMailList(WorldPacket& recvData)
 
         for (uint8 i = 0; i < item_count; ++i)
         {
-            Item* item = player->GetMItem(mail->items[i].item_guid);
+            Item* item = player->GetMItem(mail->items[i].itemGUID);
             // item index (0-6?)
             data << uint8(i);
             // item guid low?
@@ -792,7 +790,7 @@ void WorldSession::HandleMailCreateTextItem(WorldPacket& recvData)
             return;
         }
 
-        bodyItem->SetText(mailTemplateEntry->content[GetSessionDbcLocale()]);
+        bodyItem->SetText(mailTemplateEntry->Content);
     }
     else
         bodyItem->SetText(m->body);

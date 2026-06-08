@@ -989,7 +989,7 @@ public:
         uint32 duration = uint32(GetSpellInfo()->GetDuration());
 
         Position pos = caster->GetPosition();
-        if (Creature* summon = caster->GetMap()->SummonCreature(entry, pos, properties, duration, caster, GetSpellInfo()->Id))
+        if (Creature* summon = caster->GetMap()->SummonCreature(entry, pos, properties, duration, caster, GetSpellInfo()->ID))
         {
             bool heroic = summon->GetMap()->IsHeroic();
             bool raid = summon->GetMap()->Is25ManRaid();
@@ -1227,7 +1227,7 @@ class spell_halion_summon_exit_portals : public SpellScript
     {
         WorldLocation summonPos = *GetExplTargetDest();
         Position offset = {0.0f, 0.0f, 0.0f, 0.0f};
-        if (GetSpellInfo()->Id == SPELL_SUMMON_EXIT_PORTALS)
+        if (GetSpellInfo()->ID == SPELL_SUMMON_EXIT_PORTALS)
             offset.m_positionY = effIndex == EFFECT_1 ? -35.0f : 35.0f;
         else
             offset.m_positionX = effIndex == EFFECT_1 ? -35.0f : 35.0f;

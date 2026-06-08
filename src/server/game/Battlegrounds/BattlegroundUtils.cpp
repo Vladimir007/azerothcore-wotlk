@@ -13,7 +13,7 @@ uint32 GetMinPlayersPerTeam(Battleground* bg, PvPDifficultyEntry const* bracketE
     }
 
     auto maxPlayerLevel = sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL);
-    auto isMaxLevel = bracketEntry->minLevel <= maxPlayerLevel && maxPlayerLevel <= bracketEntry->maxLevel;
+    auto isMaxLevel = bracketEntry->MinLevel <= maxPlayerLevel && maxPlayerLevel <= bracketEntry->MaxLevel;
     auto lowLevelsOverride = sWorld->getIntConfig(CONFIG_BATTLEGROUND_OVERRIDE_LOWLEVELS_MINPLAYERS);
 
     return (lowLevelsOverride && !isMaxLevel) ? lowLevelsOverride : bg->GetMinPlayersPerTeam();

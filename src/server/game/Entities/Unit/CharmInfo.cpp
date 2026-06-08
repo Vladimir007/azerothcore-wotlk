@@ -19,6 +19,7 @@
 #include "Creature.h"
 #include "GameTime.h"
 #include "Map.h"
+#include "MapDefines.h"
 #include "SpellInfo.h"
 #include "Player.h"
 #include "SpellMgr.h"
@@ -150,8 +151,8 @@ bool CharmInfo::AddSpellToActionBar(SpellInfo const* spellInfo, ActiveStates new
 
     if (spellInfo)
     {
-        spell_id = spellInfo->Id;
-        first_id = spellInfo->GetFirstRankSpell()->Id;
+        spell_id = spellInfo->ID;
+        first_id = spellInfo->GetFirstRankSpell()->ID;
         if (spellInfo->IsAutocastable())
             autocastable = true;
     }
@@ -233,7 +234,7 @@ void CharmInfo::ToggleCreatureAutocast(SpellInfo const* spellInfo, bool apply)
         return;
 
     for (uint32 i = 0; i < MAX_SPELL_CHARM; ++i)
-        if (spellInfo->Id == _charmspells[i].GetAction())
+        if (spellInfo->ID == _charmspells[i].GetAction())
             _charmspells[i].SetType(apply ? ACT_ENABLED : ACT_DISABLED);
 }
 
@@ -292,7 +293,7 @@ void CharmInfo::SetSpellAutocast(SpellInfo const* spellInfo, bool state)
 {
     for (uint8 i = 0; i < MAX_UNIT_ACTION_BAR_INDEX; ++i)
     {
-        if (spellInfo->Id == PetActionBar[i].GetAction() && PetActionBar[i].IsActionBarForSpell())
+        if (spellInfo->ID == PetActionBar[i].GetAction() && PetActionBar[i].IsActionBarForSpell())
         {
             PetActionBar[i].SetType(state ? ACT_ENABLED : ACT_DISABLED);
             break;

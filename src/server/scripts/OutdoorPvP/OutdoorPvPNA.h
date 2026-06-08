@@ -200,17 +200,17 @@ public:
     int32 HandleOpenGo(Player* player, GameObject* go) override;
 
     uint32 GetAliveGuardsCount();
-    TeamId GetControllingFaction() const;
+    TeamID GetControllingFaction() const;
 
 protected:
     // called when a faction takes control
-    void FactionTakeOver(TeamId teamId);
+    void FactionTakeOver(TeamID teamId);
 
     void DespawnGOs();
     void DespawnCreatures(HalaaNPCS teamNPC);
 
     void SpawnNPCsForTeam(HalaaNPCS teamNPC);
-    void SpawnGOsForTeam(TeamId teamId);
+    void SpawnGOsForTeam(TeamID teamId);
 
     void UpdateWyvernRoostWorldState(uint32 roost);
     void UpdateHalaaWorldState();
@@ -219,7 +219,7 @@ private:
 
     uint32 m_GuardsAlive;
 
-    TeamId m_ControllingFaction;
+    TeamID m_ControllingFaction;
 
     uint32 m_WyvernStateNorth;
     uint32 m_WyvernStateSouth;

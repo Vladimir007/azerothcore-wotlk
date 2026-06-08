@@ -242,7 +242,7 @@ void GameEventMgr::LoadEventVendors()
     LOG_INFO("server.loading", "Loading Game Event Vendor Additions Data...");
     uint32 oldMSTime = getMSTime();
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_NPC_VENDOR);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -329,7 +329,7 @@ void GameEventMgr::LoadEvents()
     LOG_INFO("server.loading", "Loading Game Events...");
     uint32 oldMSTime = getMSTime();
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENTS);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -342,7 +342,7 @@ void GameEventMgr::LoadEvents()
     uint32 count = 0;
     do
     {
-        Field* fields = result->Fetch();
+        const Field* fields = result->Fetch();
 
         uint8 eventId = fields[0].Get<uint8>();
         if (eventId == 0)
@@ -352,19 +352,19 @@ void GameEventMgr::LoadEvents()
         }
 
         GameEventData& pGameEvent = _gameEvent[eventId];
-        pGameEvent.EventId      = fields[0].Get<uint32>();
-        uint64 starttime        = fields[1].Get<uint64>();
-        pGameEvent.Start        = time_t(starttime);
-        uint64 endtime          = fields[2].Get<uint64>();
+        pGameEvent.EventID      = fields[0].Get<uint32>();
+        const uint64 startTime  = fields[1].Get<uint64>();
+        pGameEvent.Start        = static_cast<time_t>(startTime);
+        uint64 endTime          = fields[2].Get<uint64>();
         if (fields[2].IsNull())
-            endtime             = GameTime::GetGameTime().count() + 63072000; // add 2 years to current date
-        pGameEvent.End          = time_t(endtime);
+            endTime             = GameTime::GetGameTime().count() + 63072000; // add 2 years to current date
+        pGameEvent.End          = static_cast<time_t>(endTime);
         pGameEvent.Occurence    = fields[3].Get<uint64>();
         pGameEvent.Length       = fields[4].Get<uint64>();
-        pGameEvent.HolidayId    = HolidayIds(fields[5].Get<uint32>());
+        pGameEvent.HolidayID    = static_cast<HolidayIds>(fields[5].Get<uint32>());
         pGameEvent.HolidayStage = fields[6].Get<uint8>();
         pGameEvent.Description  = fields[7].Get<std::string>();
-        pGameEvent.State        = (GameEventState)(fields[8].Get<uint8>());
+        pGameEvent.State        = static_cast<GameEventState>(fields[8].Get<uint8>());
         pGameEvent.Announce     = fields[9].Get<uint8>();
         pGameEvent.NextStart    = 0;
 
@@ -376,12 +376,12 @@ void GameEventMgr::LoadEvents()
             continue;
         }
 
-        if (pGameEvent.HolidayId != HOLIDAY_NONE)
+        if (pGameEvent.HolidayID != HOLIDAY_NONE)
         {
-            if (!sHolidaysStore.LookupEntry(pGameEvent.HolidayId))
+            if (!sHolidaysStore.LookupEntry(pGameEvent.HolidayID))
             {
-                LOG_ERROR("sql.sql", "`game_event` game event id ({}) have not existed holiday id {}.", eventId, pGameEvent.HolidayId);
-                pGameEvent.HolidayId = HOLIDAY_NONE;
+                LOG_ERROR("sql.sql", "`game_event` game event id ({}) have not existed holiday id {}.", eventId, pGameEvent.HolidayID);
+                pGameEvent.HolidayID = HOLIDAY_NONE;
             }
 
             SetHolidayEventTime(pGameEvent);
@@ -397,7 +397,7 @@ void GameEventMgr::LoadEventSaveData()
     uint32 oldMSTime = getMSTime();
     LOG_INFO("server.loading", "Loading Game Event Saves Data...");
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_GAME_EVENT_SAVE_DATA);
-    PreparedQueryResult result = CharacterDatabase.Query(stmt);
+    QueryResult result = CharacterDatabase.Query(stmt);
 
     if (!result)
     {
@@ -445,7 +445,7 @@ void GameEventMgr::LoadEventPrerequisiteData()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_PREREQUISITE_DATA);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -498,7 +498,7 @@ void GameEventMgr::LoadEventCreatureData()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_CREATURE_DATA);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -548,7 +548,7 @@ void GameEventMgr::LoadEventGameObjectData()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_GAMEOBJECT_DATA);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -598,7 +598,7 @@ void GameEventMgr::LoadEventModelEquipmentChangeData()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_MODEL_EQUIPMENT_DATA);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -659,7 +659,7 @@ void GameEventMgr::LoadEventQuestData()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_QUEST_DATA);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -701,7 +701,7 @@ void GameEventMgr::LoadEventGameObjectQuestData()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_GAMEOBJECT_QUEST_DATA);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -743,7 +743,7 @@ void GameEventMgr::LoadEventQuestConditionData()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_QUEST_CONDITION_DATA);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -787,7 +787,7 @@ void GameEventMgr::LoadEventConditionData()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_CONDITION_DATA);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -830,7 +830,7 @@ void GameEventMgr::LoadEventConditionSaveData()
     uint32 oldMSTime = getMSTime();
 
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_GAME_EVENT_CONDITION_SAVE_DATA);
-    PreparedQueryResult result = CharacterDatabase.Query(stmt);
+    QueryResult result = CharacterDatabase.Query(stmt);
 
     if (!result)
     {
@@ -879,7 +879,7 @@ void GameEventMgr::LoadEventNPCFlags()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement * stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_NPC_FLAGS);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -919,7 +919,7 @@ void GameEventMgr::LoadEventSeasonalQuestRelations()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_QUEST_SEASONAL_RELATIONS);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -967,7 +967,7 @@ void GameEventMgr::LoadEventBattlegroundData()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_BATTLEGROUND_DATA);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -1006,7 +1006,7 @@ void GameEventMgr::LoadEventPoolData()
     uint32 oldMSTime = getMSTime();
 
     WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_GAME_EVENT_POOL_DATA);
-    PreparedQueryResult result = WorldDatabase.Query(stmt);
+    QueryResult result = WorldDatabase.Query(stmt);
 
     if (!result)
     {
@@ -1115,9 +1115,9 @@ void GameEventMgr::LoadHolidayDates()
             if (!entry->Duration[0])
                 entry->Duration[0] = 168; // 7 days in hours
 
-            auto itr = std::lower_bound(ModifiedHolidays.begin(), ModifiedHolidays.end(), entry->Id);
-            if (itr == ModifiedHolidays.end() || *itr != entry->Id)
-                ModifiedHolidays.insert(itr, entry->Id);
+            auto itr = std::lower_bound(ModifiedHolidays.begin(), ModifiedHolidays.end(), entry->ID);
+            if (itr == ModifiedHolidays.end() || *itr != entry->ID)
+                ModifiedHolidays.insert(itr, entry->ID);
 
             continue;
         }
@@ -1144,30 +1144,28 @@ void GameEventMgr::LoadHolidayDates()
             ++dynamicCount;
         }
 
-        auto itr = std::lower_bound(ModifiedHolidays.begin(), ModifiedHolidays.end(), entry->Id);
-        if (itr == ModifiedHolidays.end() || *itr != entry->Id)
-            ModifiedHolidays.insert(itr, entry->Id);
+        auto itr = std::lower_bound(ModifiedHolidays.begin(), ModifiedHolidays.end(), entry->ID);
+        if (itr == ModifiedHolidays.end() || *itr != entry->ID)
+            ModifiedHolidays.insert(itr, entry->ID);
     }
 
     // Step 2: Check game_event.start_time for overrides (allows custom servers to override calculated dates)
     // Only use as override if start_time year >= current year (ignore old static dates)
-    QueryResult result = WorldDatabase.Query("SELECT holiday, UNIX_TIMESTAMP(start_time) FROM game_event WHERE holiday != 0 AND start_time > '2000-12-31'");
-
-    if (result)
+    if (const QueryResult result = WorldDatabase.Query("SELECT holiday, EXTRACT(epoch FROM start_time) FROM world_game_event WHERE holiday != 0 AND start_time > '2000-12-31'"))
     {
         do
         {
-            Field* fields = result->Fetch();
+            const Field* fields = result->Fetch();
 
-            uint32 const holidayId = fields[0].Get<uint32>();
-            HolidaysEntry* entry = const_cast<HolidaysEntry*>(sHolidaysStore.LookupEntry(holidayId));
+            const uint32 holidayId = fields[0].Get<uint32>();
+            const auto entry = const_cast<HolidaysEntry*>(sHolidaysStore.LookupEntry(holidayId));
             if (!entry)
                 continue;
 
             if (fields[1].IsNull())
                 continue;
 
-            time_t const startTime = fields[1].Get<uint64>();
+            const time_t startTime = fields[1].Get<uint64>();
             if (startTime == 0)
                 continue;
 
@@ -1210,14 +1208,13 @@ uint32 GameEventMgr::GetNPCFlag(Creature* cr)
 
 void GameEventMgr::Initialize()
 {
-    QueryResult result = WorldDatabase.Query("SELECT MAX(eventEntry) FROM game_event");
-    if (result)
+    if (const QueryResult result = WorldDatabase.Query("SELECT MAX(id) FROM world_game_event"))
     {
-        Field* fields = result->Fetch();
+        const Field* fields = result->Fetch();
 
         uint32 maxEventId = fields[0].Get<uint8>();
 
-        // Id starts with 1 and vector with 0, thus increment
+        // ID starts with 1 and vector with 0, thus increment
         maxEventId++;
 
         _gameEvent.resize(maxEventId);
@@ -1233,7 +1230,7 @@ void GameEventMgr::Initialize()
     }
 }
 
-uint32 GameEventMgr::StartSystem()                           // return the next event delay in ms
+uint32 GameEventMgr::StartSystem()  // Return the next event delay in ms
 {
     _activeEvents.clear();
     uint32 delay = Update();
@@ -1241,7 +1238,7 @@ uint32 GameEventMgr::StartSystem()                           // return the next 
     return delay;
 }
 
-uint32 GameEventMgr::Update()                               // return the next event delay in ms
+uint32 GameEventMgr::Update()  // Return the next event delay in ms
 {
     time_t currenttime = GameTime::GetGameTime().count();
     uint32 nextEventDelay = max_ge_check_delay;             // 1 day
@@ -1388,7 +1385,7 @@ void GameEventMgr::UpdateEventNPCFlags(uint16 eventId)
     {
         // get the creature data from the low guid to get the entry, to be able to find out the whole guid
         if (CreatureData const* data = sObjectMgr->GetCreatureData(itr->first))
-            creaturesByMap[data->mapid].insert(itr->first);
+            creaturesByMap[data->mapID].insert(itr->first);
     }
 
     for (auto const& p : creaturesByMap)
@@ -1403,7 +1400,7 @@ void GameEventMgr::UpdateEventNPCFlags(uint16 eventId)
                     Creature* creature = itr->second;
                     uint32 npcflag = GetNPCFlag(creature);
                     if (CreatureTemplate const* creatureTemplate = creature->GetCreatureTemplate())
-                        npcflag |= creatureTemplate->npcflag;
+                        npcflag |= creatureTemplate->FlagNPC;
 
                     creature->ReplaceAllNpcFlags(NPCFlags(npcflag));
                     // reset gossip options, since the flag change might have added / removed some
@@ -1452,7 +1449,7 @@ void GameEventMgr::GameEventSpawn(int16 eventId)
             sObjectMgr->AddCreatureToGrid(*itr, data);
 
             // Spawn if necessary (loaded grids only)
-            Map* map = sMapMgr->CreateBaseMap(data->mapid);
+            Map* map = sMapMgr->CreateBaseMap(data->mapID);
             // We use spawn coords to spawn
             if (!map->Instanceable() && map->IsGridLoaded(data->posX, data->posY))
             {
@@ -1475,10 +1472,10 @@ void GameEventMgr::GameEventSpawn(int16 eventId)
         // Add to correct cell
         if (GameObjectData const* data = sObjectMgr->GetGameObjectData(*itr))
         {
-            sObjectMgr->AddGameobjectToGrid(*itr, data);
+            sObjectMgr->AddGameObjectToGrid(*itr, data);
             // Spawn if necessary (loaded grids only)
             // this base map checked as non-instanced and then only existed
-            Map* map = sMapMgr->CreateBaseMap(data->mapid);
+            Map* map = sMapMgr->CreateBaseMap(data->mapID);
             // We use current coords to unspawn, not spawn coords since creature can have changed grid
             if (!map->Instanceable() && map->IsGridLoaded(data->posX, data->posY))
             {
@@ -1528,7 +1525,7 @@ void GameEventMgr::GameEventUnspawn(int16 eventId)
         {
             sObjectMgr->RemoveCreatureFromGrid(*itr, data);
 
-            sMapMgr->DoForAllMapsWithMapId(data->mapid, [&itr](Map* map)
+            sMapMgr->DoForAllMapsWithMapId(data->mapID, [&itr](Map* map)
             {
                 auto creatureBounds = map->GetCreatureBySpawnIdStore().equal_range(*itr);
                 for (auto itr2 = creatureBounds.first; itr2 != creatureBounds.second;)
@@ -1556,9 +1553,9 @@ void GameEventMgr::GameEventUnspawn(int16 eventId)
         // Remove the gameobject from grid
         if (GameObjectData const* data = sObjectMgr->GetGameObjectData(*itr))
         {
-            sObjectMgr->RemoveGameobjectFromGrid(*itr, data);
+            sObjectMgr->RemoveGameObjectFromGrid(*itr, data);
 
-            sMapMgr->DoForAllMapsWithMapId(data->mapid, [&itr](Map* map)
+            sMapMgr->DoForAllMapsWithMapId(data->mapID, [&itr](Map* map)
             {
                 auto gameobjectBounds = map->GetGameObjectBySpawnIdStore().equal_range(*itr);
                 for (auto itr2 = gameobjectBounds.first; itr2 != gameobjectBounds.second;)
@@ -1592,7 +1589,7 @@ void GameEventMgr::ChangeEquipOrModel(int16 eventId, bool activate)
             continue;
 
         // Update if spawned
-        sMapMgr->DoForAllMapsWithMapId(data->mapid, [&itr, activate](Map* map)
+        sMapMgr->DoForAllMapsWithMapId(data->mapID, [&itr, activate](Map* map)
         {
             auto creatureBounds = map->GetCreatureBySpawnIdStore().equal_range(itr->first);
             for (auto itr2 = creatureBounds.first; itr2 != creatureBounds.second; ++itr2)
@@ -1627,14 +1624,14 @@ void GameEventMgr::ChangeEquipOrModel(int16 eventId, bool activate)
         if (activate)
         {
             itr->second.ModelIdPrev = data2.displayid;
-            itr->second.EquipementIdPrev = data2.equipmentId;
+            itr->second.EquipementIdPrev = data2.equipmentID;
             data2.displayid = itr->second.ModelId;
-            data2.equipmentId = itr->second.EquipmentId;
+            data2.equipmentID = itr->second.EquipmentId;
         }
         else
         {
             data2.displayid = itr->second.ModelIdPrev;
-            data2.equipmentId = itr->second.EquipementIdPrev;
+            data2.equipmentID = itr->second.EquipementIdPrev;
         }
     }
 }
@@ -1753,16 +1750,16 @@ void GameEventMgr::UpdateEventQuests(uint16 eventId, bool activate)
 void GameEventMgr::UpdateWorldStates(uint16 eventId, bool Activate)
 {
     GameEventData const& event = _gameEvent[eventId];
-    if (event.HolidayId != HOLIDAY_NONE)
+    if (event.HolidayID != HOLIDAY_NONE)
     {
-        BattlegroundTypeId bgTypeId = BattlegroundMgr::WeekendHolidayIdToBGType(event.HolidayId);
+        BattlegroundTypeId bgTypeId = BattlegroundMgr::WeekendHolidayIdToBGType(event.HolidayID);
         if (bgTypeId != BATTLEGROUND_TYPE_NONE)
         {
-            BattlemasterListEntry const* bl = sBattlemasterListStore.LookupEntry(bgTypeId);
-            if (bl && bl->HolidayWorldStateId)
+            const BattlemasterListEntry* bl = sBattlemasterListStore.LookupEntry(bgTypeId);
+            if (bl && bl->HolidayWorldStateID)
             {
                 WorldPackets::WorldState::UpdateWorldState worldstate;
-                worldstate.VariableID = bl->HolidayWorldStateId;
+                worldstate.VariableID = bl->HolidayWorldStateID;
                 worldstate.Value = Activate ? 1 : 0;
                 sWorldSessionMgr->SendGlobalMessage(worldstate.Write());
             }
@@ -1918,11 +1915,11 @@ void GameEventMgr::SetHolidayEventTime(GameEventData& event)
     if (!event.HolidayStage) // Ignore holiday
         return;
 
-    HolidaysEntry const* holiday = sHolidaysStore.LookupEntry(event.HolidayId);
+    HolidaysEntry const* holiday = sHolidaysStore.LookupEntry(event.HolidayID);
 
     if (!holiday->Date[0] || !holiday->Duration[0]) // Invalid definitions
     {
-        LOG_ERROR("sql.sql", "Missing date or duration for holiday {}.", event.HolidayId);
+        LOG_ERROR("sql.sql", "Missing date or duration for holiday {}.", event.HolidayID);
         return;
     }
 
@@ -2011,9 +2008,9 @@ uint32 GameEventMgr::GetHolidayEventId(uint32 holidayId) const
 
     for (auto const& eventEntry : events)
     {
-        if (eventEntry.HolidayId == holidayId)
+        if (eventEntry.HolidayID == holidayId)
         {
-            return eventEntry.EventId;
+            return eventEntry.EventID;
         }
     }
 
@@ -2029,7 +2026,7 @@ bool IsHolidayActive(HolidayIds id)
     GameEventMgr::ActiveEvents const& ae = sGameEventMgr->GetActiveEventList();
 
     for (GameEventMgr::ActiveEvents::const_iterator itr = ae.begin(); itr != ae.end(); ++itr)
-        if (events[*itr].HolidayId == id)
+        if (events[*itr].HolidayID == id)
             return true;
 
     return false;

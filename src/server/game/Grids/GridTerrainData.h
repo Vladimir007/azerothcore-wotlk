@@ -18,96 +18,24 @@
 #ifndef GRID_TERRAIN_DATA_H
 #define GRID_TERRAIN_DATA_H
 
-#include "Common.h"
 #include <fstream>
-#include <G3D/Plane.h>
 #include <memory>
+#include <G3D/Plane.h>
+#include "MapDefines.h"
 
-#define MAX_HEIGHT            100000.0f                     // can be use for find ground height at surface
-#define INVALID_HEIGHT       -100000.0f                     // for check, must be equal to VMAP_INVALID_HEIGHT, real value for unknown height is VMAP_INVALID_HEIGHT_VALUE
-#define MAX_FALL_DISTANCE     250000.0f                     // "unlimited fall" to find VMap ground if it is available, just larger than MAX_HEIGHT - INVALID_HEIGHT
-#define MIN_HEIGHT           -500.0f
+enum LiquidStatus : uint32
+{
+    LIQUID_MAP_NO_WATER     = 0x0,
+    LIQUID_MAP_ABOVE_WATER  = 0x1,
+    LIQUID_MAP_WATER_WALK   = 0x2,
+    LIQUID_MAP_IN_WATER     = 0x4,
+    LIQUID_MAP_UNDER_WATER  = 0x8,
+};
 
 #define MAP_LIQUID_STATUS_SWIMMING (LIQUID_MAP_IN_WATER | LIQUID_MAP_UNDER_WATER)
 #define MAP_LIQUID_STATUS_IN_CONTACT (MAP_LIQUID_STATUS_SWIMMING | LIQUID_MAP_WATER_WALK)
 
-#define MAP_LIQUID_TYPE_NO_WATER    0x00
-#define MAP_LIQUID_TYPE_WATER       0x01
-#define MAP_LIQUID_TYPE_OCEAN       0x02
-#define MAP_LIQUID_TYPE_MAGMA       0x04
-#define MAP_LIQUID_TYPE_SLIME       0x08
 
-#define MAP_ALL_LIQUIDS   (MAP_LIQUID_TYPE_WATER | MAP_LIQUID_TYPE_OCEAN | MAP_LIQUID_TYPE_MAGMA | MAP_LIQUID_TYPE_SLIME)
-
-#define MAP_LIQUID_TYPE_DARK_WATER  0x10
-
-// ******************************************
-// Map file format defines
-// ******************************************
-union u_map_magic
-{
-    char asChar[4];
-    uint32 asUInt;
-};
-
-const u_map_magic MapMagic        = { {'M', 'A', 'P', 'S'} };
-const uint32 MapVersionMagic      = 9;
-const u_map_magic MapAreaMagic    = { {'A', 'R', 'E', 'A'} };
-const u_map_magic MapHeightMagic  = { {'M', 'H', 'G', 'T'} };
-const u_map_magic MapLiquidMagic  = { {'M', 'L', 'I', 'Q'} };
-
-struct map_fileheader
-{
-    uint32 mapMagic;
-    uint32 versionMagic;
-    uint32 buildMagic;
-    uint32 areaMapOffset;
-    uint32 areaMapSize;
-    uint32 heightMapOffset;
-    uint32 heightMapSize;
-    uint32 liquidMapOffset;
-    uint32 liquidMapSize;
-    uint32 holesOffset;
-    uint32 holesSize;
-};
-
-#define MAP_AREA_NO_AREA      0x0001
-
-struct map_areaHeader
-{
-    uint32 fourcc;
-    uint16 flags;
-    uint16 gridArea;
-};
-
-#define MAP_HEIGHT_NO_HEIGHT            0x0001
-#define MAP_HEIGHT_AS_INT16             0x0002
-#define MAP_HEIGHT_AS_INT8              0x0004
-#define MAP_HEIGHT_HAS_FLIGHT_BOUNDS    0x0008
-
-struct map_heightHeader
-{
-    uint32 fourcc;
-    uint32 flags;
-    float  gridHeight;
-    float  gridMaxHeight;
-};
-
-#define MAP_LIQUID_NO_TYPE    0x0001
-#define MAP_LIQUID_NO_HEIGHT  0x0002
-
-struct map_liquidHeader
-{
-    uint32 fourcc;
-    uint8 flags;
-    uint8 liquidFlags;
-    uint16 liquidType;
-    uint8  offsetX;
-    uint8  offsetY;
-    uint8  width;
-    uint8  height;
-    float  liquidLevel;
-};
 
 // ******************************************
 // Loaded map data structures
@@ -186,14 +114,7 @@ struct LoadedHoleData
     HolesType holes;
 };
 
-enum LiquidStatus : uint32
-{
-    LIQUID_MAP_NO_WATER     = 0x00000000,
-    LIQUID_MAP_ABOVE_WATER  = 0x00000001,
-    LIQUID_MAP_WATER_WALK   = 0x00000002,
-    LIQUID_MAP_IN_WATER     = 0x00000004,
-    LIQUID_MAP_UNDER_WATER  = 0x00000008
-};
+
 
 struct LiquidData
 {
@@ -246,7 +167,7 @@ public:
     TerrainMapDataReadResult Load(std::string const& mapFileName);
 
     uint16 getArea(float x, float y) const;
-    inline float getHeight(float x, float y) const { return (this->*_gridGetHeight)(x, y); }
+    float getHeight(float x, float y) const { return (this->*_gridGetHeight)(x, y); }
     float getMinHeight(float x, float y) const;
     float getLiquidLevel(float x, float y) const;
     LiquidData const GetLiquidData(float x, float y, float z, float collisionHeight, Optional<uint8> ReqLiquidType) const;

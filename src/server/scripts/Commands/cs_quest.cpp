@@ -35,11 +35,11 @@ public:
     {
         static ChatCommandTable questCommandTable =
         {
-            { "add",      HandleQuestAdd,      SEC_GAMEMASTER, Console::Yes },
-            { "complete", HandleQuestComplete, SEC_GAMEMASTER, Console::Yes },
-            { "remove",   HandleQuestRemove,   SEC_GAMEMASTER, Console::Yes },
-            { "reward",   HandleQuestReward,   SEC_GAMEMASTER, Console::Yes },
-            { "status",   HandleQuestStatus,   SEC_GAMEMASTER, Console::Yes },
+            { "add",      HandleQuestAdd,      SEC_GAME_MASTER, Console::Yes },
+            { "complete", HandleQuestComplete, SEC_GAME_MASTER, Console::Yes },
+            { "remove",   HandleQuestRemove,   SEC_GAME_MASTER, Console::Yes },
+            { "reward",   HandleQuestReward,   SEC_GAME_MASTER, Console::Yes },
+            { "status",   HandleQuestStatus,   SEC_GAME_MASTER, Console::Yes },
         };
         static ChatCommandTable commandTable =
         {
@@ -193,7 +193,7 @@ public:
                 stmt->SetData(0, requiredItem);
                 stmt->SetData(1, guid);
 
-                PreparedQueryResult result = CharacterDatabase.Query(stmt);
+                QueryResult result = CharacterDatabase.Query(stmt);
 
                 if (result)
                 {
@@ -411,7 +411,7 @@ public:
                 stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_REP_BY_FACTION);
                 stmt->SetData(0, repFaction);
                 stmt->SetData(1, guid);
-                PreparedQueryResult result = CharacterDatabase.Query(stmt);
+                QueryResult result = CharacterDatabase.Query(stmt);
 
                 if (result)
                 {
@@ -441,7 +441,7 @@ public:
                 stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_REP_BY_FACTION);
                 stmt->SetData(0, repFaction);
                 stmt->SetData(1, guid);
-                PreparedQueryResult result = CharacterDatabase.Query(stmt);
+                QueryResult result = CharacterDatabase.Query(stmt);
 
                 if (result)
                 {
@@ -535,7 +535,7 @@ public:
                 stmt->SetData(0, requiredItem);
                 stmt->SetData(1, guid);
 
-                PreparedQueryResult result = CharacterDatabase.Query(stmt);
+                QueryResult result = CharacterDatabase.Query(stmt);
 
                 if (result)
                 {
@@ -557,7 +557,7 @@ public:
                 stmt->SetData(0, sourceItem);
                 stmt->SetData(1, guid);
 
-                PreparedQueryResult result = CharacterDatabase.Query(stmt);
+                QueryResult result = CharacterDatabase.Query(stmt);
 
                 if (result)
                 {

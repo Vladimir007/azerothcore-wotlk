@@ -1,20 +1,3 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "EventMap.h"
 #include "Random.h"
 
@@ -25,27 +8,27 @@ void EventMap::Reset()
     _phaseMask = 0;
 }
 
-void EventMap::SetPhase(PhaseIndex phase)
+void EventMap::SetPhase(const PhaseIndex phase)
 {
     if (!phase)
         _phaseMask = 0;
     else if (phase <= sizeof(PhaseMask) * 8)
-        _phaseMask = PhaseMask(1u << (phase - 1u));
+        _phaseMask = static_cast<PhaseMask>(1u << (phase - 1u));
 }
 
-void EventMap::AddPhase(PhaseIndex phase)
+void EventMap::AddPhase(const PhaseIndex phase)
 {
     if (phase && phase <= sizeof(PhaseMask) * 8)
-        _phaseMask |= PhaseMask(1u << (phase - 1u));
+        _phaseMask |= static_cast<PhaseMask>(1u << (phase - 1u));
 }
 
-void EventMap::RemovePhase(PhaseIndex phase)
+void EventMap::RemovePhase(const PhaseIndex phase)
 {
     if (phase && phase <= sizeof(PhaseMask) * 8)
-        _phaseMask &= PhaseMask(~(1u << (phase - 1u)));
+        _phaseMask &= static_cast<PhaseMask>(~(1u << (phase - 1u)));
 }
 
-void EventMap::ScheduleEvent(EventId eventId, Milliseconds time, GroupIndex group /*= 0u*/, PhaseIndex phase /*= 0u*/)
+void EventMap::ScheduleEvent(const EventId eventId, const Milliseconds time, const GroupIndex group /*= 0u*/, const PhaseIndex phase /*= 0u*/)
 {
     if (group > sizeof(GroupMask) * 8)
         return;
@@ -56,29 +39,29 @@ void EventMap::ScheduleEvent(EventId eventId, Milliseconds time, GroupIndex grou
     _eventMap.emplace(_time + time, Event(eventId, group, phase));
 }
 
-void EventMap::ScheduleEvent(EventId eventId, Milliseconds minTime, Milliseconds maxTime, GroupIndex group /*= 0u*/, PhaseIndex phase /*= 0u*/)
+void EventMap::ScheduleEvent(const EventId eventId, const Milliseconds minTime, const Milliseconds maxTime, const GroupIndex group /*= 0u*/, const PhaseIndex phase /*= 0u*/)
 {
     ScheduleEvent(eventId, randtime(minTime, maxTime), group, phase);
 }
 
-void EventMap::RescheduleEvent(EventId eventId, Milliseconds minTime, Milliseconds maxTime, GroupIndex group /*= 0u*/, PhaseIndex phase /*= 0u*/)
+void EventMap::RescheduleEvent(const EventId eventId, const Milliseconds minTime, const Milliseconds maxTime, const GroupIndex group /*= 0u*/, const PhaseIndex phase /*= 0u*/)
 {
     CancelEvent(eventId);
     ScheduleEvent(eventId, randtime(minTime, maxTime), group, phase);
 }
 
-void EventMap::RescheduleEvent(EventId eventId, Milliseconds time, GroupIndex group /*= 0u*/, PhaseIndex phase /*= 0u*/)
+void EventMap::RescheduleEvent(const EventId eventId, const Milliseconds time, const GroupIndex group /*= 0u*/, const PhaseIndex phase /*= 0u*/)
 {
     CancelEvent(eventId);
     ScheduleEvent(eventId, time, group, phase);
 }
 
-void EventMap::Repeat(Milliseconds time)
+void EventMap::Repeat(const Milliseconds time)
 {
     _eventMap.emplace(_time + time, _lastEvent);
 }
 
-void EventMap::Repeat(Milliseconds minTime, Milliseconds maxTime)
+void EventMap::Repeat(const Milliseconds minTime, const Milliseconds maxTime)
 {
     Repeat(randtime(minTime, maxTime));
 }
@@ -91,11 +74,12 @@ EventMap::EventId EventMap::ExecuteEvent()
 
         if (itr->first > _time)
             return 0;
-        else if (_phaseMask && itr->second._phaseMask && !(itr->second._phaseMask & _phaseMask))
+
+        if (_phaseMask && itr->second._phaseMask && !(itr->second._phaseMask & _phaseMask))
             _eventMap.erase(itr);
         else
         {
-            auto eventId = itr->second._id;
+            const auto eventId = itr->second._id;
             _lastEvent = itr->second;
             _eventMap.erase(itr);
             return eventId;
@@ -105,7 +89,7 @@ EventMap::EventId EventMap::ExecuteEvent()
     return 0;
 }
 
-void EventMap::DelayEvents(Milliseconds delay)
+void EventMap::DelayEvents(const Milliseconds delay)
 {
     if (Empty())
         return;
@@ -119,7 +103,7 @@ void EventMap::DelayEvents(Milliseconds delay)
     }
 }
 
-void EventMap::DelayEvents(Milliseconds delay, GroupIndex group)
+void EventMap::DelayEvents(const Milliseconds delay, const GroupIndex group)
 {
     if (group > sizeof(GroupMask) * 8 || Empty())
         return;
@@ -128,7 +112,7 @@ void EventMap::DelayEvents(Milliseconds delay, GroupIndex group)
 
     for (auto itr = _eventMap.begin(); itr != _eventMap.end();)
     {
-        if (!group || (itr->second._groupMask & GroupMask(1u << (group - 1u))))
+        if (!group || (itr->second._groupMask & static_cast<GroupMask>(1u << (group - 1u))))
         {
             delayed.emplace(itr->first + delay, itr->second);
             itr = _eventMap.erase(itr);
@@ -141,11 +125,11 @@ void EventMap::DelayEvents(Milliseconds delay, GroupIndex group)
     _eventMap.insert(delayed.begin(), delayed.end());
 }
 
-void EventMap::DelayEventsToMax(Milliseconds delay, GroupIndex group)
+void EventMap::DelayEventsToMax(const Milliseconds delay, const GroupIndex group)
 {
     for (auto itr = _eventMap.begin(); itr != _eventMap.end();)
     {
-        if (itr->first < _time + delay && (!group || (itr->second._groupMask & GroupMask(1u << (group - 1u)))))
+        if (itr->first < _time + delay && (!group || (itr->second._groupMask & static_cast<GroupMask>(1u << (group - 1u)))))
         {
             ScheduleEvent(itr->second._id, delay, group);
             _eventMap.erase(itr);
@@ -157,7 +141,7 @@ void EventMap::DelayEventsToMax(Milliseconds delay, GroupIndex group)
     }
 }
 
-void EventMap::CancelEvent(EventId eventId)
+void EventMap::CancelEvent(const EventId eventId)
 {
     if (Empty())
         return;
@@ -174,14 +158,14 @@ void EventMap::CancelEvent(EventId eventId)
     }
 }
 
-void EventMap::CancelEventGroup(GroupIndex group)
+void EventMap::CancelEventGroup(const GroupIndex group)
 {
     if (!group || group > sizeof(GroupMask) * 8 || Empty())
         return;
 
     for (auto itr = _eventMap.begin(); itr != _eventMap.end();)
     {
-        if (itr->second._groupMask & GroupMask(1u << (group - 1u)))
+        if (itr->second._groupMask & static_cast<GroupMask>(1u << (group - 1u)))
         {
             _eventMap.erase(itr);
             itr = _eventMap.begin();
@@ -192,12 +176,12 @@ void EventMap::CancelEventGroup(GroupIndex group)
     }
 }
 
-bool EventMap::IsInPhase(PhaseIndex phase) const
+bool EventMap::IsInPhase(const PhaseIndex phase) const
 {
-    return phase <= sizeof(PhaseIndex) * 8 && (!phase || _phaseMask & PhaseMask(1u << (phase - 1u)));
+    return phase <= sizeof(PhaseIndex) * 8 && (!phase || _phaseMask & static_cast<PhaseMask>(1u << (phase - 1u)));
 }
 
-Milliseconds EventMap::GetTimeUntilEvent(EventId eventId) const
+Milliseconds EventMap::GetTimeUntilEvent(const EventId eventId) const
 {
     for (auto const& [time, event] : _eventMap)
         if (eventId == event._id)
@@ -206,7 +190,7 @@ Milliseconds EventMap::GetTimeUntilEvent(EventId eventId) const
     return Milliseconds::max();
 }
 
-bool EventMap::HasTimeUntilEvent(EventId eventId) const
+bool EventMap::HasTimeUntilEvent(const EventId eventId) const
 {
     return GetTimeUntilEvent(eventId) != Milliseconds::max();
 }

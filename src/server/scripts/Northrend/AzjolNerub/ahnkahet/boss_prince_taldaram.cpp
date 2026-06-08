@@ -326,7 +326,7 @@ struct boss_taldaram : public BossAI
 
     void SpellHitTarget(Unit* /*target*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_CONJURE_FLAME_SPHERE)
+        if (spellInfo->ID == SPELL_CONJURE_FLAME_SPHERE)
             summons.DoAction(ACTION_SPHERE);
     }
 

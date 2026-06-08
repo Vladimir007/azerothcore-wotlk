@@ -145,7 +145,7 @@ public:
 
     typedef std::list<ArenaTeamMember> MemberList;
 
-    [[nodiscard]] uint32 GetId() const              { return TeamId; }
+    [[nodiscard]] uint32 GetId() const              { return Team; }
     [[nodiscard]] uint32 GetType() const            { return Type; }
     [[nodiscard]] uint8  GetSlot() const            { return GetSlotByType(GetType()); }
     static uint8 GetSlotByType(uint32 type);
@@ -218,7 +218,7 @@ public:
     static std::unordered_map<uint8, uint8> ArenaReqPlayersForType; // Type -> Players count
 
 protected:
-    uint32      TeamId;
+    uint32      Team;
     uint8       Type;
     std::string TeamName;
     ObjectGuid  CaptainGuid;

@@ -209,7 +209,7 @@ struct instance_eye_of_eternity : public InstanceScript
                 return _pokeAchievementValid;
             case ACHIEV_CRITERIA_DENYIN_THE_SCION_10:
             case ACHIEV_CRITERIA_DENYIN_THE_SCION_25:
-                return source && source->GetVehicle() && source->GetVehicle()->GetVehicleInfo()->m_ID == 224;
+                return source && source->GetVehicle() && source->GetVehicle()->GetVehicleInfo()->ID == 224;
         }
         return false;
     }

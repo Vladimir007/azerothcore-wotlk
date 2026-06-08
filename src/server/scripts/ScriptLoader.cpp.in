@@ -9,8 +9,3 @@
 void AddScripts()
 {
 @NCORE_SCRIPTS_INVOKE@}
-
-char const* GetBuildDirective()
-{
-    return AC_BUILD_TYPE;
-}

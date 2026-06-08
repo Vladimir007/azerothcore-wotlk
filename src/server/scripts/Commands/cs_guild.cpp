@@ -31,13 +31,13 @@ public:
     {
         static ChatCommandTable guildCommandTable =
         {
-            { "create",     HandleGuildCreateCommand,   SEC_GAMEMASTER, Console::Yes },
-            { "delete",     HandleGuildDeleteCommand,   SEC_GAMEMASTER, Console::Yes },
-            { "invite",     HandleGuildInviteCommand,   SEC_GAMEMASTER, Console::Yes },
-            { "uninvite",   HandleGuildUninviteCommand, SEC_GAMEMASTER, Console::Yes },
-            { "rank",       HandleGuildRankCommand,     SEC_GAMEMASTER, Console::Yes },
-            { "rename",     HandleGuildRenameCommand,   SEC_GAMEMASTER, Console::Yes },
-            { "info",       HandleGuildInfoCommand,     SEC_GAMEMASTER, Console::Yes }
+            { "create",     HandleGuildCreateCommand,   SEC_GAME_MASTER, Console::Yes },
+            { "delete",     HandleGuildDeleteCommand,   SEC_GAME_MASTER, Console::Yes },
+            { "invite",     HandleGuildInviteCommand,   SEC_GAME_MASTER, Console::Yes },
+            { "uninvite",   HandleGuildUninviteCommand, SEC_GAME_MASTER, Console::Yes },
+            { "rank",       HandleGuildRankCommand,     SEC_GAME_MASTER, Console::Yes },
+            { "rename",     HandleGuildRenameCommand,   SEC_GAME_MASTER, Console::Yes },
+            { "info",       HandleGuildInfoCommand,     SEC_GAME_MASTER, Console::Yes }
         };
         static ChatCommandTable commandTable =
         {

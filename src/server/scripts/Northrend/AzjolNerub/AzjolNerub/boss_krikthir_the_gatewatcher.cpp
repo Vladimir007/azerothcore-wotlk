@@ -218,7 +218,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_SUBBOSS_AGGRO_TRIGGER)
+            if (spellInfo->ID == SPELL_SUBBOSS_AGGRO_TRIGGER)
             {
                 if (_minionsEngaged == 2 && _firstCall)
                     return;

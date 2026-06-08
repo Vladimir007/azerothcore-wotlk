@@ -50,13 +50,13 @@ public:
     virtual void OnOpenStateChange(bool /*open*/) { }
 
     // Called after the world configuration is (re)loaded.
-    virtual void OnAfterConfigLoad(bool /*reload*/) { }
+    virtual void OnAfterConfigLoad() { }
 
     // Called when loading custom database tables
     virtual void OnLoadCustomDatabaseTable() { }
 
     // Called before the world configuration is (re)loaded.
-    virtual void OnBeforeConfigLoad(bool /*reload*/) { }
+    virtual void OnBeforeConfigLoad() { }
 
     // Called before the message of the day is changed.
     virtual void OnMotdChange(std::string& /*newMotd*/, LocaleConstant& /*locale*/) { }

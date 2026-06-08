@@ -163,7 +163,7 @@ struct boss_terestian_illhoof : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_BROKEN_PACT)
+        if (spell->ID == SPELL_BROKEN_PACT)
         {
             scheduler.Schedule(45s, [this](TaskContext /*context*/) {
                 SummonKilrek();

@@ -240,7 +240,7 @@ public:
         CloseGossipMenuFor(player);
 
         creature->AI()->DoAction(instance->GetData(DATA_ESCORT_PROGRESS));
-        creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+        creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
         return true;
     }
 
@@ -495,7 +495,7 @@ public:
             combatEvents.Reset();
             summons.DespawnAll();
 
-            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
             instance->SetData(DATA_THRALL_REPOSITION, 1);
 
             uint32 data = instance->GetData(DATA_ESCORT_PROGRESS);
@@ -888,7 +888,7 @@ public:
                     break;
                 case EVENT_EROZION_FLAGS:
                     if (Creature* erozion = summons.GetCreatureWithEntry(NPC_EROZION))
-                        erozion->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+                        erozion->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
                     break;
             }
         }
@@ -929,7 +929,7 @@ public:
             SetEscortPaused(true);
             SetDespawnAtEnd(false);
 
-            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUESTGIVER);
+            me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP | UNIT_NPC_FLAG_QUEST_GIVER);
 
             if (data < ENCOUNTER_PROGRESS_THRALL_ARMORED)
             {

@@ -17,6 +17,7 @@
 
 #include "AreaDefines.h"
 #include "CreatureScript.h"
+#include "MapDefines.h"
 #include "PassiveAI.h"
 #include "Player.h"
 #include "ScriptedCreature.h"
@@ -109,7 +110,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (phase || spell->Id != SPELL_SET_CART)
+            if (phase || spell->ID != SPELL_SET_CART)
                 return;
 
             Player* player = caster->ToPlayer();
@@ -612,7 +613,7 @@ public:
 
         void SpellHit(Unit* unit, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_NEURAL_NEEDLE && unit->IsPlayer())
+            if (spell->ID == SPELL_NEURAL_NEEDLE && unit->IsPlayer())
             {
                 if (Player* player = unit->ToPlayer())
                 {

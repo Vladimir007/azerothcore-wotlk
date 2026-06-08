@@ -34,13 +34,13 @@ public:
     {
         static ChatCommandTable HandleItemRestoreCommandTable =
         {
-            { "list",      HandleItemRestoreListCommand,        SEC_GAMEMASTER,    Console::Yes },
-            { "",          HandleItemRestoreCommand,            SEC_GAMEMASTER,    Console::Yes },
+            { "list",      HandleItemRestoreListCommand,        SEC_GAME_MASTER,    Console::Yes },
+            { "",          HandleItemRestoreCommand,            SEC_GAME_MASTER,    Console::Yes },
         };
         static ChatCommandTable itemCommandTable =
         {
             { "restore",   HandleItemRestoreCommandTable },
-            { "move",      HandleItemMoveCommand,               SEC_GAMEMASTER,    Console::Yes },
+            { "move",      HandleItemMoveCommand,               SEC_GAME_MASTER,    Console::Yes },
             { "refund",    HandleItemRefundCommand,             SEC_ADMINISTRATOR, Console::Yes },
         };
         static ChatCommandTable commandTable =
@@ -66,7 +66,7 @@ public:
         // Check existence of item in recovery table
         CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_RECOVERY_ITEM);
         stmt->SetData(0, restoreId);
-        PreparedQueryResult fields = CharacterDatabase.Query(stmt);
+        QueryResult fields = CharacterDatabase.Query(stmt);
 
         if (!fields || !(*fields)[1].Get<uint32>() || (*fields)[3].Get<uint32>() != player.GetGUID().GetCounter())
         {
@@ -121,7 +121,7 @@ public:
 
         CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_RECOVERY_ITEM_LIST);
         stmt->SetData(0, player.GetGUID().GetCounter());
-        PreparedQueryResult disposedItems = CharacterDatabase.Query(stmt);
+        QueryResult disposedItems = CharacterDatabase.Query(stmt);
 
         if (!disposedItems)
         {
@@ -198,42 +198,42 @@ public:
                 return false;
             }
 
-            if (iece->reqhonorpoints)
+            if (iece->ReqHonorPoints)
             {
-                uint32 honor = target->GetHonorPoints() + iece->reqhonorpoints;
+                uint32 honor = target->GetHonorPoints() + iece->ReqHonorPoints;
                 if (honor > sWorld->getIntConfig(CONFIG_MAX_HONOR_POINTS))
                 {
-                    handler->SendErrorMessage(LANG_CMD_ITEM_REFUND_MAX_HONOR, item->Name1, item->ItemId, sWorld->getIntConfig(CONFIG_MAX_HONOR_POINTS), target->GetHonorPoints(), iece->reqhonorpoints);
+                    handler->SendErrorMessage(LANG_CMD_ITEM_REFUND_MAX_HONOR, item->Name1, item->ItemId, sWorld->getIntConfig(CONFIG_MAX_HONOR_POINTS), target->GetHonorPoints(), iece->ReqHonorPoints);
                     ChatHandler(target->GetSession()).PSendSysMessage(LANG_CMD_ITEM_REFUND_HONOR_FAILED, item->Name1);
                     return false;
                 }
 
                 target->SetHonorPoints(honor);
-                ChatHandler(target->GetSession()).PSendSysMessage(LANG_CMD_ITEM_REFUNDED_HONOR, item->Name1, item->ItemId, iece->reqhonorpoints);
-                handler->PSendSysMessage(LANG_CMD_ITEM_REFUNDED_HONOR, item->Name1, item->ItemId, iece->reqhonorpoints);
+                ChatHandler(target->GetSession()).PSendSysMessage(LANG_CMD_ITEM_REFUNDED_HONOR, item->Name1, item->ItemId, iece->ReqHonorPoints);
+                handler->PSendSysMessage(LANG_CMD_ITEM_REFUNDED_HONOR, item->Name1, item->ItemId, iece->ReqHonorPoints);
             }
 
-            if (iece->reqarenapoints)
+            if (iece->ReqArenaPoints)
             {
-                uint32 arenapoints = target->GetArenaPoints() + iece->reqarenapoints;
+                uint32 arenapoints = target->GetArenaPoints() + iece->ReqArenaPoints;
                 if (arenapoints > sWorld->getIntConfig(CONFIG_MAX_ARENA_POINTS))
                 {
-                    handler->SendErrorMessage(LANG_CMD_ITEM_REFUND_MAX_AP, item->Name1, item->ItemId, sWorld->getIntConfig(CONFIG_MAX_ARENA_POINTS), target->GetArenaPoints(), iece->reqarenapoints);
+                    handler->SendErrorMessage(LANG_CMD_ITEM_REFUND_MAX_AP, item->Name1, item->ItemId, sWorld->getIntConfig(CONFIG_MAX_ARENA_POINTS), target->GetArenaPoints(), iece->ReqArenaPoints);
                     ChatHandler(target->GetSession()).PSendSysMessage(LANG_CMD_ITEM_REFUND_AP_FAILED, item->Name1);
                     return false;
                 }
 
                 target->SetArenaPoints(arenapoints);
-                ChatHandler(target->GetSession()).PSendSysMessage(LANG_CMD_ITEM_REFUNDED_AP, item->Name1, item->ItemId, iece->reqarenapoints);
-                handler->PSendSysMessage(LANG_CMD_ITEM_REFUNDED_AP, item->Name1, item->ItemId, iece->reqarenapoints);
+                ChatHandler(target->GetSession()).PSendSysMessage(LANG_CMD_ITEM_REFUNDED_AP, item->Name1, item->ItemId, iece->ReqArenaPoints);
+                handler->PSendSysMessage(LANG_CMD_ITEM_REFUNDED_AP, item->Name1, item->ItemId, iece->ReqArenaPoints);
             }
 
             uint8 count = 0;
-            for (uint32 const& reqItem : iece->reqitem)
+            for (uint32 const& reqItem : iece->ReqItem)
             {
                 if (reqItem)
                 {
-                    target->AddItem(reqItem, iece->reqitemcount[count]);
+                    target->AddItem(reqItem, iece->ReqItemCount[count]);
                 }
 
                 ++count;
@@ -252,56 +252,56 @@ public:
             stmt->SetData(0, itemId);
             stmt->SetData(1, guid);
 
-            PreparedQueryResult result = CharacterDatabase.Query(stmt);
+            QueryResult result = CharacterDatabase.Query(stmt);
 
             if (result)
             {
-                if (iece->reqhonorpoints)
+                if (iece->ReqHonorPoints)
                 {
                     stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_HONORPOINTS);
                     stmt->SetData(0, guid);
 
-                    PreparedQueryResult queryResult = CharacterDatabase.Query(stmt);
+                    QueryResult queryResult = CharacterDatabase.Query(stmt);
 
                     if (queryResult)
                     {
                         Field* fields = queryResult->Fetch();
-                        if ((fields[0].Get<uint32>() + iece->reqhonorpoints) > sWorld->getIntConfig(CONFIG_MAX_HONOR_POINTS))
+                        if ((fields[0].Get<uint32>() + iece->ReqHonorPoints) > sWorld->getIntConfig(CONFIG_MAX_HONOR_POINTS))
                         {
-                            handler->SendErrorMessage(LANG_CMD_ITEM_REFUND_MAX_HONOR, item->Name1, item->ItemId, sWorld->getIntConfig(CONFIG_MAX_HONOR_POINTS), fields[0].Get<uint32>(), iece->reqhonorpoints);
+                            handler->SendErrorMessage(LANG_CMD_ITEM_REFUND_MAX_HONOR, item->Name1, item->ItemId, sWorld->getIntConfig(CONFIG_MAX_HONOR_POINTS), fields[0].Get<uint32>(), iece->ReqHonorPoints);
                             return false;
                         }
                     }
 
                     stmt = CharacterDatabase.GetPreparedStatement(CHAR_UDP_CHAR_HONOR_POINTS_ACCUMULATIVE);
-                    stmt->SetData(0, iece->reqhonorpoints);
+                    stmt->SetData(0, iece->ReqHonorPoints);
                     stmt->SetData(1, guid);
                     trans->Append(stmt);
-                    handler->PSendSysMessage(LANG_CMD_ITEM_REFUNDED_HONOR, item->Name1, item->ItemId, iece->reqhonorpoints);
+                    handler->PSendSysMessage(LANG_CMD_ITEM_REFUNDED_HONOR, item->Name1, item->ItemId, iece->ReqHonorPoints);
                 }
 
-                if (iece->reqarenapoints)
+                if (iece->ReqArenaPoints)
                 {
                     stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_ARENAPOINTS);
                     stmt->SetData(0, guid);
 
-                    PreparedQueryResult queryResult = CharacterDatabase.Query(stmt);
+                    QueryResult queryResult = CharacterDatabase.Query(stmt);
 
                     if (queryResult)
                     {
                         Field* fields = queryResult->Fetch();
-                        if ((fields[0].Get<uint32>() + iece->reqhonorpoints) > sWorld->getIntConfig(CONFIG_MAX_ARENA_POINTS))
+                        if ((fields[0].Get<uint32>() + iece->ReqHonorPoints) > sWorld->getIntConfig(CONFIG_MAX_ARENA_POINTS))
                         {
-                            handler->SendErrorMessage(LANG_CMD_ITEM_REFUND_MAX_AP, item->Name1, item->ItemId, sWorld->getIntConfig(CONFIG_MAX_ARENA_POINTS), fields[0].Get<uint32>(), iece->reqarenapoints);
+                            handler->SendErrorMessage(LANG_CMD_ITEM_REFUND_MAX_AP, item->Name1, item->ItemId, sWorld->getIntConfig(CONFIG_MAX_ARENA_POINTS), fields[0].Get<uint32>(), iece->ReqArenaPoints);
                             return false;
                         }
                     }
 
                     stmt = CharacterDatabase.GetPreparedStatement(CHAR_UDP_CHAR_ARENA_POINTS_ACCUMULATIVE);
-                    stmt->SetData(0, iece->reqarenapoints);
+                    stmt->SetData(0, iece->ReqArenaPoints);
                     stmt->SetData(1, guid);
                     trans->Append(stmt);
-                    handler->PSendSysMessage(LANG_CMD_ITEM_REFUNDED_AP, item->Name1, item->ItemId, iece->reqarenapoints);
+                    handler->PSendSysMessage(LANG_CMD_ITEM_REFUNDED_AP, item->Name1, item->ItemId, iece->ReqArenaPoints);
                 }
 
                 MailSender sender(MAIL_NORMAL, guid, MAIL_STATIONERY_GM);
@@ -311,7 +311,7 @@ public:
 
                 uint8 count      = 0;
                 bool  foundItems = false;
-                for (uint32 const& reqItem : iece->reqitem)
+                for (uint32 const& reqItem : iece->ReqItem)
                 {
                     if (reqItem)
                     {
@@ -321,7 +321,7 @@ public:
                             continue;
                         }
 
-                        if (Item* item = Item::CreateItem(reqItem, iece->reqitemcount[count]))
+                        if (Item* item = Item::CreateItem(reqItem, iece->ReqItemCount[count]))
                         {
                             item->SaveToDB(trans);
                             draft.AddItem(item);

@@ -30,7 +30,7 @@ ChannelMgr::~ChannelMgr()
     channels.clear();
 }
 
-ChannelMgr* ChannelMgr::forTeam(TeamId teamId)
+ChannelMgr* ChannelMgr::forTeam(TeamID teamId)
 {
     static ChannelMgr allianceChannelMgr(TEAM_ALLIANCE);
     static ChannelMgr hordeChannelMgr(TEAM_HORDE);
@@ -67,7 +67,7 @@ void ChannelMgr::LoadChannels()
 
         uint32 channelDBId = fields[0].Get<uint32>();
         std::string channelName = fields[1].Get<std::string>();
-        TeamId team = TeamId(fields[2].Get<uint32>());
+        TeamID team = TeamID(fields[2].Get<uint32>());
         std::string password = fields[5].Get<std::string>();
 
         std::wstring channelWName;

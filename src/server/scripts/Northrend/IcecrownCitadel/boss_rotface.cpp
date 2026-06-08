@@ -229,7 +229,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spell) override
         {
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_SLIME_SPRAY:
                     Talk(SAY_SLIME_SPRAY);
@@ -247,7 +247,7 @@ public:
                 case 69798:
                 case 69801:
                     {
-                        uint32 index = getOozeFloodSpellIndex(spell->Id);
+                        uint32 index = getOozeFloodSpellIndex(spell->ID);
                         if (target->GetGUID() == _oozeFloodDummyGUIDs[index][0] || target->GetGUID() == _oozeFloodDummyGUIDs[index][1])
                             target->CastSpell((Unit*)nullptr, spell->Effects[0].CalcValue(), false);
                     }
@@ -518,7 +518,7 @@ class spell_rotface_mutated_infection : public SpellScript
     {
         // remove targets with this aura already
         // tank is not on this list
-        targets.remove_if(Acore::UnitAuraCheck(true, GetSpellInfo()->Id));
+        targets.remove_if(Acore::UnitAuraCheck(true, GetSpellInfo()->ID));
         targets.remove(GetCaster()->GetVictim());
         if (targets.empty())
             return;

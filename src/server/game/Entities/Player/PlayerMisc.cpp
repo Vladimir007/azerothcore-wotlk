@@ -24,55 +24,6 @@
 #include "WorldSession.h"
 
 /*********************************************************/
-/***               FLOOD FILTER SYSTEM                 ***/
-/*********************************************************/
-
-void Player::UpdateSpeakTime(ChatFloodThrottle::Index index)
-{
-    // ignore chat spam protection for GMs in any mode
-    if (!AccountMgr::IsPlayerAccount(GetSession()->GetSecurity()))
-        return;
-
-    uint32 limit, delay;
-    switch (index)
-    {
-         case ChatFloodThrottle::ADDON:
-             limit = sWorld->getIntConfig(CONFIG_CHATFLOOD_ADDON_MESSAGE_COUNT);
-             delay = sWorld->getIntConfig(CONFIG_CHATFLOOD_ADDON_MESSAGE_DELAY);
-             break;
-         case ChatFloodThrottle::REGULAR:
-             limit = sWorld->getIntConfig(CONFIG_CHATFLOOD_MESSAGE_COUNT);
-             delay = sWorld->getIntConfig(CONFIG_CHATFLOOD_MESSAGE_DELAY);
-             [[fallthrough]];
-         default:
-             return;
-    }
-    time_t current = GameTime::GetGameTime().count();
-    if (m_chatFloodData[index].Time > current)
-    {
-        ++m_chatFloodData[index].Count;
-        if (m_chatFloodData[index].Count >= limit)
-        {
-            // prevent overwrite mute time, if message send just before mutes set, for example.
-            time_t new_mute = current + sWorld->getIntConfig(CONFIG_CHATFLOOD_MUTE_TIME);
-            if (GetSession()->m_muteTime < new_mute)
-                GetSession()->m_muteTime = new_mute;
-
-            m_chatFloodData[index].Count = 0;
-        }
-    }
-    else
-        m_chatFloodData[index].Count = 1;
-
-    m_chatFloodData[index].Time = current + delay;
-}
-
-bool Player::CanSpeak() const
-{
-    return  GetSession()->m_muteTime <= time (nullptr);
-}
-
-/*********************************************************/
 /***              LOW LEVEL FUNCTIONS:Notifiers        ***/
 /*********************************************************/
 
@@ -382,7 +333,7 @@ void Player::UpdatePvPFlag(time_t currTime)
 
 void Player::UpdateFFAPvPFlag(time_t currTime)
 {
-    if (!IsFFAPvP() || sWorld->IsFFAPvPRealm() || !pvpInfo.FFAPvPEndTimer || currTime < pvpInfo.FFAPvPEndTimer + 30)
+    if (!IsFFAPvP() || !pvpInfo.FFAPvPEndTimer || currTime < pvpInfo.FFAPvPEndTimer + 30)
     {
         return;
     }

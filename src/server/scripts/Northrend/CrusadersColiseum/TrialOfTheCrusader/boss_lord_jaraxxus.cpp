@@ -148,13 +148,13 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case 66228:
                 case 67106:
                 case 67107:
                 case 67108:
-                    if (Aura* a = me->GetAura(spell->Id))
+                    if (Aura* a = me->GetAura(spell->ID))
                         a->SetStackAmount(spell->StackAmount);
                     break;
                 case 30449:

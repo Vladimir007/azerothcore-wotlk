@@ -38,7 +38,7 @@ public:
     void schedule_map_preload(uint32 mapid);
     void schedule_lfg_update(uint32 diff);
     void wait();
-    void activate(std::size_t num_threads);
+    void activate();
     void deactivate();
     bool activated();
     void update_finished();
@@ -47,8 +47,8 @@ private:
     void WorkerThread();
     ProducerConsumerQueue<UpdateRequest*> _queue;
     std::atomic<int> pending_requests;  // Use std::atomic for pending_requests to avoid lock contention
-    std::atomic<bool> _cancelationToken;  // Atomic flag for cancellation to avoid race conditions
-    std::vector<std::thread> _workerThreads;
+    std::atomic<bool> _cancellationToken;  // Atomic flag for cancellation to avoid race conditions
+    std::unique_ptr<std::thread> _workerThread{nullptr};
     std::mutex _lock; // Mutex and condition variable for synchronization
     std::condition_variable _condition;
 };

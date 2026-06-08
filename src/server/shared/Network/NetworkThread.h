@@ -1,35 +1,17 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef NETWORK_THREAD_H
+#define NETWORK_THREAD_H
 
-#ifndef NetworkThread_h__
-#define NetworkThread_h__
-
+#include <atomic>
+#include <memory>
+#include <mutex>
+#include <thread>
+#include <boost/asio/steady_timer.hpp>
+#include <boost/asio/ip/tcp.hpp>
 #include "Define.h"
 #include "Errors.h"
 #include "IoContext.h"
 #include "Log.h"
 #include "Socket.h"
-#include <boost/asio/ip/tcp.hpp>
-#include <boost/asio/steady_timer.hpp>
-#include <atomic>
-#include <memory>
-#include <mutex>
-#include <set>
-#include <thread>
 
 using boost::asio::ip::tcp;
 
@@ -37,17 +19,13 @@ template<class SocketType>
 class NetworkThread
 {
 public:
-    NetworkThread() :
-        _ioContext(1), _acceptSocket(_ioContext), _updateTimer(_ioContext), _proxyHeaderReadingEnabled(false) { }
+    NetworkThread(): _ioContext(1), _acceptSocket(_ioContext), _updateTimer(_ioContext) { }
 
     virtual ~NetworkThread()
     {
         Stop();
-
         if (_thread)
-        {
             Wait();
-        }
     }
 
     void Stop()
@@ -61,7 +39,7 @@ public:
         if (_thread)
             return false;
 
-        _thread = std::make_unique<std::thread>([this]() { NetworkThread::Run(); });
+        _thread = std::make_unique<std::thread>([this] { Run(); });
         return true;
     }
 
@@ -70,9 +48,7 @@ public:
         ASSERT(_thread);
 
         if (_thread->joinable())
-        {
             _thread->join();
-        }
 
         _thread.reset();
     }
@@ -84,7 +60,7 @@ public:
 
     virtual void AddSocket(std::shared_ptr<SocketType> sock)
     {
-        std::lock_guard<std::mutex> lock(_newSocketsLock);
+        std::lock_guard lock(_newSocketsLock);
 
         ++_connections;
         _newSockets.emplace_back(sock);
@@ -93,86 +69,30 @@ public:
 
     IoContextTcpSocket* GetSocketForAccept() { return &_acceptSocket; }
 
-    void EnableProxyProtocol() { _proxyHeaderReadingEnabled = true; }
-
 protected:
     virtual void SocketAdded(std::shared_ptr<SocketType> const& /*sock*/) { }
     virtual void SocketRemoved(std::shared_ptr<SocketType> const& /*sock*/) { }
 
     void AddNewSockets()
     {
-        std::lock_guard<std::mutex> lock(_newSocketsLock);
+        std::lock_guard lock(_newSocketsLock);
 
         if (_newSockets.empty())
             return;
 
-        if (!_proxyHeaderReadingEnabled)
+        for (std::shared_ptr<SocketType> sock: _newSockets)
         {
-            for (std::shared_ptr<SocketType> sock : _newSockets)
-            {
-                if (!sock->IsOpen())
-                {
-                    SocketRemoved(sock);
-                    --_connections;
-                    continue;
-                }
-
-                _sockets.emplace_back(sock);
-
-                sock->Start();
-            }
-
-            _newSockets.clear();
-        }
-        else
-        {
-            HandleNewSocketsProxyReadingOnConnect();
-        }
-    }
-
-    void HandleNewSocketsProxyReadingOnConnect()
-    {
-        std::size_t index = 0;
-        std::vector<int> newSocketsToRemoveIndexes;
-        for (auto sock_iter = _newSockets.begin(); sock_iter != _newSockets.end(); ++sock_iter, ++index)
-        {
-            std::shared_ptr<SocketType> sock = *sock_iter;
-
             if (!sock->IsOpen())
             {
-                newSocketsToRemoveIndexes.emplace_back(index);
                 SocketRemoved(sock);
                 --_connections;
                 continue;
             }
 
-            const auto proxyHeaderReadingState = sock->GetProxyHeaderReadingState();
-            if (proxyHeaderReadingState == PROXY_HEADER_READING_STATE_STARTED)
-                continue;
-
-            switch (proxyHeaderReadingState) {
-                case PROXY_HEADER_READING_STATE_NOT_STARTED:
-                    sock->AsyncReadProxyHeader();
-                    break;
-
-                case PROXY_HEADER_READING_STATE_FINISHED:
-                    newSocketsToRemoveIndexes.emplace_back(index);
-                    _sockets.emplace_back(sock);
-
-                    sock->Start();
-
-                    break;
-
-                default:
-                    newSocketsToRemoveIndexes.emplace_back(index);
-                    SocketRemoved(sock);
-                    --_connections;
-                    break;
-            }
+            _sockets.emplace_back(sock);
+            sock->Start();
         }
-
-        for (auto it = newSocketsToRemoveIndexes.rbegin(); it != newSocketsToRemoveIndexes.rend(); ++it)
-            _newSockets.erase(_newSockets.begin() + *it);
+        _newSockets.clear();
     }
 
     void Run()
@@ -221,18 +141,16 @@ private:
     std::atomic<int32> _connections{};
     std::atomic<bool> _stopped{};
 
-    std::unique_ptr<std::thread> _thread;
+    std::unique_ptr<std::thread> _thread = nullptr;
 
-    SocketContainer _sockets;
+    SocketContainer _sockets{};
 
     std::mutex _newSocketsLock;
-    SocketContainer _newSockets;
+    SocketContainer _newSockets{};
 
     Acore::Asio::IoContext _ioContext;
     IoContextTcpSocket _acceptSocket;
     boost::asio::steady_timer _updateTimer;
-
-    bool _proxyHeaderReadingEnabled;
 };
 
-#endif // NetworkThread_h__
+#endif

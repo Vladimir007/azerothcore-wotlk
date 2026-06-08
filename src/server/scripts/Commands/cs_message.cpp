@@ -38,12 +38,12 @@ public:
     {
         static ChatCommandTable commandTable =
         {
-            { "nameannounce",   HandleNameAnnounceCommand,   SEC_GAMEMASTER, Console::Yes },
-            { "gmnameannounce", HandleGMNameAnnounceCommand, SEC_GAMEMASTER, Console::Yes },
-            { "announce",       HandleAnnounceCommand,       SEC_GAMEMASTER, Console::Yes },
-            { "gmannounce",     HandleGMAnnounceCommand,     SEC_GAMEMASTER, Console::Yes },
-            { "notify",         HandleNotifyCommand,         SEC_GAMEMASTER, Console::Yes },
-            { "gmnotify",       HandleGMNotifyCommand,       SEC_GAMEMASTER, Console::Yes },
+            { "nameannounce",   HandleNameAnnounceCommand,   SEC_GAME_MASTER, Console::Yes },
+            { "gmnameannounce", HandleGMNameAnnounceCommand, SEC_GAME_MASTER, Console::Yes },
+            { "announce",       HandleAnnounceCommand,       SEC_GAME_MASTER, Console::Yes },
+            { "gmannounce",     HandleGMAnnounceCommand,     SEC_GAME_MASTER, Console::Yes },
+            { "notify",         HandleNotifyCommand,         SEC_GAME_MASTER, Console::Yes },
+            { "gmnotify",       HandleGMNotifyCommand,       SEC_GAME_MASTER, Console::Yes },
             { "whispers",       HandleWhispersCommand,       SEC_MODERATOR,  Console::No },
         };
         return commandTable;
@@ -81,7 +81,7 @@ public:
         if (message.empty())
             return false;
 
-        sWorldSessionMgr->SendServerMessage(SERVER_MSG_STRING, Acore::StringFormat(handler->GetAcoreString(LANG_SYSTEMMESSAGE), message.data()));
+        sWorldSessionMgr->SendServerMessage(SERVER_MSG_STRING, Acore::StringFormat(handler->GetNcoreString(LANG_SYSTEMMESSAGE), message.data()));
         return true;
     }
 
@@ -101,7 +101,7 @@ public:
         if (message.empty())
             return false;
 
-        std::string str = handler->GetAcoreString(LANG_GLOBAL_NOTIFY);
+        std::string str = handler->GetNcoreString(LANG_GLOBAL_NOTIFY);
         str += message;
 
         WorldPacket data(SMSG_NOTIFICATION, (str.size() + 1));
@@ -117,7 +117,7 @@ public:
         if (message.empty())
             return false;
 
-        std::string str = handler->GetAcoreString(LANG_GM_NOTIFY);
+        std::string str = handler->GetNcoreString(LANG_GM_NOTIFY);
         str += message;
 
         WorldPacket data(SMSG_NOTIFICATION, (str.size() + 1));
@@ -132,7 +132,7 @@ public:
     {
         if (!operationArg)
         {
-            handler->PSendSysMessage(LANG_COMMAND_WHISPERACCEPTING, handler->GetSession()->GetPlayer()->isAcceptWhispers() ?  handler->GetAcoreString(LANG_ON) : handler->GetAcoreString(LANG_OFF));
+            handler->PSendSysMessage(LANG_COMMAND_WHISPERACCEPTING, handler->GetSession()->GetPlayer()->isAcceptWhispers() ?  handler->GetNcoreString(LANG_ON) : handler->GetNcoreString(LANG_OFF));
             return true;
         }
 

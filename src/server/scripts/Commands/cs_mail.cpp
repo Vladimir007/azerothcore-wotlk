@@ -40,8 +40,8 @@ public:
     {
         static ChatCommandTable mailCommandTable =
         {
-            { "list",   HandleMailListCommand,   SEC_GAMEMASTER, Console::Yes },
-            { "return", HandleMailReturnCommand,  SEC_GAMEMASTER, Console::Yes }
+            { "list",   HandleMailListCommand,   SEC_GAME_MASTER, Console::Yes },
+            { "return", HandleMailReturnCommand,  SEC_GAME_MASTER, Console::Yes }
         };
 
         static ChatCommandTable commandTable =
@@ -91,7 +91,7 @@ public:
             if (i > 0)
                 result += ", ";
 
-            result += Acore::StringFormat("{}(guid:{})", items[i].item_template, items[i].item_guid);
+            result += Acore::StringFormat("{}(guid:{})", items[i].itemTemplate, items[i].itemGUID);
         }
         return result;
     }
@@ -255,7 +255,7 @@ public:
                 {
                     for (auto const& itemInfo : m->items)
                     {
-                        Item* item = player->GetMItem(itemInfo.item_guid);
+                        Item* item = player->GetMItem(itemInfo.itemGUID);
                         if (item && !sScriptMgr->OnPlayerCanSendMail(player, senderGuid, ObjectGuid::Empty, subject, body, money, 0, item))
                         {
                             handler->SendErrorMessage(LANG_MAIL_RETURN_HOOK_BLOCKED);
@@ -298,10 +298,10 @@ public:
             {
                 for (auto const& itemInfo : m->items)
                 {
-                    if (Item* item = player->GetMItem(itemInfo.item_guid))
+                    if (Item* item = player->GetMItem(itemInfo.itemGUID))
                         draft.AddItem(item);
 
-                    player->RemoveMItem(itemInfo.item_guid);
+                    player->RemoveMItem(itemInfo.itemGUID);
                 }
             }
 

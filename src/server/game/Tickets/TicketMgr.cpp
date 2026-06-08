@@ -311,7 +311,7 @@ void TicketMgr::LoadTickets()
     _openTicketCount = 0;
 
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_GM_TICKETS);
-    PreparedQueryResult result = CharacterDatabase.Query(stmt);
+    QueryResult result = CharacterDatabase.Query(stmt);
     if (!result)
     {
         LOG_WARN("server.loading", ">> Loaded 0 GM tickets. DB table `gm_ticket` is empty!");

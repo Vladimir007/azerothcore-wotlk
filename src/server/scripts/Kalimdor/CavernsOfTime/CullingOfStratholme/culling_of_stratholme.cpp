@@ -1387,7 +1387,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_ARCANE_DISRUPTION && !_marked)
+            if (spell->ID == SPELL_ARCANE_DISRUPTION && !_marked)
             {
                 _marked = true;
                 if (InstanceScript* instance = me->GetInstanceScript())
@@ -1596,7 +1596,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_ARTHAS_CRUSADER_STRIKE)
+            if (spellInfo->ID == SPELL_ARTHAS_CRUSADER_STRIKE)
             {
                 if (me->GetEntry() == NPC_CITY_MAN3)
                 {

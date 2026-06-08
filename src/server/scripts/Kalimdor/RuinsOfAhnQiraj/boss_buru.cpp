@@ -94,7 +94,7 @@ struct boss_buru : public BossAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_CREATURE_SPECIAL)
+        if (spell->ID == SPELL_CREATURE_SPECIAL)
             ChaseNewVictim();
     }
 

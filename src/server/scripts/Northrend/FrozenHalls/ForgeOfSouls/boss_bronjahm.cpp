@@ -104,7 +104,7 @@ struct boss_bronjahm : public BossAI
 
     void SpellHitTarget(Unit* /*target*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_TELEPORT)
+        if (spell->ID == SPELL_TELEPORT)
         {
             DoCastSelf(SPELL_TELEPORT_VISUAL, true);
             events.RescheduleEvent(EVENT_START_SOULSTORM, 1ms);

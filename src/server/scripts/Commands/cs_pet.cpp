@@ -36,9 +36,9 @@ public:
     {
         static ChatCommandTable petCommandTable =
         {
-            { "create",  HandlePetCreateCommand,  SEC_GAMEMASTER, Console::No },
-            { "learn",   HandlePetLearnCommand,   SEC_GAMEMASTER, Console::No },
-            { "unlearn", HandlePetUnlearnCommand, SEC_GAMEMASTER, Console::No }
+            { "create",  HandlePetCreateCommand,  SEC_GAME_MASTER, Console::No },
+            { "learn",   HandlePetLearnCommand,   SEC_GAME_MASTER, Console::No },
+            { "unlearn", HandlePetUnlearnCommand, SEC_GAME_MASTER, Console::No }
         };
 
         static ChatCommandTable commandTable =
@@ -62,7 +62,7 @@ public:
 
         CreatureTemplate const* creatrueTemplate = sObjectMgr->GetCreatureTemplate(creatureTarget->GetEntry());
         // Creatures with family 0 crashes the server
-        if (!creatrueTemplate->family)
+        if (!creatrueTemplate->Family)
         {
             handler->SendErrorMessage(LANG_CREATURE_NON_TAMEABLE, creatrueTemplate->Entry);
             return false;
@@ -93,7 +93,7 @@ public:
 
         if (!SpellMgr::IsSpellValid(spell))
         {
-            handler->SendErrorMessage(LANG_COMMAND_SPELL_BROKEN, spell->Id);
+            handler->SendErrorMessage(LANG_COMMAND_SPELL_BROKEN, spell->ID);
             return false;
         }
 
@@ -104,23 +104,23 @@ public:
             return false;
         }
 
-        SpellScriptsBounds bounds = sObjectMgr->GetSpellScriptsBounds(spell->Id);
-        uint32 spellDifficultyId = sSpellMgr->GetSpellDifficultyId(spell->Id);
+        SpellScriptsBounds bounds = sObjectMgr->GetSpellScriptsBounds(spell->ID);
+        uint32 spellDifficultyId = sSpellMgr->GetSpellDifficultyId(spell->ID);
         if (bounds.first != bounds.second || spellDifficultyId)
         {
-            handler->SendErrorMessage("Spell {} cannot be learnt using a command!", spell->Id);
+            handler->SendErrorMessage("Spell {} cannot be learnt using a command!", spell->ID);
             return false;
         }
 
         // Check if pet already has it
-        if (pet->HasSpell(spell->Id))
+        if (pet->HasSpell(spell->ID))
         {
-            handler->SendErrorMessage("Pet already has spell: {}", spell->Id);
+            handler->SendErrorMessage("Pet already has spell: {}", spell->ID);
             return false;
         }
 
-        pet->learnSpell(spell->Id);
-        handler->PSendSysMessage("Pet has learned spell {}", spell->Id);
+        pet->learnSpell(spell->ID);
+        handler->PSendSysMessage("Pet has learned spell {}", spell->ID);
 
         return true;
     }
@@ -135,7 +135,7 @@ public:
 
         if (!SpellMgr::IsSpellValid(spell))
         {
-            handler->SendErrorMessage(LANG_COMMAND_SPELL_BROKEN, spell->Id);
+            handler->SendErrorMessage(LANG_COMMAND_SPELL_BROKEN, spell->ID);
             return false;
         }
 
@@ -146,9 +146,9 @@ public:
             return false;
         }
 
-        if (pet->HasSpell(spell->Id))
+        if (pet->HasSpell(spell->ID))
         {
-            pet->removeSpell(spell->Id, false);
+            pet->removeSpell(spell->ID, false);
         }
         else
         {

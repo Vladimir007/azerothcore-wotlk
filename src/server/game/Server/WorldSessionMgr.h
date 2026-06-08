@@ -45,7 +45,6 @@ public:
 
     bool KickSession(uint32 id);
     void KickAll();
-    void KickAllLess(AccountTypes sec);
     void AddSession(WorldSession* session);
 
     void AddQueuedPlayer(WorldSession* session);
@@ -79,8 +78,8 @@ public:
     }
     inline void DecreasePlayerCount() { _playerCount--; }
 
-    void SendGlobalMessage(WorldPacket const* packet, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL);
-    void SendGlobalGMMessage(WorldPacket const* packet, WorldSession* self = nullptr, TeamId teamId = TEAM_NEUTRAL);
+    void SendGlobalMessage(WorldPacket const* packet, WorldSession* self = nullptr, TeamID teamId = TEAM_NEUTRAL);
+    void SendGlobalGMMessage(WorldPacket const* packet, WorldSession* self = nullptr, TeamID teamId = TEAM_NEUTRAL);
     void SendServerMessage(ServerMessageType messageID, std::string stringParam = "", Player* player = nullptr);
 
     void DoForAllOnlinePlayers(std::function<void(Player*)> exec);

@@ -176,7 +176,7 @@ struct boss_vezax : public BossAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spell) override
     {
-        if (target && spell && target->IsPlayer() && spell->Id == SPELL_VEZAX_SHADOW_CRASH_DMG)
+        if (target && spell && target->IsPlayer() && spell->ID == SPELL_VEZAX_SHADOW_CRASH_DMG)
             bAchievShadowdodger = false;
     }
 

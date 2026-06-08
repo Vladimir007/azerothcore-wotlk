@@ -187,11 +187,11 @@ bool Totem::IsImmunedToSpellEffect(SpellInfo const* spellInfo, uint32 index, Uni
             spellInfo->Effects[index].Effect != SPELL_EFFECT_SCRIPT_EFFECT &&
             spellInfo->IsPositive() && spellInfo->Effects[index].TargetA.GetTarget() != TARGET_UNIT_CASTER &&
             spellInfo->Effects[index].TargetA.GetCheckType() != TARGET_CHECK_ENTRY &&
-            spellInfo->Id != SPELL_STONECLAW && spellInfo->Id != SPELL_BIND_SIGHT && spellInfo->Id != SPELL_INTERVENE)
+            spellInfo->ID != SPELL_STONECLAW && spellInfo->ID != SPELL_BIND_SIGHT && spellInfo->ID != SPELL_INTERVENE)
         return true;
 
     // Cyclone shouldn't be casted on totems
-    if (spellInfo->Id == SPELL_CYCLONE)
+    if (spellInfo->ID == SPELL_CYCLONE)
     {
         return true;
     }

@@ -65,7 +65,7 @@ struct npc_pet_gen_soul_trader_beacon : public ScriptedAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_STEAL_ESSENCE_VISUAL && target == me)
+        if (spellInfo->ID == SPELL_STEAL_ESSENCE_VISUAL && target == me)
         {
             Talk(1);
             events.ScheduleEvent(EVENT_ADD_TOKEN, 3s);
@@ -748,7 +748,7 @@ struct npc_pet_gen_fetch_ball : public NullCreatureAI
 
     void SpellHitTarget(Unit* target, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_PET_TOY_FETCH_BALL_COME_HERE)
+        if (spellInfo->ID == SPELL_PET_TOY_FETCH_BALL_COME_HERE)
         {
             target->GetMotionMaster()->MovePoint(50, me->GetHomePosition());
             targetGUID = target->GetGUID();
@@ -802,7 +802,7 @@ struct npc_pet_darting_hatchling : public NullCreatureAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_DARTING_FEAR)
+        if (spellInfo->ID == SPELL_DARTING_FEAR)
         {
             goFast = true;
         }

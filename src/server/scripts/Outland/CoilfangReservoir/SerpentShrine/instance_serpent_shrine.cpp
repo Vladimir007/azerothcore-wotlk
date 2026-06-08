@@ -135,7 +135,7 @@ public:
                     break;
                 case NPC_SEER_OLUM:
                     creature->RemoveNpcFlag(UNIT_NPC_FLAG_GOSSIP);
-                    creature->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                    creature->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                     break;
                 case NPC_COILFANG_FRENZY:
                     if (!creature->IsInWater() || _frenzyCount >= MAX_FRENZY_COUNT)

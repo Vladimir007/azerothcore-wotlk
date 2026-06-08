@@ -46,9 +46,9 @@ enum AllBattlegroundHook
     ALLBATTLEGROUNDHOOK_END
 };
 
-enum BattlegroundBracketId : uint8;
+enum BattlegroundBracketID : uint8;
 enum BattlegroundTypeId : uint8;
-enum TeamId : uint8;
+enum TeamID : uint8;
 
 class BattlegroundQueue;
 struct GroupQueueInfo;
@@ -69,7 +69,7 @@ public:
     virtual void OnBattlegroundStart(Battleground* /*bg*/) { }
 
     // End Battleground
-    virtual void OnBattlegroundEndReward(Battleground* /*bg*/, Player* /*player*/, TeamId /*winnerTeamId*/) { }
+    virtual void OnBattlegroundEndReward(Battleground* /*bg*/, Player* /*player*/, TeamID /*winnerTeamId*/) { }
 
     // Update Battlegroud
     virtual void OnBattlegroundUpdate(Battleground* /*bg*/, uint32 /*diff*/) { }
@@ -83,16 +83,16 @@ public:
     // Remove player at leave BG
     virtual void OnBattlegroundRemovePlayerAtLeave(Battleground* /*bg*/, Player* /*player*/) { }
 
-    virtual void OnQueueUpdate(BattlegroundQueue* /*queue*/, uint32 /* diff */, BattlegroundTypeId /* bgTypeId */, BattlegroundBracketId /* bracket_id */, uint8 /* arenaType */, bool /* isRated */, uint32 /* arenaRating */) { }
+    virtual void OnQueueUpdate(BattlegroundQueue* /*queue*/, uint32 /* diff */, BattlegroundTypeId /* bgTypeId */, BattlegroundBracketID /* bracket_id */, uint8 /* arenaType */, bool /* isRated */, uint32 /* arenaRating */) { }
 
-    [[nodiscard]] virtual bool OnQueueUpdateValidity(BattlegroundQueue* /*queue*/, uint32 /* diff */, BattlegroundTypeId /* bgTypeId */, BattlegroundBracketId /* bracket_id */, uint8 /* arenaType */, bool /* isRated */, uint32 /* arenaRating */) { return true; }
+    [[nodiscard]] virtual bool OnQueueUpdateValidity(BattlegroundQueue* /*queue*/, uint32 /* diff */, BattlegroundTypeId /* bgTypeId */, BattlegroundBracketID /* bracket_id */, uint8 /* arenaType */, bool /* isRated */, uint32 /* arenaRating */) { return true; }
 
     virtual void OnAddGroup(BattlegroundQueue* /*queue*/, GroupQueueInfo* /*ginfo*/, uint32& /*index*/, Player* /*leader*/, Group* /*group*/, BattlegroundTypeId /* bgTypeId */, PvPDifficultyEntry const* /* bracketEntry */,
             uint8 /* arenaType */, bool /* isRated */, bool /* isPremade */, uint32 /* arenaRating */, uint32 /* matchmakerRating */, uint32 /* arenaTeamId */, uint32 /* opponentsArenaTeamId */) { }
 
-    [[nodiscard]] virtual bool CanFillPlayersToBG(BattlegroundQueue* /*queue*/, Battleground* /*bg*/, BattlegroundBracketId /*bracket_id*/) { return true; }
+    [[nodiscard]] virtual bool CanFillPlayersToBG(BattlegroundQueue* /*queue*/, Battleground* /*bg*/, BattlegroundBracketID /*bracket_id*/) { return true; }
 
-    [[nodiscard]] virtual bool IsCheckNormalMatch(BattlegroundQueue* /*queue*/, Battleground* /*bgTemplate*/, BattlegroundBracketId /*bracket_id*/, uint32 /*minPlayers*/, uint32 /*maxPlayers*/) { return false; };
+    [[nodiscard]] virtual bool IsCheckNormalMatch(BattlegroundQueue* /*queue*/, Battleground* /*bgTemplate*/, BattlegroundBracketID /*bracket_id*/, uint32 /*minPlayers*/, uint32 /*maxPlayers*/) { return false; };
 
     [[nodiscard]] virtual bool CanSendMessageBGQueue(BattlegroundQueue* /*queue*/, Player* /*leader*/, Battleground* /*bg*/, PvPDifficultyEntry const* /*bracketEntry*/) { return true; }
 
@@ -123,7 +123,7 @@ public:
      * @param bg Contains information about the Battleground
      * @param TeamId Contains information about the winneer team
      */
-    virtual void OnBattlegroundEnd(Battleground* /*bg*/, TeamId /*winner team*/) { }
+    virtual void OnBattlegroundEnd(Battleground* /*bg*/, TeamID /*winner team*/) { }
 
     /**
      * @brief This hook runs before Battleground destroy
@@ -152,7 +152,7 @@ public:
      * @param bracketId The bracket ID
      * @return True to allow adding this group, false to skip it
      */
-    [[nodiscard]] virtual bool CanAddGroupToMatchingPool(BattlegroundQueue* /*queue*/, GroupQueueInfo* /*group*/, uint32 /*poolPlayerCount*/, Battleground* /*bg*/, BattlegroundBracketId /*bracketId*/) { return true; }
+    [[nodiscard]] virtual bool CanAddGroupToMatchingPool(BattlegroundQueue* /*queue*/, GroupQueueInfo* /*group*/, uint32 /*poolPlayerCount*/, Battleground* /*bg*/, BattlegroundBracketID /*bracketId*/) { return true; }
 
     /**
      * @brief This hook allows modules to provide matchmaking rating for a player

@@ -23,23 +23,23 @@
 void Acore::BroadcastTextBuilder::operator()(WorldPacket& data, LocaleConstant locale) const
 {
     BroadcastText const* bct = sObjectMgr->GetBroadcastText(_textId);
-    ChatHandler::BuildChatPacket(data, _msgType, bct ? Language(bct->LanguageID) : LANG_UNIVERSAL, _source, _target, bct ? bct->GetText(locale, _gender) : "", _achievementId, "", locale);
+    ChatHandler::BuildChatPacket(data, _msgType, bct ? Language(bct->LanguageID) : LANG_UNIVERSAL, _source, _target, bct ? bct->GetText(_gender) : "", _achievementId);
 }
 
 std::size_t Acore::BroadcastTextBuilder::operator()(WorldPacket* data, LocaleConstant locale) const
 {
     BroadcastText const* bct = sObjectMgr->GetBroadcastText(_textId);
-    return ChatHandler::BuildChatPacket(*data, _msgType, bct ? Language(bct->LanguageID) : LANG_UNIVERSAL, _source, _target, bct ? bct->GetText(locale, _gender) : "", _achievementId, "", locale);
+    return ChatHandler::BuildChatPacket(*data, _msgType, bct ? Language(bct->LanguageID) : LANG_UNIVERSAL, _source, _target, bct ? bct->GetText(_gender) : "", _achievementId);
 }
 
 void Acore::CustomChatTextBuilder::operator()(WorldPacket& data, LocaleConstant locale) const
 {
-    ChatHandler::BuildChatPacket(data, _msgType, _language, _source, _target, _text, 0, "", locale);
+    ChatHandler::BuildChatPacket(data, _msgType, _language, _source, _target, _text);
 }
 
 void Acore::AcoreStringChatBuilder::operator()(WorldPacket& data, LocaleConstant locale) const
 {
-    std::string strtext = sObjectMgr->GetAcoreString(_textId, locale);
+    std::string strtext = sObjectMgr->GetNcoreString(_textId);
     char const* text = strtext.c_str();
 
     if (_args)
@@ -53,10 +53,10 @@ void Acore::AcoreStringChatBuilder::operator()(WorldPacket& data, LocaleConstant
         vsnprintf(strBuffer, BufferSize, text, ap);
         va_end(ap);
 
-        ChatHandler::BuildChatPacket(data, _msgType, LANG_UNIVERSAL, _source, _target, strBuffer, 0, "", locale);
+        ChatHandler::BuildChatPacket(data, _msgType, LANG_UNIVERSAL, _source, _target, strBuffer);
     }
     else
     {
-        ChatHandler::BuildChatPacket(data, _msgType, LANG_UNIVERSAL, _source, _target, text, 0, "", locale);
+        ChatHandler::BuildChatPacket(data, _msgType, LANG_UNIVERSAL, _source, _target, text);
     }
 }

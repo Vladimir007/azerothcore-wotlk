@@ -155,7 +155,7 @@ public:
 
         void SpellHitTarget(Unit* /*target*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_CHAIN_LIGHTNING)
+            if (spell->ID == SPELL_CHAIN_LIGHTNING)
             {
                 if (rand() % 10)
                     return;
@@ -385,7 +385,7 @@ public:
 
         void SpellHitTarget(Unit* /*target*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_KUR_CHAIN_LIGHTNING)
+            if (spell->ID == SPELL_KUR_CHAIN_LIGHTNING)
             {
                 if (rand() % 30)
                     return;
@@ -393,7 +393,7 @@ public:
                 Talk(SAY_KUR_LIGHTNING);
             }
 
-            if (spell->Id == SPELL_KUR_FROST_SHOCK)
+            if (spell->ID == SPELL_KUR_FROST_SHOCK)
             {
                 if (rand() % 30)
                     return;

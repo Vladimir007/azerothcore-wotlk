@@ -1,22 +1,5 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-#ifndef _DISABLEMGR_H
-#define _DISABLEMGR_H
+#ifndef DISABLE_MGR_H
+#define DISABLE_MGR_H
 
 #include "Define.h"
 #include "Map.h"
@@ -30,7 +13,7 @@ enum DisableType
     DISABLE_TYPE_MAP                    = 2,
     DISABLE_TYPE_BATTLEGROUND           = 3,
     DISABLE_TYPE_ACHIEVEMENT_CRITERIA   = 4,
-    DISABLE_TYPE_OUTDOORPVP             = 5,
+    DISABLE_TYPE_OUTDOOR_PVP            = 5,
     DISABLE_TYPE_VMAP                   = 6,
     DISABLE_TYPE_GO_LOS                 = 7,
     DISABLE_TYPE_LFG_MAP                = 8,
@@ -56,23 +39,21 @@ enum SpellDisableTypes
 struct DisableData
 {
     uint8 flags;
-    std::set<uint32> params[2];                             // params0, params1
+    std::set<uint32> params[2];  // params0, params1
 };
 
 class DisableMgr
 {
-private:
     DisableMgr();
     ~DisableMgr();
 
 public:
     static DisableMgr* instance();
 
-    void LoadDisables();
-    void AddDisable(DisableType type, uint32 entry, uint8 flags, std::string const& param0, std::string const& param1);
-    bool HandleDisableType(DisableType type, uint32 entry, uint8 flags, std::string const& params_0, std::string const& params_1, DisableData& data);
+    static void LoadDisables();
+    static bool HandleDisableType(DisableType type, uint32 entry, uint8 flags, const std::vector<uint32>& params0, const std::vector<uint32>& params1, DisableData& data);
     static bool IsDisabledFor(DisableType type, uint32 entry, Unit const* unit, uint8 flags = 0);
-    void CheckQuestDisables();
+    static void CheckQuestDisables();
     static bool IsVMAPDisabledFor(uint32 entry, uint8 flags);
     static bool IsPathfindingEnabled(Map const* map);
 
@@ -87,4 +68,4 @@ private:
 
 #define sDisableMgr DisableMgr::instance()
 
-#endif //_DISABLEMGR_H
+#endif

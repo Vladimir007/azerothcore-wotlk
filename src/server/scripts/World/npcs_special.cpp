@@ -232,7 +232,7 @@ public:
             {
                 if (!me->IsQuestGiver())
                 {
-                    me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                    me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                 }
                 if (sWorldState->getWorldState(WORLD_STATE_STRANGLETHORN_VALE_FISHING_ANNOUNCE_EVENT_BEGIN))
                 {
@@ -244,7 +244,7 @@ public:
             {
                 if (me->IsQuestGiver())
                 {
-                    me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                    me->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                 }
             }
             if (sGameEventMgr->IsActiveEvent(EVENT_FISHING_POOLS))
@@ -298,7 +298,7 @@ public:
     {
         if (quest->GetQuestId() == QUEST_MASTER_ANGLER)
         {
-            creature->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+            creature->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
             creature->AI()->Talk(RIGGLE_SAY_WINNER, player);
             sWorldState->setWorldState(WORLD_STATE_STRANGLETHORN_VALE_FISHING_PREV_WIN_TIME, GameTime::GetGameTime().count());
             sWorldState->setWorldState(WORLD_STATE_STRANGLETHORN_VALE_FISHING_HAS_WINNER, 1);
@@ -629,7 +629,7 @@ public:
         {
             ResetFlagTimer = 120000;
             me->SetFaction(FACTION_PREY);
-            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
         }
 
         void JustEngagedWith(Unit* /*who*/) override { }
@@ -637,7 +637,7 @@ public:
         void UpdateAI(uint32 diff) override
         {
             // Reset flags after a certain time has passed so that the next player has to start the 'event' again
-            if (me->HasNpcFlag(UNIT_NPC_FLAG_QUESTGIVER))
+            if (me->HasNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER))
             {
                 if (ResetFlagTimer <= diff)
                 {
@@ -659,7 +659,7 @@ public:
                 case TEXT_EMOTE_CHICKEN:
                     if (player->GetQuestStatus(QUEST_CLUCK) == QUEST_STATUS_NONE && rand() % 30 == 1)
                     {
-                        me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                        me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                         me->SetFaction(FACTION_FRIENDLY);
                         Talk(EMOTE_HELLO);
                     }
@@ -667,7 +667,7 @@ public:
                 case TEXT_EMOTE_CHEER:
                     if (player->GetQuestStatus(QUEST_CLUCK) == QUEST_STATUS_COMPLETE)
                     {
-                        me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                        me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                         me->SetFaction(FACTION_FRIENDLY);
                         Talk(EMOTE_CLUCK_TEXT);
                     }
@@ -1062,7 +1062,7 @@ public:
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
             Player* player = caster->ToPlayer();
-            if (!player || !me->IsAlive() || spell->Id != 20804)
+            if (!player || !me->IsAlive() || spell->ID != 20804)
                 return;
 
             if (player->GetQuestStatus(6624) == QUEST_STATUS_INCOMPLETE || player->GetQuestStatus(6622) == QUEST_STATUS_INCOMPLETE)
@@ -1248,7 +1248,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_LESSER_HEAL_R2 || spell->Id == SPELL_FORTITUDE_R1)
+            if (spell->ID == SPELL_LESSER_HEAL_R2 || spell->ID == SPELL_FORTITUDE_R1)
             {
                 //not while in combat
                 if (me->IsInCombat())
@@ -1265,12 +1265,12 @@ public:
                         case ENTRY_SHAYA:
                             if (player->GetQuestStatus(QUEST_MOON) == QUEST_STATUS_INCOMPLETE)
                             {
-                                if (IsHealed && !CanRun && spell->Id == SPELL_FORTITUDE_R1)
+                                if (IsHealed && !CanRun && spell->ID == SPELL_FORTITUDE_R1)
                                 {
                                     Talk(SAY_THANKS, caster);
                                     CanRun = true;
                                 }
-                                else if (!IsHealed && spell->Id == SPELL_LESSER_HEAL_R2)
+                                else if (!IsHealed && spell->ID == SPELL_LESSER_HEAL_R2)
                                 {
                                     CasterGUID = caster->GetGUID();
                                     me->SetStandState(UNIT_STAND_STATE_STAND);
@@ -1282,12 +1282,12 @@ public:
                         case ENTRY_ROBERTS:
                             if (player->GetQuestStatus(QUEST_LIGHT_1) == QUEST_STATUS_INCOMPLETE)
                             {
-                                if (IsHealed && !CanRun && spell->Id == SPELL_FORTITUDE_R1)
+                                if (IsHealed && !CanRun && spell->ID == SPELL_FORTITUDE_R1)
                                 {
                                     Talk(SAY_THANKS, caster);
                                     CanRun = true;
                                 }
-                                else if (!IsHealed && spell->Id == SPELL_LESSER_HEAL_R2)
+                                else if (!IsHealed && spell->ID == SPELL_LESSER_HEAL_R2)
                                 {
                                     CasterGUID = caster->GetGUID();
                                     me->SetStandState(UNIT_STAND_STATE_STAND);
@@ -1299,12 +1299,12 @@ public:
                         case ENTRY_DOLF:
                             if (player->GetQuestStatus(QUEST_LIGHT_2) == QUEST_STATUS_INCOMPLETE)
                             {
-                                if (IsHealed && !CanRun && spell->Id == SPELL_FORTITUDE_R1)
+                                if (IsHealed && !CanRun && spell->ID == SPELL_FORTITUDE_R1)
                                 {
                                     Talk(SAY_THANKS, caster);
                                     CanRun = true;
                                 }
-                                else if (!IsHealed && spell->Id == SPELL_LESSER_HEAL_R2)
+                                else if (!IsHealed && spell->ID == SPELL_LESSER_HEAL_R2)
                                 {
                                     CasterGUID = caster->GetGUID();
                                     me->SetStandState(UNIT_STAND_STATE_STAND);
@@ -1316,12 +1316,12 @@ public:
                         case ENTRY_KORJA:
                             if (player->GetQuestStatus(QUEST_SPIRIT) == QUEST_STATUS_INCOMPLETE)
                             {
-                                if (IsHealed && !CanRun && spell->Id == SPELL_FORTITUDE_R1)
+                                if (IsHealed && !CanRun && spell->ID == SPELL_FORTITUDE_R1)
                                 {
                                     Talk(SAY_THANKS, caster);
                                     CanRun = true;
                                 }
-                                else if (!IsHealed && spell->Id == SPELL_LESSER_HEAL_R2)
+                                else if (!IsHealed && spell->ID == SPELL_LESSER_HEAL_R2)
                                 {
                                     CasterGUID = caster->GetGUID();
                                     me->SetStandState(UNIT_STAND_STATE_STAND);
@@ -1333,12 +1333,12 @@ public:
                         case ENTRY_DG_KEL:
                             if (player->GetQuestStatus(QUEST_DARKNESS) == QUEST_STATUS_INCOMPLETE)
                             {
-                                if (IsHealed && !CanRun && spell->Id == SPELL_FORTITUDE_R1)
+                                if (IsHealed && !CanRun && spell->ID == SPELL_FORTITUDE_R1)
                                 {
                                     Talk(SAY_THANKS, caster);
                                     CanRun = true;
                                 }
-                                else if (!IsHealed && spell->Id == SPELL_LESSER_HEAL_R2)
+                                else if (!IsHealed && spell->ID == SPELL_LESSER_HEAL_R2)
                                 {
                                     CasterGUID = caster->GetGUID();
                                     me->SetStandState(UNIT_STAND_STATE_STAND);
@@ -2509,7 +2509,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_SILITHID_EGG || spell->Id == SPELL_SILITHID_MEAT || spell->Id == SPELL_FRESH_DINOSAUR_MEAT)
+            if (spell->ID == SPELL_SILITHID_EGG || spell->ID == SPELL_SILITHID_MEAT || spell->ID == SPELL_FRESH_DINOSAUR_MEAT)
             {
                 Talk(TALK_EMOTE_EAT);
             }

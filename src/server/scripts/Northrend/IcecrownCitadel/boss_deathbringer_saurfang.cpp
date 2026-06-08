@@ -382,7 +382,7 @@ public:
 
         void SpellHitTarget(Unit*  /*target*/, SpellInfo const* spell) override
         {
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_MARK_OF_THE_FALLEN_CHAMPION:
                     Talk(SAY_MARK_OF_THE_FALLEN_CHAMPION);
@@ -617,7 +617,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_GRIP_OF_AGONY)
+            if (spell->ID == SPELL_GRIP_OF_AGONY)
             {
                 me->SetDisableGravity(true);
                 me->GetMotionMaster()->MovePoint(POINT_CHOKE, chokePos[0]);
@@ -876,7 +876,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_GRIP_OF_AGONY)
+            if (spell->ID == SPELL_GRIP_OF_AGONY)
             {
                 me->SetDisableGravity(true);
                 me->GetMotionMaster()->MovePoint(POINT_CHOKE, chokePos[0]);
@@ -1012,7 +1012,7 @@ public:
 
         void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_GRIP_OF_AGONY)
+            if (spell->ID == SPELL_GRIP_OF_AGONY)
             {
                 me->SetDisableGravity(true);
                 me->GetMotionMaster()->MovePoint(POINT_CHOKE, chokePos[_index]);
@@ -1074,7 +1074,7 @@ class spell_deathbringer_blood_link_aura : public AuraScript
         //if (Creature* saurfang = eventInfo.GetActor()->ToCreature())
         //markCount = saurfang->IsAIEnabled ? saurfang->AI()->GetData(123456 /*FALLEN_CHAMPION_CAST_COUNT*/) : 0;
         int32 basepoints = int32(1.0f /*+ 0.5f + 0.5f*markCount*/);
-        switch (procSpell->Id) // some spells give more Blood Power
+        switch (procSpell->ID) // some spells give more Blood Power
         {
             case 72380:
             case 72438:
@@ -1224,7 +1224,7 @@ class spell_deathbringer_boiling_blood : public SpellScript
         if (targets.empty())
             return;
 
-        if (GetSpellInfo()->Id == 72385 || GetSpellInfo()->Id == 72442) // 10n, 10h
+        if (GetSpellInfo()->ID == 72385 || GetSpellInfo()->ID == 72442) // 10n, 10h
         {
             WorldObject* target = Acore::Containers::SelectRandomContainerElement(targets);
             targets.clear();

@@ -141,7 +141,7 @@ struct boss_fathomlord_karathress : public BossAI
             olum->SetWalk(true);
             olum->GetMotionMaster()->MovePoint(0, olumWalk, FORCED_MOVEMENT_NONE, 0.f, false);
             olum->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
-            olum->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+            olum->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
         }
     }
 

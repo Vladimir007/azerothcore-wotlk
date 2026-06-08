@@ -51,7 +51,7 @@ public:
             { "group",    HandleLfgGroupInfoCommand,        SEC_MODERATOR,     Console::No },
             { "queue",    HandleLfgQueueInfoCommand,        SEC_MODERATOR,     Console::Yes },
             { "clean",    HandleLfgCleanCommand,            SEC_ADMINISTRATOR, Console::Yes },
-            { "options",  HandleLfgOptionsCommand,          SEC_GAMEMASTER,    Console::Yes },
+            { "options",  HandleLfgOptionsCommand,          SEC_GAME_MASTER,    Console::Yes },
             { "cooldown", HandleLfgCooldownClearCommand,    SEC_ADMINISTRATOR, Console::Yes },
         };
 

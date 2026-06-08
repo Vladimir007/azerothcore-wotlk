@@ -27,7 +27,7 @@ TerrainMapDataReadResult GridTerrainData::Load(std::string const& mapFileName)
         return TerrainMapDataReadResult::ReadError;
 
     // Read the map header
-    map_fileheader header;
+    MapFileHeader header;
     if (!fileStream.read(reinterpret_cast<char*>(&header), sizeof(header)))
         return TerrainMapDataReadResult::ReadError;
 
@@ -58,7 +58,7 @@ bool GridTerrainData::LoadAreaData(std::ifstream& fileStream, uint32 const offse
 {
     fileStream.seekg(offset);
 
-    map_areaHeader header;
+    MapAreaHeader header;
     if (!fileStream.read(reinterpret_cast<char*>(&header), sizeof(header)) || header.fourcc != MapAreaMagic.asUInt)
         return false;
 
@@ -77,7 +77,7 @@ bool GridTerrainData::LoadHeightData(std::ifstream& fileStream, uint32 const off
 {
     fileStream.seekg(offset);
 
-    map_heightHeader header;
+    MapHeightHeader header;
     if (!fileStream.read(reinterpret_cast<char*>(&header), sizeof(header)) || header.fourcc != MapHeightMagic.asUInt)
         return false;
 
@@ -167,7 +167,7 @@ bool GridTerrainData::LoadLiquidData(std::ifstream& fileStream, uint32 const off
 {
     fileStream.seekg(offset);
 
-    map_liquidHeader header;
+    MapLiquidHeader header;
     if (!fileStream.read(reinterpret_cast<char*>(&header), sizeof(header)) || header.fourcc != MapLiquidMagic.asUInt)
         return false;
 
@@ -558,9 +558,9 @@ LiquidData const GridTerrainData::GetLiquidData(float x, float y, float z, float
                 if (AreaTableEntry const* area = sAreaTableStore.LookupEntry(getArea(x, y)))
                 {
                     uint32 overrideLiquid = area->LiquidTypeOverride[liquidEntry->Type];
-                    if (!overrideLiquid && area->zone)
+                    if (!overrideLiquid && area->Zone)
                     {
-                        area = sAreaTableStore.LookupEntry(area->zone);
+                        area = sAreaTableStore.LookupEntry(area->Zone);
                         if (area)
                             overrideLiquid = area->LiquidTypeOverride[liquidEntry->Type];
                     }

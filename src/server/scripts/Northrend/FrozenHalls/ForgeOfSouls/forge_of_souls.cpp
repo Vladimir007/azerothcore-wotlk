@@ -233,14 +233,14 @@ public:
     {
         npc_fos_leader_secondAI(Creature* creature) : ScriptedAI(creature)
         {
-            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
         }
 
         void MovementInform(uint32 type, uint32 id) override
         {
             if (type == POINT_MOTION_TYPE && id == 1)
             {
-                me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+                me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
                 if (me->GetEntry() == NPC_JAINA_PART1)
                     Talk(SAY_JAINA_OUTRO);
                 else

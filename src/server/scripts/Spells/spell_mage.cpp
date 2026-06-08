@@ -376,7 +376,7 @@ class spell_mage_brain_freeze : public AuraScript
 
         // xinef: Improved Blizzard, generic chilled check
         if (spellInfo->SpellFamilyFlags[0] & 0x100000)
-            return spellInfo->Id == SPELL_MAGE_IMPROVED_BLIZZARD_CHILLED;
+            return spellInfo->ID == SPELL_MAGE_IMPROVED_BLIZZARD_CHILLED;
 
         return true;
     }
@@ -495,13 +495,13 @@ class spell_mage_cold_snap : public SpellScript
         for (PlayerSpellMap::const_iterator itr = spellMap.begin(); itr != spellMap.end(); ++itr)
         {
             SpellInfo const* spellInfo = sSpellMgr->AssertSpellInfo(itr->first);
-            if (spellInfo->SpellFamilyName == SPELLFAMILY_MAGE && (spellInfo->GetSchoolMask() & SPELL_SCHOOL_MASK_FROST) && spellInfo->Id != SPELL_MAGE_COLD_SNAP && spellInfo->GetRecoveryTime() > 0)
+            if (spellInfo->SpellFamilyName == SPELLFAMILY_MAGE && (spellInfo->GetSchoolMask() & SPELL_SCHOOL_MASK_FROST) && spellInfo->ID != SPELL_MAGE_COLD_SNAP && spellInfo->GetRecoveryTime() > 0)
             {
-                SpellCooldowns::iterator citr = caster->GetSpellCooldownMap().find(spellInfo->Id);
+                SpellCooldowns::iterator citr = caster->GetSpellCooldownMap().find(spellInfo->ID);
                 if (citr != caster->GetSpellCooldownMap().end() && citr->second.needSendToClient)
-                    caster->RemoveSpellCooldown(spellInfo->Id, true);
+                    caster->RemoveSpellCooldown(spellInfo->ID, true);
                 else
-                    caster->RemoveSpellCooldown(spellInfo->Id, false);
+                    caster->RemoveSpellCooldown(spellInfo->ID, false);
             }
         }
     }
@@ -831,7 +831,7 @@ class spell_mage_master_of_elements : public AuraScript
             && spellInfo->SpellIconID == MAGE_ICON_LIVING_BOMB
             && !spellInfo->ManaCost && !spellInfo->ManaCostPercentage)
         {
-            uint8 rank = sSpellMgr->GetSpellRank(spellInfo->Id);
+            uint8 rank = sSpellMgr->GetSpellRank(spellInfo->ID);
             spellInfo = sSpellMgr->GetSpellInfo(
                 sSpellMgr->GetSpellWithRank(SPELL_MAGE_LIVING_BOMB_R1, rank));
             if (!spellInfo)
@@ -1075,7 +1075,7 @@ class spell_mage_empowered_fire : public AuraScript
             return false;
 
         // Only proc on Ignite
-        return spellInfo->Id == SPELL_MAGE_IGNITE;
+        return spellInfo->ID == SPELL_MAGE_IGNITE;
     }
 
     void HandleProc(AuraEffect const* aurEff, ProcEventInfo& /*eventInfo*/)
@@ -1115,7 +1115,7 @@ class spell_mage_gen_extra_effects : public AuraScript
     {
         Unit* caster = eventInfo.GetActor();
         // T8 4P bonus: prevent double proc on Arcane Missiles
-        if (GetSpellInfo()->Id == SPELL_MAGE_HOT_STREAK_PROC && caster->HasAura(SPELL_MAGE_T8_4P_BONUS))
+        if (GetSpellInfo()->ID == SPELL_MAGE_HOT_STREAK_PROC && caster->HasAura(SPELL_MAGE_T8_4P_BONUS))
         {
             SpellInfo const* spellInfo = eventInfo.GetSpellInfo();
             if (spellInfo && spellInfo->SpellFamilyName == SPELLFAMILY_MAGE &&
@@ -1173,7 +1173,7 @@ class spell_mage_glyph_of_ice_block : public AuraScript
             if (spellInfo->SpellFamilyName == SPELLFAMILY_MAGE &&
                 (spellInfo->SpellFamilyFlags[0] & 0x00000040))
             {
-                player->RemoveSpellCooldown(spellInfo->Id, true);
+                player->RemoveSpellCooldown(spellInfo->ID, true);
             }
         }
     }

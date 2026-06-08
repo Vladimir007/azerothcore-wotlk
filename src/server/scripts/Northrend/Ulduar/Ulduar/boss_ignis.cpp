@@ -100,7 +100,7 @@ struct npc_ulduar_iron_construct : public ScriptedAI
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_ACTIVATE_CONSTRUCT)
+        if (spell->ID == SPELL_ACTIVATE_CONSTRUCT)
         {
             me->RemoveAura(38757);
             me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
@@ -113,7 +113,7 @@ struct npc_ulduar_iron_construct : public ScriptedAI
                     DoZoneInCombat();
                 }
         }
-        else if (spell->Id == SPELL_HEAT_BUFF)
+        else if (spell->ID == SPELL_HEAT_BUFF)
         {
             if (Aura* heat = me->GetAura(SPELL_HEAT_BUFF))
             {
@@ -278,7 +278,7 @@ struct boss_ignis : public BossAI
 
     void SpellHit(Unit* caster, SpellInfo const* spell) override
     {
-        if (caster && spell->Id == SPELL_GRAB_CONTROL_2)
+        if (caster && spell->ID == SPELL_GRAB_CONTROL_2)
         {
             //caster->ClearUnitState(UNIT_STATE_ONVEHICLE);
             me->CastSpell(caster, SPELL_SLAG_POT, true);

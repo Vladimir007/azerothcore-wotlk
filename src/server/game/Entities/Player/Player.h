@@ -275,8 +275,8 @@ typedef std::list<PlayerCreateInfoItem> PlayerCreateInfoItems;
 struct PlayerClassLevelInfo
 {
     PlayerClassLevelInfo()  = default;
-    uint32 basehealth{0};
-    uint32 basemana{0};
+    uint32 baseHealth{0};
+    uint32 baseMana{0};
 };
 
 struct PlayerClassInfo
@@ -822,7 +822,7 @@ enum TeleportToOptions
 };
 
 /// Type of environmental damages
-enum EnviromentalDamage
+enum EnvironmentalDamageType
 {
     DAMAGE_EXHAUSTED = 0,
     DAMAGE_DROWNING  = 1,
@@ -925,7 +925,7 @@ enum PlayerCharmedAISpells
 struct ProgressionRequirement
 {
     uint32 id;
-    TeamId faction;
+    TeamID faction;
     std::string note;
     uint32 priority;
     bool checkLeaderOnly;
@@ -1030,7 +1030,7 @@ struct BGData
 
     uint32 bgInstanceID{0};
     BattlegroundTypeId bgTypeID{BATTLEGROUND_TYPE_NONE};
-    TeamId bgTeamId{TEAM_NEUTRAL};
+    TeamID bgTeamId{TEAM_NEUTRAL};
     uint32 bgQueueSlot{PLAYER_MAX_BATTLEGROUND_QUEUES};
     bool isInvited{false};
     bool bgIsRandom{false};
@@ -1125,7 +1125,7 @@ public:
     void RemovePlayerFlag(PlayerFlags flags) { RemoveFlag(PLAYER_FLAGS, flags); }
     void ReplaceAllPlayerFlags(PlayerFlags flags) { SetUInt32Value(PLAYER_FLAGS, flags); }
 
-    static bool BuildEnumData(PreparedQueryResult result, WorldPacket* data);
+    static bool BuildEnumData(QueryResult result, WorldPacket* data);
 
     [[nodiscard]] bool IsClass(Classes playerClass, ClassContext context = CLASS_CONTEXT_NONE) const override;
 
@@ -1142,7 +1142,7 @@ public:
 
     bool CanInteractWithQuestGiver(Object* questGiver);
     Creature* GetNPCIfCanInteractWith(ObjectGuid const& guid, uint32 npcflagmask);
-    [[nodiscard]] GameObject* GetGameObjectIfCanInteractWith(ObjectGuid const& guid, GameobjectTypes type) const;
+    [[nodiscard]] GameObject* GetGameObjectIfCanInteractWith(ObjectGuid const& guid, GameObjectTypes type) const;
 
     void ToggleAFK();
     void ToggleDND();
@@ -1415,7 +1415,7 @@ public:
     void AddItemDurations(Item* item);
     void RemoveItemDurations(Item* item);
     void SendItemDurations();
-    void LoadCorpse(PreparedQueryResult result);
+    void LoadCorpse(QueryResult result);
     void LoadPet();
 
     bool AddItem(uint32 itemId, uint32 count);
@@ -1758,7 +1758,7 @@ public:
     [[nodiscard]] uint8 GetSpecsCount() const { return m_specsCount; }
     void SetSpecsCount(uint8 count) { m_specsCount = count; }
     void ActivateSpec(uint8 spec);
-    void LoadActions(PreparedQueryResult result);
+    void LoadActions(QueryResult result);
     void GetTalentTreePoints(uint8 (&specPoints)[3]) const;
     [[nodiscard]] uint8 GetMostPointsTalentTree() const;
     bool HasTankSpec();
@@ -1822,7 +1822,7 @@ public:
     void RemoveCategoryCooldown(uint32 cat);
     void RemoveArenaSpellCooldowns(bool removeActivePetCooldowns = false);
     void RemoveAllSpellCooldown();
-    void _LoadSpellCooldowns(PreparedQueryResult result);
+    void _LoadSpellCooldowns(QueryResult result);
     void _SaveSpellCooldowns(CharacterDatabaseTransaction trans, bool logout);
     uint32 GetLastPotionId() { return m_lastPotionId; }
     void SetLastPotionId(uint32 item_id) { m_lastPotionId = item_id; }
@@ -1981,9 +1981,9 @@ public:
     float GetMeleeCritFromAgility();
     void GetDodgeFromAgility(float& diminishing, float& nondiminishing);
     [[nodiscard]] float GetMissPercentageFromDefence() const;
-    float GetSpellCritFromIntellect();
-    float OCTRegenHPPerSpirit();
-    float OCTRegenMPPerSpirit();
+    float GetSpellCritFromIntellect() const;
+    float OCTRegenHPPerSpirit() const;
+    float OCTRegenMPPerSpirit() const;
     [[nodiscard]] float GetRatingMultiplier(CombatRating cr) const;
     [[nodiscard]] float GetRatingBonusValue(CombatRating cr) const;
     uint32 GetBaseSpellPowerBonus() { return m_baseSpellPower; }
@@ -2021,7 +2021,7 @@ public:
 
     void BuildCreateUpdateBlockForPlayer(UpdateData* data, Player* target) override;
     void DestroyForPlayer(Player* target, bool onDeath = false) const override;
-    void SendLogXPGain(uint32 GivenXP, Unit* victim, uint32 BonusXP, bool recruitAFriend = false, float group_rate = 1.0f);
+    void SendLogXPGain(uint32 GivenXP, Unit* victim, uint32 BonusXP, float group_rate = 1.0f);
 
     // notifiers
     void SendAttackSwingCantAttack();
@@ -2123,21 +2123,19 @@ public:
 
     void CheckAreaExploreAndOutdoor();
 
-    static TeamId TeamIdForRace(uint8 race);
-    [[nodiscard]] TeamId GetTeamId(bool original = false) const { return original ? TeamIdForRace(getRace(true)) : m_team; };
+    static TeamID TeamIdForRace(uint8 race);
+    [[nodiscard]] TeamID GetTeamId(bool original = false) const { return original ? TeamIdForRace(getRace(true)) : m_team; };
     void SetFactionForRace(uint8 race);
-    void setTeamId(TeamId teamid) { m_team = teamid; };
+    void setTeamId(TeamID teamid) { m_team = teamid; };
 
     void InitDisplayIds();
 
     bool IsAtGroupRewardDistance(WorldObject const* pRewardSource) const;
     bool IsAtLootRewardDistance(WorldObject const* pRewardSource) const;
-    bool IsAtRecruitAFriendDistance(WorldObject const* pOther) const;
     void RewardPlayerAndGroupAtKill(Unit* victim, bool isBattleGround);
     void RewardPlayerAndGroupAtEvent(uint32 creature_id, WorldObject* pRewardSource);
     bool isHonorOrXPTarget(Unit* victim) const;
 
-    bool GetsRecruitAFriendBonus(bool forXP);
     uint8 GetGrantableLevels() { return m_grantableLevels; }
     void SetGrantableLevels(uint8 val) { m_grantableLevels = val; }
 
@@ -2303,14 +2301,14 @@ public:
     [[nodiscard]] bool IsInvitedForBattlegroundQueueType(BattlegroundQueueTypeId bgQueueTypeId) const;
     [[nodiscard]] bool InBattlegroundQueueForBattlegroundQueueType(BattlegroundQueueTypeId bgQueueTypeId) const;
 
-    void SetBattlegroundId(uint32 id, BattlegroundTypeId bgTypeId, uint32 queueSlot, bool invited, bool isRandom, TeamId teamId);
+    void SetBattlegroundId(uint32 id, BattlegroundTypeId bgTypeId, uint32 queueSlot, bool invited, bool isRandom, TeamID teamId);
     uint32 AddBattlegroundQueueId(BattlegroundQueueTypeId val);
     bool HasFreeBattlegroundQueueId() const;
     void RemoveBattlegroundQueueId(BattlegroundQueueTypeId val);
     void SetInviteForBattlegroundQueueType(BattlegroundQueueTypeId bgQueueTypeId, uint32 instanceId);
     bool IsInvitedForBattlegroundInstance(uint32 instanceId) const;
 
-    [[nodiscard]] TeamId GetBgTeamId() const { return m_bgData.bgTeamId != TEAM_NEUTRAL ? m_bgData.bgTeamId : GetTeamId(); }
+    [[nodiscard]] TeamID GetBgTeamId() const { return m_bgData.bgTeamId != TEAM_NEUTRAL ? m_bgData.bgTeamId : GetTeamId(); }
 
     void LeaveBattleground(Battleground* bg = nullptr);
     [[nodiscard]] bool CanJoinToBattleground() const;
@@ -2335,11 +2333,11 @@ public:
     bool IsOutdoorPvPActive();
 
     /*********************************************************/
-    /***              ENVIROMENTAL SYSTEM                  ***/
+    /***              ENVIRONMENTAL SYSTEM                  ***/
     /*********************************************************/
 
     bool IsImmuneToEnvironmentalDamage();
-    uint32 EnvironmentalDamage(EnviromentalDamage type, uint32 damage);
+    uint32 EnvironmentalDamage(EnvironmentalDamageType type, uint32 damage);
 
     /*********************************************************/
     /***               FLOOD FILTER SYSTEM                 ***/
@@ -2357,9 +2355,6 @@ public:
         time_t Time = 0;
         uint32 Count = 0;
     };
-
-    void UpdateSpeakTime(ChatFloodThrottle::Index index);
-    [[nodiscard]] bool CanSpeak() const;
 
     /*********************************************************/
     /***                 VARIOUS SYSTEMS                   ***/
@@ -2575,9 +2570,9 @@ public:
     [[nodiscard]] Seconds GetCreationTime() const { return m_creationTime; }
 
     [[nodiscard]] bool HasTitle(uint32 bitIndex) const;
-    bool HasTitle(CharTitlesEntry const* title) const { return HasTitle(title->bit_index); }
+    bool HasTitle(CharTitlesEntry const* title) const { return HasTitle(title->BitIndex); }
     void SetTitle(CharTitlesEntry const* title, bool lost = false);
-    void SetCurrentTitle(CharTitlesEntry const* title, bool clear = false) { SetUInt32Value(PLAYER_CHOSEN_TITLE, clear ? 0 : title->bit_index); };
+    void SetCurrentTitle(CharTitlesEntry const* title, bool clear = false) { SetUInt32Value(PLAYER_CHOSEN_TITLE, clear ? 0 : title->BitIndex); };
 
     //bool isActiveObject() const { return true; }
     bool CanSeeSpellClickOn(Creature const* creature) const;
@@ -2750,34 +2745,34 @@ protected:
     /***                   LOAD SYSTEM                     ***/
     /*********************************************************/
 
-    void _LoadActions(PreparedQueryResult result);
-    void _LoadAuras(PreparedQueryResult result, uint32 timediff);
+    void _LoadActions(QueryResult result);
+    void _LoadAuras(QueryResult result, uint32 timediff);
     void _LoadGlyphAuras();
-    void _LoadInventory(PreparedQueryResult result, uint32 timeDiff);
-    void _LoadMail(PreparedQueryResult mailsResult, PreparedQueryResult mailItemsResult);
+    void _LoadInventory(QueryResult result, uint32 timeDiff);
+    void _LoadMail(QueryResult mailsResult, QueryResult mailItemsResult);
     static Item* _LoadMailedItem(ObjectGuid const& playerGuid, Player* player, uint32 mailId, Mail* mail, Field* fields);
-    void _LoadQuestStatus(PreparedQueryResult result);
-    void _LoadQuestStatusRewarded(PreparedQueryResult result);
-    void _LoadDailyQuestStatus(PreparedQueryResult result);
-    void _LoadWeeklyQuestStatus(PreparedQueryResult result);
-    void _LoadMonthlyQuestStatus(PreparedQueryResult result);
-    void _LoadSeasonalQuestStatus(PreparedQueryResult result);
-    void _LoadRandomBGStatus(PreparedQueryResult result);
+    void _LoadQuestStatus(QueryResult result);
+    void _LoadQuestStatusRewarded(QueryResult result);
+    void _LoadDailyQuestStatus(QueryResult result);
+    void _LoadWeeklyQuestStatus(QueryResult result);
+    void _LoadMonthlyQuestStatus(QueryResult result);
+    void _LoadSeasonalQuestStatus(QueryResult result);
+    void _LoadRandomBGStatus(QueryResult result);
     void _LoadGroup();
-    void _LoadSkills(PreparedQueryResult result);
-    void _LoadSpells(PreparedQueryResult result);
-    void _LoadFriendList(PreparedQueryResult result);
-    bool _LoadHomeBind(PreparedQueryResult result);
-    void _LoadDeclinedNames(PreparedQueryResult result);
+    void _LoadSkills(QueryResult result);
+    void _LoadSpells(QueryResult result);
+    void _LoadFriendList(QueryResult result);
+    bool _LoadHomeBind(QueryResult result);
+    void _LoadDeclinedNames(QueryResult result);
     void _LoadArenaTeamInfo();
-    void _LoadEquipmentSets(PreparedQueryResult result);
-    void _LoadEntryPointData(PreparedQueryResult result);
-    void _LoadGlyphs(PreparedQueryResult result);
-    void _LoadTalents(PreparedQueryResult result);
-    void _LoadInstanceTimeRestrictions(PreparedQueryResult result);
-    void _LoadBrewOfTheMonth(PreparedQueryResult result);
-    void _LoadCharacterSettings(PreparedQueryResult result);
-    void _LoadPetStable(uint8 petStableSlots, PreparedQueryResult result);
+    void _LoadEquipmentSets(QueryResult result);
+    void _LoadEntryPointData(QueryResult result);
+    void _LoadGlyphs(QueryResult result);
+    void _LoadTalents(QueryResult result);
+    void _LoadInstanceTimeRestrictions(QueryResult result);
+    void _LoadBrewOfTheMonth(QueryResult result);
+    void _LoadCharacterSettings(QueryResult result);
+    void _LoadPetStable(uint8 petStableSlots, QueryResult result);
 
     /*********************************************************/
     /***                   SAVE SYSTEM                     ***/
@@ -2819,12 +2814,11 @@ protected:
     void outDebugValues() const;
     ObjectGuid m_lootGuid;
 
-    TeamId m_team;
+    TeamID m_team;
     uint32 m_nextSave; // pussywizard
     uint16 m_additionalSaveTimer; // pussywizard
     uint8 m_additionalSaveMask; // pussywizard
     uint16 m_hostileReferenceCheckTimer; // pussywizard
-    std::array<ChatFloodThrottle, ChatFloodThrottle::MAX> m_chatFloodData;
     Difficulty m_dungeonDifficulty;
     Difficulty m_raidDifficulty;
     Difficulty m_raidMapDifficulty;

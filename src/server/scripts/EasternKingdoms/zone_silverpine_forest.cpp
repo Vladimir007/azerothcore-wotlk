@@ -166,7 +166,7 @@ struct npc_deathstalker_fearleia : public ScriptedAI
         {
             _playerGUID.Clear();
             _summons.DespawnAll();
-            me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+            me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
         }
     }
 
@@ -176,7 +176,7 @@ struct npc_deathstalker_fearleia : public ScriptedAI
         {
             _questInProgress = true;
             _playerGUID = player->GetGUID();
-            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+            me->RemoveNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
         }
 
         Talk(NPCSAY_INIT, player);

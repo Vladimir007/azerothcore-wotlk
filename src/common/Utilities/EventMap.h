@@ -1,26 +1,9 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef EVENT_MAP_H
+#define EVENT_MAP_H
 
-#ifndef _EVENT_MAP_H_
-#define _EVENT_MAP_H_
-
+#include <map>
 #include "Define.h"
 #include "Duration.h"
-#include <map>
 
 class EventMap
 {
@@ -32,12 +15,10 @@ class EventMap
     struct Event
     {
         Event() = default;
-        Event(EventId id, GroupIndex groupIndex, PhaseIndex phaseIndex) :
+        Event(const EventId id, const GroupIndex groupIndex, const PhaseIndex phaseIndex) :
             _id(id),
-            _groupMask(groupIndex ? GroupMask(1u << (groupIndex - 1u)) : 0u),
-            _phaseMask(phaseIndex ? PhaseMask(1u << (phaseIndex - 1u)) : 0u)
-        {
-        }
+            _groupMask(groupIndex ? static_cast<GroupMask>(1u << (groupIndex - 1u)) : 0u),
+            _phaseMask(phaseIndex ? static_cast<PhaseMask>(1u << (phaseIndex - 1u)) : 0u) { }
 
         EventId _id          = 0u;
         GroupMask _groupMask = 0u;
@@ -64,7 +45,7 @@ public:
     * @brief Updates the timer of the event map.
     * @param time Value to be added to time.
     */
-    void Update(uint32 time)
+    void Update(const uint32 time)
     {
         Update(Milliseconds(time));
     }
@@ -74,7 +55,7 @@ public:
     * @brief Updates the timer of the event map.
     * @param time Value in ms to be added to time.
     */
-    void Update(Milliseconds time)
+    void Update(const Milliseconds time)
     {
         _time += time;
     }
@@ -178,7 +159,7 @@ public:
     /**
     * @name ExecuteEvent
     * @brief Returns the next event to execute and removes it from map.
-    * @return Id of the event to execute.
+    * @return ID of the event to execute.
     */
     EventId ExecuteEvent();
 
@@ -251,7 +232,7 @@ private:
     *
     * This does not represent the real date/time value.
     * It's more like a stopwatch: It can run, it can be stopped,
-    * it can be resetted and so on. Events occur when this timer
+    * it can be reset and so on. Events occur when this timer
     * has reached their time value. Its value is changed in the
     * Update method.
     */
@@ -263,7 +244,7 @@ private:
     *
     * Contains the phases the event map is in. Multiple
     * phases from 1 to 8 can be set with SetPhase or
-    * AddPhase. RemovePhase deactives a phase.
+    * AddPhase. RemovePhase deactivates a phase.
     */
     PhaseMask _phaseMask{ 0 };
 

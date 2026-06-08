@@ -31,7 +31,7 @@ void BattlegroundMapScript::checkValidity()
 
     if (GetEntry() && !GetEntry()->IsBattleground())
     {
-        LOG_ERROR("maps.script", "BattlegroundMapScript for map {} is invalid.", GetEntry()->MapID);
+        LOG_ERROR("maps.script", "BattlegroundMapScript for map {} is invalid.", GetEntry()->ID);
     }
 }
 

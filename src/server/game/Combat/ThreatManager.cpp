@@ -706,12 +706,12 @@ void ThreatManager::ProcessAIUpdates()
     // modifiers by spell
     if (spell)
     {
-        if (SpellThreatEntry const* threatEntry = sSpellMgr->GetSpellThreatEntry(spell->Id))
+        if (SpellThreatEntry const* threatEntry = sSpellMgr->GetSpellThreatEntry(spell->ID))
             if (threatEntry->pctMod != 1.0f) // flat/AP modifiers handled in Spell::HandleThreatSpells
                 threat *= threatEntry->pctMod;
 
         if (Player* modOwner = victim->GetSpellModOwner())
-            modOwner->ApplySpellMod(spell->Id, SPELLMOD_THREAT, threat);
+            modOwner->ApplySpellMod(spell->ID, SPELLMOD_THREAT, threat);
     }
 
     // modifiers by effect school

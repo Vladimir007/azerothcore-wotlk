@@ -69,9 +69,9 @@ AC_API_EXPORT Races EnumUtils<Races>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<Races>::ToIndex(Races value)
+AC_API_EXPORT std::size_t EnumUtils<Races>::ToIndex(Races index)
 {
-    switch (value)
+    switch (index)
     {
         case RACE_HUMAN: return 0;
         case RACE_ORC: return 1;
@@ -132,9 +132,9 @@ AC_API_EXPORT Classes EnumUtils<Classes>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<Classes>::ToIndex(Classes value)
+AC_API_EXPORT std::size_t EnumUtils<Classes>::ToIndex(Classes index)
 {
-    switch (value)
+    switch (index)
     {
         case CLASS_WARRIOR: return 0;
         case CLASS_PALADIN: return 1;
@@ -239,9 +239,9 @@ AC_API_EXPORT SpellAttr0 EnumUtils<SpellAttr0>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<SpellAttr0>::ToIndex(SpellAttr0 value)
+AC_API_EXPORT std::size_t EnumUtils<SpellAttr0>::ToIndex(SpellAttr0 index)
 {
-    switch (value)
+    switch (index)
     {
         case SPELL_ATTR0_PROC_FAILURE_BURNS_CHARGE: return 0;
         case SPELL_ATTR0_USES_RANGED_SLOT: return 1;
@@ -368,9 +368,9 @@ AC_API_EXPORT SpellAttr1 EnumUtils<SpellAttr1>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<SpellAttr1>::ToIndex(SpellAttr1 value)
+AC_API_EXPORT std::size_t EnumUtils<SpellAttr1>::ToIndex(SpellAttr1 index)
 {
-    switch (value)
+    switch (index)
     {
         case SPELL_ATTR1_DISMISS_PET_FIRST: return 0;
         case SPELL_ATTR1_USE_ALL_MANA: return 1;
@@ -497,9 +497,9 @@ AC_API_EXPORT SpellAttr2 EnumUtils<SpellAttr2>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<SpellAttr2>::ToIndex(SpellAttr2 value)
+AC_API_EXPORT std::size_t EnumUtils<SpellAttr2>::ToIndex(SpellAttr2 index)
 {
-    switch (value)
+    switch (index)
     {
         case SPELL_ATTR2_ALLOW_DEAD_TARGET: return 0;
         case SPELL_ATTR2_NO_SHAPESHIFT_UI: return 1;
@@ -626,9 +626,9 @@ AC_API_EXPORT SpellAttr3 EnumUtils<SpellAttr3>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<SpellAttr3>::ToIndex(SpellAttr3 value)
+AC_API_EXPORT std::size_t EnumUtils<SpellAttr3>::ToIndex(SpellAttr3 index)
 {
-    switch (value)
+    switch (index)
     {
         case SPELL_ATTR3_PVP_ENABLING: return 0;
         case SPELL_ATTR3_NO_PROC_EQUIP_REQUIREMENT: return 1;
@@ -755,9 +755,9 @@ AC_API_EXPORT SpellAttr4 EnumUtils<SpellAttr4>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<SpellAttr4>::ToIndex(SpellAttr4 value)
+AC_API_EXPORT std::size_t EnumUtils<SpellAttr4>::ToIndex(SpellAttr4 index)
 {
-    switch (value)
+    switch (index)
     {
         case SPELL_ATTR4_NO_CAST_LOG: return 0;
         case SPELL_ATTR4_CLASS_TRIGGER_ONLY_ON_TARGET: return 1;
@@ -884,9 +884,9 @@ AC_API_EXPORT SpellAttr5 EnumUtils<SpellAttr5>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<SpellAttr5>::ToIndex(SpellAttr5 value)
+AC_API_EXPORT std::size_t EnumUtils<SpellAttr5>::ToIndex(SpellAttr5 index)
 {
-    switch (value)
+    switch (index)
     {
         case SPELL_ATTR5_ALLOW_ACTION_DURING_CHANNEL: return 0;
         case SPELL_ATTR5_NO_REAGENT_COST_WITH_AURA: return 1;
@@ -1013,9 +1013,9 @@ AC_API_EXPORT SpellAttr6 EnumUtils<SpellAttr6>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<SpellAttr6>::ToIndex(SpellAttr6 value)
+AC_API_EXPORT std::size_t EnumUtils<SpellAttr6>::ToIndex(SpellAttr6 index)
 {
-    switch (value)
+    switch (index)
     {
         case SPELL_ATTR6_NO_COOLDOWN_ON_TOOLTIP: return 0;
         case SPELL_ATTR6_DO_NOT_RESET_COOLDOWN_IN_ARENA: return 1;
@@ -1142,9 +1142,9 @@ AC_API_EXPORT SpellAttr7 EnumUtils<SpellAttr7>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<SpellAttr7>::ToIndex(SpellAttr7 value)
+AC_API_EXPORT std::size_t EnumUtils<SpellAttr7>::ToIndex(SpellAttr7 index)
 {
-    switch (value)
+    switch (index)
     {
         case SPELL_ATTR7_ALLOW_SPELL_REFLECTION: return 0;
         case SPELL_ATTR7_NO_TARGET_DURATION_MOD: return 1;
@@ -1585,9 +1585,9 @@ AC_API_EXPORT SpellCastResult EnumUtils<SpellCastResult>::FromIndex(std::size_t 
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<SpellCastResult>::ToIndex(SpellCastResult value)
+AC_API_EXPORT std::size_t EnumUtils<SpellCastResult>::ToIndex(SpellCastResult index)
 {
-    switch (value)
+    switch (index)
     {
         case SPELL_FAILED_SUCCESS: return 0;
         case SPELL_FAILED_AFFECTING_COMBAT: return 1;
@@ -1843,9 +1843,9 @@ AC_API_EXPORT AuraStateType EnumUtils<AuraStateType>::FromIndex(std::size_t inde
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<AuraStateType>::ToIndex(AuraStateType value)
+AC_API_EXPORT std::size_t EnumUtils<AuraStateType>::ToIndex(AuraStateType index)
 {
-    switch (value)
+    switch (index)
     {
         case AURA_STATE_NONE: return 0;
         case AURA_STATE_DEFENSE: return 1;
@@ -1958,9 +1958,9 @@ AC_API_EXPORT Mechanics EnumUtils<Mechanics>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<Mechanics>::ToIndex(Mechanics value)
+AC_API_EXPORT std::size_t EnumUtils<Mechanics>::ToIndex(Mechanics index)
 {
-    switch (value)
+    switch (index)
     {
         case MECHANIC_NONE: return 0;
         case MECHANIC_CHARM: return 1;
@@ -2371,9 +2371,9 @@ AC_API_EXPORT Emote EnumUtils<Emote>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<Emote>::ToIndex(Emote value)
+AC_API_EXPORT std::size_t EnumUtils<Emote>::ToIndex(Emote index)
 {
-    switch (value)
+    switch (index)
     {
         case EMOTE_ONESHOT_TALK: return 0;
         case EMOTE_ONESHOT_BOW: return 1;
@@ -2684,9 +2684,9 @@ AC_API_EXPORT ChatMsg EnumUtils<ChatMsg>::FromIndex(std::size_t index)
 }
 
 template <>
-AC_API_EXPORT std::size_t EnumUtils<ChatMsg>::ToIndex(ChatMsg value)
+AC_API_EXPORT std::size_t EnumUtils<ChatMsg>::ToIndex(ChatMsg index)
 {
-    switch (value)
+    switch (index)
     {
         case CHAT_MSG_ADDON: return 0;
         case CHAT_MSG_SYSTEM: return 1;

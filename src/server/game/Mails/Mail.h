@@ -158,8 +158,8 @@ private:
 
 struct MailItemInfo
 {
-    ObjectGuid::LowType item_guid;
-    uint32 item_template;
+    ObjectGuid::LowType itemGUID;
+    uint32 itemTemplate;
 };
 typedef std::vector<MailItemInfo> MailItemInfoVec;
 
@@ -185,8 +185,8 @@ struct Mail
     void AddItem(ObjectGuid::LowType itemGuidLow, uint32 item_template)
     {
         MailItemInfo mii;
-        mii.item_guid = itemGuidLow;
-        mii.item_template = item_template;
+        mii.itemGUID = itemGuidLow;
+        mii.itemTemplate = item_template;
         items.push_back(mii);
     }
 
@@ -194,7 +194,7 @@ struct Mail
     {
         for (MailItemInfoVec::iterator itr = items.begin(); itr != items.end(); ++itr)
         {
-            if (itr->item_guid == item_guid)
+            if (itr->itemGUID == item_guid)
             {
                 items.erase(itr);
                 return true;

@@ -1124,7 +1124,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (spell->Id == SPELL_HURL_SPEAR && me->HasAura(SPELL_AETHER_SHIELD))
+            if (spell->ID == SPELL_HURL_SPEAR && me->HasAura(SPELL_AETHER_SHIELD))
             {
                 me->RemoveAurasDueToSpell(SPELL_AETHER_SHIELD);
                 Talk(EMOTE_SVALNA_BROKEN_SHIELD, caster);
@@ -1150,7 +1150,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spell) override
         {
-            switch (spell->Id)
+            switch (spell->ID)
             {
                 case SPELL_IMPALING_SPEAR_KILL:
                     Unit::Kill(me, target);
@@ -1295,7 +1295,7 @@ public:
 
     void SpellHit(Unit* /*caster*/, SpellInfo const* spell) override
     {
-        if (spell->Id == SPELL_REVIVE_CHAMPION && !IsUndead)
+        if (spell->ID == SPELL_REVIVE_CHAMPION && !IsUndead)
         {
             me->setDeathState(DeathState::JustRespawned);
             uint32 newEntry = 0;
@@ -1796,7 +1796,7 @@ public:
 
         void SpellHitTarget(Unit* c, SpellInfo const* spell) override
         {
-            if (spell->Id == 71306 && c->IsCreature()) // Twisted Winds
+            if (spell->ID == 71306 && c->IsCreature()) // Twisted Winds
             {
                 Position myPos = me->GetPosition();
                 me->NearTeleportTo(c->GetPositionX(), c->GetPositionY(), c->GetPositionZ(), c->GetOrientation());
@@ -2758,7 +2758,7 @@ public:
 
         void SpellHitTarget(Unit* target, SpellInfo const* spell) override
         {
-            if (spell->Id == 71906 || spell->Id == 71942)
+            if (spell->ID == 71906 || spell->ID == 71942)
             {
                 if (Creature* c = me->SummonCreature(38410, *target, TEMPSUMMON_TIMED_DESPAWN_OUT_OF_COMBAT, 30000))
                 {

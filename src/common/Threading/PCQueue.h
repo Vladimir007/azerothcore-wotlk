@@ -1,32 +1,14 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef PCQ_H
+#define PCQ_H
 
-#ifndef _PCQ_H
-#define _PCQ_H
-
-#include <condition_variable>
-#include <queue>
 #include <atomic>
+#include <condition_variable>
 #include <mutex>
+#include <queue>
 
 template <typename T>
 class ProducerConsumerQueue
 {
-private:
     mutable std::mutex _queueLock;
     std::queue<T> _queue;
     std::condition_variable _condition;
@@ -39,7 +21,7 @@ public:
     void Push(const T& value)
     {
         {
-            std::lock_guard<std::mutex> lock(_queueLock);
+            std::lock_guard lock(_queueLock);
             _queue.push(std::move(value));
         }
         _condition.notify_one();
@@ -47,19 +29,19 @@ public:
 
     bool Empty() const
     {
-        std::lock_guard<std::mutex> lock(_queueLock);
+        std::lock_guard lock(_queueLock);
         return _queue.empty();
     }
 
     [[nodiscard]] std::size_t Size() const
     {
-        std::lock_guard<std::mutex> lock(_queueLock);
+        std::lock_guard lock(_queueLock);
         return _queue.size();
     }
 
     bool Pop(T& value)
     {
-        std::lock_guard<std::mutex> lock(_queueLock);
+        std::lock_guard lock(_queueLock);
         if (_queue.empty() || _cancel)
             return false;
 
@@ -70,7 +52,7 @@ public:
 
     void WaitAndPop(T& value)
     {
-        std::unique_lock<std::mutex> lock(_queueLock);
+        std::unique_lock lock(_queueLock);
 
         // Wait for the queue to have an element or the cancel/shutdown flag
         _condition.wait(lock, [this] { return !_queue.empty() || _cancel || _shutdown; });
@@ -85,7 +67,7 @@ public:
     // Clears the queue and immediately stops any consumers.
     void Cancel()
     {
-        std::lock_guard<std::mutex> lock(_queueLock);
+        std::lock_guard lock(_queueLock);
         while (!_queue.empty()) {
             T& value = _queue.front();
             DeleteQueuedObject(value);
@@ -104,13 +86,13 @@ public:
 
 private:
     template<typename E = T>
-    typename std::enable_if<std::is_pointer<E>::value>::type DeleteQueuedObject(E& obj)
+    std::enable_if_t<std::is_pointer_v<E>> DeleteQueuedObject(E& obj)
     {
         delete obj;
     }
 
     template<typename E = T>
-    typename std::enable_if<!std::is_pointer<E>::value>::type DeleteQueuedObject(E const& /*obj*/) { }
+    std::enable_if_t<!std::is_pointer_v<E>> DeleteQueuedObject(E const& /*obj*/) { }
 };
 
 #endif

@@ -48,7 +48,7 @@ void WorldSession::HandleAutostoreLootItemOpcode(WorldPacket& recvData)
         //    go = nullptr;
 
         // not check distance for GO in case owned GO (fishing bobber case, for example) or Fishing hole GO
-        if (!go || ((go->GetOwnerGUID() != _player->GetGUID() && go->GetGoType() != GAMEOBJECT_TYPE_FISHINGHOLE) && !go->IsWithinDistInMap(_player)))
+        if (!go || ((go->GetOwnerGUID() != _player->GetGUID() && go->GetGoType() != GAME_OBJECT_TYPE_FISHING_HOLE) && !go->IsWithinDistInMap(_player)))
         {
             player->SendLootRelease(lguid);
             return;
@@ -285,21 +285,21 @@ void WorldSession::DoLootRelease(ObjectGuid lguid)
         GameObject* go = GetPlayer()->GetMap()->GetGameObject(lguid);
 
         // not check distance for GO in case owned GO (fishing bobber case, for example) or Fishing hole GO
-        if (!go || ((go->GetOwnerGUID() != _player->GetGUID() && go->GetGoType() != GAMEOBJECT_TYPE_FISHINGHOLE) && !go->IsWithinDistInMap(_player)))
+        if (!go || ((go->GetOwnerGUID() != _player->GetGUID() && go->GetGoType() != GAME_OBJECT_TYPE_FISHING_HOLE) && !go->IsWithinDistInMap(_player)))
         {
             return;
         }
 
         loot = &go->loot;
 
-        if (go->GetGoType() == GAMEOBJECT_TYPE_DOOR)
+        if (go->GetGoType() == GAME_OBJECT_TYPE_DOOR)
         {
             // locked doors are opened with spelleffect openlock, prevent remove its as looted
             go->UseDoorOrButton();
         }
-        else if (loot->isLooted() || go->GetGoType() == GAMEOBJECT_TYPE_FISHINGNODE)
+        else if (loot->isLooted() || go->GetGoType() == GAME_OBJECT_TYPE_FISHING_NODE)
         {
-            if (go->GetGoType() == GAMEOBJECT_TYPE_FISHINGHOLE)
+            if (go->GetGoType() == GAME_OBJECT_TYPE_FISHING_HOLE)
             {
                 // The fishing hole used once more
                 go->AddUse();                               // if the max usage is reached, will be despawned in next tick
@@ -315,10 +315,10 @@ void WorldSession::DoLootRelease(ObjectGuid lguid)
                 // Xinef: moved event execution to loot release (after everything is looted)
                 // Xinef: 99% sure that this worked like this on blizz
                 // Xinef: prevents exploits with just opening GO and spawning bilions of npcs, which can crash core if you know what you're doin ;)
-                if (go->GetGoType() == GAMEOBJECT_TYPE_CHEST && go->GetGOInfo()->chest.eventId)
+                if (go->GetGoType() == GAME_OBJECT_TYPE_CHEST && go->GetGOInfo()->Chest.eventId)
                 {
-                    LOG_DEBUG("spells.aura", "Chest ScriptStart id {} for GO {}", go->GetGOInfo()->chest.eventId, go->GetSpawnId());
-                    player->GetMap()->ScriptsStart(sEventScripts, go->GetGOInfo()->chest.eventId, player, go);
+                    LOG_DEBUG("spells.aura", "Chest ScriptStart id {} for GO {}", go->GetGOInfo()->Chest.eventId, go->GetSpawnId());
+                    player->GetMap()->ScriptsStart(sEventScripts, go->GetGOInfo()->Chest.eventId, player, go);
                 }
             }
 

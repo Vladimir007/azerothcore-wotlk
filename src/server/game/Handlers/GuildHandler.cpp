@@ -230,7 +230,7 @@ void WorldSession::HandleSaveGuildEmblemOpcode(WorldPackets::Guild::SaveGuildEmb
                    , GetPlayerInfo(), packet.Vendor.ToString(), emblemInfo.GetStyle()
                    , emblemInfo.GetColor(), emblemInfo.GetBorderStyle()
                    , emblemInfo.GetBorderColor(), emblemInfo.GetBackgroundColor());
-    if (GetPlayer()->GetNPCIfCanInteractWith(packet.Vendor, UNIT_NPC_FLAG_TABARDDESIGNER))
+    if (GetPlayer()->GetNPCIfCanInteractWith(packet.Vendor, UNIT_NPC_FLAG_TABARD_DESIGNER))
     {
         // Remove fake death
         if (GetPlayer()->HasUnitState(UNIT_STATE_DIED))
@@ -273,7 +273,7 @@ void WorldSession::HandleGuildBankerActivate(WorldPackets::Guild::GuildBankActiv
     LOG_DEBUG("guild", "CMSG_GUILD_BANKER_ACTIVATE [{}]: Go: [{}] AllSlots: {}"
     , GetPlayerInfo(), packet.Banker.ToString(), packet.FullUpdate);
 
-    GameObject const* const go = GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAMEOBJECT_TYPE_GUILD_BANK);
+    GameObject const* const go = GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAME_OBJECT_TYPE_GUILD_BANK);
     if (!go)
         return;
 
@@ -293,7 +293,7 @@ void WorldSession::HandleGuildBankQueryTab(WorldPackets::Guild::GuildBankQueryTa
     LOG_DEBUG("guild", "CMSG_GUILD_BANK_QUERY_TAB [{}]: Go: [{}], TabId: {}, ShowTabs: {}"
     , GetPlayerInfo(), packet.Banker.ToString(), packet.Tab, packet.FullUpdate);
 
-    if (GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAMEOBJECT_TYPE_GUILD_BANK))
+    if (GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAME_OBJECT_TYPE_GUILD_BANK))
         if (Guild* guild = GetPlayer()->GetGuild())
             guild->SendBankTabData(this, packet.Tab, packet.FullUpdate);
 }
@@ -303,7 +303,7 @@ void WorldSession::HandleGuildBankDepositMoney(WorldPackets::Guild::GuildBankDep
     LOG_DEBUG("guild", "CMSG_GUILD_BANK_DEPOSIT_MONEY [{}]: Go: [{}], money: {}",
               GetPlayerInfo(), packet.Banker.ToString(), packet.Money);
 
-    if (GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAMEOBJECT_TYPE_GUILD_BANK))
+    if (GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAME_OBJECT_TYPE_GUILD_BANK))
         if (packet.Money && GetPlayer()->HasEnoughMoney(packet.Money))
             if (Guild* guild = GetPlayer()->GetGuild())
                 guild->HandleMemberDepositMoney(this, packet.Money);
@@ -313,14 +313,14 @@ void WorldSession::HandleGuildBankWithdrawMoney(WorldPackets::Guild::GuildBankWi
 {
     LOG_DEBUG("guild", "CMSG_GUILD_BANK_WITHDRAW_MONEY [{}]: Go: [{}], money: {}",
                    GetPlayerInfo(), packet.Banker.ToString(), packet.Money);
-    if (packet.Money && GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAMEOBJECT_TYPE_GUILD_BANK))
+    if (packet.Money && GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAME_OBJECT_TYPE_GUILD_BANK))
         if (Guild* guild = GetPlayer()->GetGuild())
             guild->HandleMemberWithdrawMoney(this, packet.Money);
 }
 
 void WorldSession::HandleGuildBankSwapItems(WorldPackets::Guild::GuildBankSwapItems& packet)
 {
-    if (!GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAMEOBJECT_TYPE_GUILD_BANK))
+    if (!GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAME_OBJECT_TYPE_GUILD_BANK))
     {
         return;
     }
@@ -361,7 +361,7 @@ void WorldSession::HandleGuildBankBuyTab(WorldPackets::Guild::GuildBankBuyTab& p
 {
     LOG_DEBUG("guild", "CMSG_GUILD_BANK_BUY_TAB [{}]: [{}[, TabId: {}", GetPlayerInfo(), packet.Banker .ToString(), packet.BankTab);
 
-    if (GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAMEOBJECT_TYPE_GUILD_BANK))
+    if (GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAME_OBJECT_TYPE_GUILD_BANK))
         if (Guild* guild = GetPlayer()->GetGuild())
             guild->HandleBuyBankTab(this, packet.BankTab);
 }
@@ -372,7 +372,7 @@ void WorldSession::HandleGuildBankUpdateTab(WorldPackets::Guild::GuildBankUpdate
     , GetPlayerInfo(), packet.Banker.ToString(), packet.BankTab, packet.Name, packet.Icon);
 
     if (!packet.Name.empty() && !packet.Icon.empty())
-        if (GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAMEOBJECT_TYPE_GUILD_BANK))
+        if (GetPlayer()->GetGameObjectIfCanInteractWith(packet.Banker, GAME_OBJECT_TYPE_GUILD_BANK))
             if (Guild* guild = GetPlayer()->GetGuild())
                 guild->HandleSetBankTabInfo(this, packet.BankTab, packet.Name, packet.Icon);
 }

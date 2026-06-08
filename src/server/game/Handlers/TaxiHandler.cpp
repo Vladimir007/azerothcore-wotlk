@@ -36,7 +36,7 @@ void WorldSession::SendTaxiStatus(ObjectGuid guid)
 {
     Player* const player = GetPlayer();
     Creature* unit = ObjectAccessor::GetCreature(*player, guid);
-    if (!unit || unit->IsHostileTo(player) || !unit->HasNpcFlag(UNIT_NPC_FLAG_FLIGHTMASTER))
+    if (!unit || unit->IsHostileTo(player) || !unit->HasNpcFlag(UNIT_NPC_FLAG_FLIGHT_MASTER))
     {
         LOG_DEBUG("network", "WorldSession::SendTaxiStatus - Unit ({}) not found.", guid.ToString());
         return;
@@ -62,7 +62,7 @@ void WorldSession::HandleTaxiQueryAvailableNodes(WorldPacket& recvData)
     recvData >> guid;
 
     // cheating checks
-    Creature* unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_FLIGHTMASTER);
+    Creature* unit = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_FLIGHT_MASTER);
     if (!unit)
     {
         LOG_DEBUG("network", "WORLD: HandleTaxiQueryAvailableNodes - Unit ({}) not found or you can't interact with him.", guid.ToString());
@@ -168,7 +168,7 @@ void WorldSession::HandleActivateTaxiExpressOpcode(WorldPacket& recvData)
 
     recvData >> guid >> node_count;
 
-    Creature* npc = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_FLIGHTMASTER);
+    Creature* npc = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_FLIGHT_MASTER);
     if (!npc)
     {
         LOG_DEBUG("network", "WORLD: HandleActivateTaxiExpressOpcode - Unit ({}) not found or you can't interact with it.", guid.ToString());
@@ -185,7 +185,7 @@ void WorldSession::HandleActivateTaxiExpressOpcode(WorldPacket& recvData)
         if (!GetPlayer()->m_taxi.IsTaximaskNodeKnown(node) && !GetPlayer()->isTaxiCheater())
         {
             SendActivateTaxiReply(ERR_TAXINOTVISITED);
-            recvData.rfinish();
+            recvData.rFinish();
             return;
         }
 
@@ -219,22 +219,21 @@ void WorldSession::HandleMoveSplineDoneOpcode(WorldPacket& recvData)
         // 2) switch from one map to other in case multim-map taxi path
         // we need process only (1)
 
-        uint32 curDest = GetPlayer()->m_taxi.GetTaxiDestination();
-        if (curDest)
+        if (const uint32 curDest = GetPlayer()->m_taxi.GetTaxiDestination())
         {
-            TaxiNodesEntry const* curDestNode = sTaxiNodesStore.LookupEntry(curDest);
+            const TaxiNodesEntry* curDestNode = sTaxiNodesStore.LookupEntry(curDest);
 
             // far teleport case
-            if (curDestNode && curDestNode->map_id != GetPlayer()->GetMapId() && GetPlayer()->GetMotionMaster()->GetCurrentMovementGeneratorType() == FLIGHT_MOTION_TYPE)
+            if (curDestNode && curDestNode->MapID != GetPlayer()->GetMapId() && GetPlayer()->GetMotionMaster()->GetCurrentMovementGeneratorType() == FLIGHT_MOTION_TYPE)
             {
-                if (FlightPathMovementGenerator* flight = dynamic_cast<FlightPathMovementGenerator*>(GetPlayer()->GetMotionMaster()->top()))
+                if (const auto flight = dynamic_cast<FlightPathMovementGenerator*>(GetPlayer()->GetMotionMaster()->top()))
                 {
                     // short preparations to continue flight
                     flight->SetCurrentNodeAfterTeleport();
                     TaxiPathNodeEntry const* node = flight->GetPath()[flight->GetCurrentNode()];
                     flight->SkipCurrentNode();
 
-                    GetPlayer()->TeleportTo(curDestNode->map_id, node->x, node->y, node->z, GetPlayer()->GetOrientation(), TELE_TO_NOT_LEAVE_TAXI);
+                    GetPlayer()->TeleportTo(curDestNode->MapID, node->X, node->Y, node->Z, GetPlayer()->GetOrientation(), TELE_TO_NOT_LEAVE_TAXI);
                 }
             }
 
@@ -243,9 +242,7 @@ void WorldSession::HandleMoveSplineDoneOpcode(WorldPacket& recvData)
 
         // at this point only 1 node is expected (final destination)
         if (GetPlayer()->m_taxi.GetPath().size() != 1)
-        {
             return;
-        }
 
         GetPlayer()->CleanupAfterTaxiFlight();
         GetPlayer()->SetFallInformation(GameTime::GetGameTime().count(), GetPlayer()->GetPositionZ());
@@ -276,7 +273,7 @@ void WorldSession::HandleActivateTaxiOpcode(WorldPacket& recvData)
     GetPlayer()->SetCanTeleport(true);
     recvData >> guid >> nodes[0] >> nodes[1];
     LOG_DEBUG("network", "WORLD: Received CMSG_ACTIVATETAXI from {} to {}", nodes[0], nodes[1]);
-    Creature* npc = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_FLIGHTMASTER);
+    Creature* npc = GetPlayer()->GetNPCIfCanInteractWith(guid, UNIT_NPC_FLAG_FLIGHT_MASTER);
     if (!npc)
     {
         LOG_DEBUG("network", "WORLD: HandleActivateTaxiOpcode - Unit ({}) not found or you can't interact with it.", guid.ToString());

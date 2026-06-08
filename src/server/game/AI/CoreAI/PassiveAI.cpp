@@ -30,7 +30,7 @@ NullCreatureAI::NullCreatureAI(Creature* c) : CreatureAI(c)
 
 int32 NullCreatureAI::Permissible(Creature const* creature)
 {
-    if (creature->HasNpcFlag(UNIT_NPC_FLAG_SPELLCLICK))
+    if (creature->HasNpcFlag(UNIT_NPC_FLAG_SPELL_CLICK))
         return PERMIT_BASE_PROACTIVE + 50;
 
     if (creature->IsTrigger())

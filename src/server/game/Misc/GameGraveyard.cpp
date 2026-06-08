@@ -83,7 +83,7 @@ GraveyardStruct const* Graveyard::GetGraveyard(uint32 ID) const
     return nullptr;
 }
 
-GraveyardStruct const* Graveyard::GetDefaultGraveyard(TeamId teamId)
+GraveyardStruct const* Graveyard::GetDefaultGraveyard(TeamID teamId)
 {
     enum DefaultGraveyard
     {
@@ -94,7 +94,7 @@ GraveyardStruct const* Graveyard::GetDefaultGraveyard(TeamId teamId)
     return GetGraveyard(teamId == TEAM_HORDE ? HORDE_GRAVEYARD : ALLIANCE_GRAVEYARD);
 }
 
-GraveyardStruct const* Graveyard::GetClosestGraveyard(Player* player, TeamId teamId, bool nearCorpse)
+GraveyardStruct const* Graveyard::GetClosestGraveyard(Player* player, TeamID teamId, bool nearCorpse)
 {
     uint32 graveyardOverride = 0;
     sScriptMgr->OnPlayerBeforeChooseGraveyard(player, teamId, nearCorpse, graveyardOverride);
@@ -212,9 +212,9 @@ GraveyardStruct const* Graveyard::GetClosestGraveyard(Player* player, TeamId tea
         {
             // if find graveyard at different map from where entrance placed (or no entrance data), use any first
             if (!mapEntry
-                    || mapEntry->entrance_map < 0
-                    || uint32(mapEntry->entrance_map) != entry->Map
-                    || (mapEntry->entrance_x == 0 && mapEntry->entrance_y == 0))
+                    || mapEntry->EntranceMap < 0
+                    || uint32(mapEntry->EntranceMap) != entry->Map
+                    || (mapEntry->EntranceX == 0 && mapEntry->EntranceY == 0))
             {
                 // not have any corrdinates for check distance anyway
                 entryFar = entry;
@@ -222,8 +222,8 @@ GraveyardStruct const* Graveyard::GetClosestGraveyard(Player* player, TeamId tea
             }
 
             // at entrance map calculate distance (2D);
-            float dist2 = (entry->x - mapEntry->entrance_x) * (entry->x - mapEntry->entrance_x)
-                          + (entry->y - mapEntry->entrance_y) * (entry->y - mapEntry->entrance_y);
+            float dist2 = (entry->x - mapEntry->EntranceX) * (entry->x - mapEntry->EntranceX)
+                          + (entry->y - mapEntry->EntranceY) * (entry->y - mapEntry->EntranceY);
             if (foundEntr)
             {
                 if (dist2 < distEntr)
@@ -282,7 +282,7 @@ GraveyardData const* Graveyard::FindGraveyardData(uint32 id, uint32 zoneId)
     return nullptr;
 }
 
-bool Graveyard::AddGraveyardLink(uint32 id, uint32 zoneId, TeamId teamId, bool persist /*= true*/)
+bool Graveyard::AddGraveyardLink(uint32 id, uint32 zoneId, TeamID teamId, bool persist /*= true*/)
 {
     if (FindGraveyardData(id, zoneId))
         return false;
@@ -310,7 +310,7 @@ bool Graveyard::AddGraveyardLink(uint32 id, uint32 zoneId, TeamId teamId, bool p
     return true;
 }
 
-void Graveyard::RemoveGraveyardLink(uint32 id, uint32 zoneId, TeamId teamId, bool persist /*= false*/)
+void Graveyard::RemoveGraveyardLink(uint32 id, uint32 zoneId, TeamID teamId, bool persist /*= false*/)
 {
     GraveyardMapBoundsNonConst range = GraveyardStore.equal_range(zoneId);
     if (range.first == range.second)
@@ -386,7 +386,7 @@ void Graveyard::LoadGraveyardZones()
         uint32 safeLocId = fields[0].Get<uint32>();
         uint32 zoneId = fields[1].Get<uint32>();
         uint32 team = fields[2].Get<uint16>();
-        TeamId teamId = team == 0 ? TEAM_NEUTRAL : (team == ALLIANCE ? TEAM_ALLIANCE : TEAM_HORDE);
+        TeamID teamId = team == 0 ? TEAM_NEUTRAL : (team == ALLIANCE ? TEAM_ALLIANCE : TEAM_HORDE);
 
         GraveyardStruct const* entry = GetGraveyard(safeLocId);
         if (!entry)

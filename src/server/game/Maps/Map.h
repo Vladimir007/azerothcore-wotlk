@@ -28,6 +28,7 @@
 #include "GridDefines.h"
 #include "GridRefMgr.h"
 #include "MapCollisionData.h"
+#include "MapDefines.h"
 #include "MapGridManager.h"
 #include "MapRefMgr.h"
 #include "ObjectDefines.h"
@@ -121,7 +122,7 @@ enum LineOfSightChecks
 struct InstanceTemplate
 {
     uint32 Parent;
-    uint32 ScriptId;
+    uint32 ScriptID;
     bool AllowMount;
 };
 
@@ -207,7 +208,7 @@ public:
     template<class T, class CONTAINER> void Visit(const Cell& cell, TypeContainerVisitor<T, CONTAINER>& visitor);
 
     bool IsGridLoaded(GridCoord const& gridCoord) const;
-    bool IsGridLoaded(float x, float y) const
+    bool IsGridLoaded(const float x, const float y) const
     {
         return IsGridLoaded(Acore::ComputeGridCoord(x, y));
     }
@@ -227,7 +228,7 @@ public:
     GridTerrainData* GetGridTerrainData(GridCoord const& gridCoord);
     GridTerrainData* GetGridTerrainData(float x, float y);
 
-    [[nodiscard]] uint32 GetId() const { return i_mapEntry->MapID; }
+    [[nodiscard]] uint32 GetId() const { return i_mapEntry->ID; }
 
     [[nodiscard]] Map const* GetParent() const { return m_parentMap; }
 
@@ -235,7 +236,7 @@ public:
     std::unordered_set<Unit*> i_objectsForDelayedVisibility;
     void HandleDelayedVisibility();
 
-    // some calls like isInWater should not use vmaps due to processor power
+    // some calls like isInWater should not use vMaps due to processor power
     // can return INVALID_HEIGHT if under z+2 z coord not found height
     [[nodiscard]] float GetHeight(float x, float y, float z, bool checkVMap = true, float maxSearchDist = DEFAULT_HEIGHT_SEARCH) const;
     [[nodiscard]] float GetHeight(Position const& pos, bool checkVMap = true, float maxSearchDist = DEFAULT_HEIGHT_SEARCH) const { return GetHeight(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), checkVMap, maxSearchDist); }
@@ -284,14 +285,14 @@ public:
 
     virtual EnterState CannotEnter(Player* /*player*/, bool /*loginCheck = false*/) { return CAN_ENTER; }
 
-    [[nodiscard]] const char* GetMapName() const;
+    [[nodiscard]] std::string GetMapName() const;
 
     // have meaning only for instanced map (that have set real difficulty)
     [[nodiscard]] Difficulty GetDifficulty() const { return Difficulty(GetSpawnMode()); }
     [[nodiscard]] bool IsRegularDifficulty() const { return GetDifficulty() == REGULAR_DIFFICULTY; }
     [[nodiscard]] MapDifficulty const* GetMapDifficulty() const;
 
-    [[nodiscard]] bool Instanceable() const { return i_mapEntry && i_mapEntry->Instanceable(); }
+    [[nodiscard]] bool Instanceable() const { return i_mapEntry && i_mapEntry->InstanceAble(); }
     [[nodiscard]] bool IsDungeon() const { return i_mapEntry && i_mapEntry->IsDungeon(); }
     [[nodiscard]] bool IsNonRaidDungeon() const { return i_mapEntry && i_mapEntry->IsNonRaidDungeon(); }
     [[nodiscard]] bool IsRaid() const { return i_mapEntry && i_mapEntry->IsRaid(); }
@@ -443,8 +444,8 @@ public:
 
     static void DeleteRespawnTimesInDB(uint16 mapId, uint32 instanceId);
 
-    bool SendZoneMessage(uint32 zone, WorldPacket const* packet, WorldSession const* self = nullptr, TeamId teamId = TEAM_NEUTRAL) const;
-    void SendZoneText(uint32 zoneId, char const* text, WorldSession const* self = nullptr, TeamId teamId = TEAM_NEUTRAL) const;
+    bool SendZoneMessage(uint32 zone, WorldPacket const* packet, WorldSession const* self = nullptr, TeamID teamId = TEAM_NEUTRAL) const;
+    void SendZoneText(uint32 zoneId, char const* text, WorldSession const* self = nullptr, TeamID teamId = TEAM_NEUTRAL) const;
 
     void SendInitTransports(Player* player);
     void SendRemoveTransports(Player* player);

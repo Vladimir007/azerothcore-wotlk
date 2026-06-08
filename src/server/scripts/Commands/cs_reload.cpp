@@ -1,23 +1,5 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "AchievementMgr.h"
 #include "AuctionHouseMgr.h"
-#include "AutobroadcastMgr.h"
 #include "BattlegroundMgr.h"
 #include "Chat.h"
 #include "CommandScript.h"
@@ -27,7 +9,6 @@
 #include "ItemEnchantmentMgr.h"
 #include "LFGMgr.h"
 #include "Language.h"
-#include "MapMgr.h"
 #include "MotdMgr.h"
 #include "ObjectMgr.h"
 #include "PoolMgr.h"
@@ -40,9 +21,7 @@
 #include "StringConvert.h"
 #include "TicketMgr.h"
 #include "Tokenize.h"
-#include "WardenCheckMgr.h"
 #include "WaypointMgr.h"
-#include "WorldGlobals.h"
 
 using namespace Acore::ChatCommands;
 
@@ -59,7 +38,6 @@ public:
             { "area",                          HandleReloadAllAreaCommand,                    SEC_ADMINISTRATOR, Console::Yes },
             { "gossips",                       HandleReloadAllGossipsCommand,                 SEC_ADMINISTRATOR, Console::Yes },
             { "item",                          HandleReloadAllItemCommand,                    SEC_ADMINISTRATOR, Console::Yes },
-            { "locales",                       HandleReloadAllLocalesCommand,                 SEC_ADMINISTRATOR, Console::Yes },
             { "loot",                          HandleReloadAllLootCommand,                    SEC_ADMINISTRATOR, Console::Yes },
             { "npc",                           HandleReloadAllNpcCommand,                     SEC_ADMINISTRATOR, Console::Yes },
             { "quest",                         HandleReloadAllQuestCommand,                   SEC_ADMINISTRATOR, Console::Yes },
@@ -69,24 +47,19 @@ public:
         };
         static ChatCommandTable reloadCommandTable =
         {
-            { "antidos_opcode_policies",       HandleReloadAntiDosOpcodePoliciesCommand,      SEC_ADMINISTRATOR, Console::Yes },
             { "auctions",                      HandleReloadAuctionsCommand,                   SEC_ADMINISTRATOR, Console::Yes },
             { "dungeon_access_template",       HandleReloadDungeonAccessCommand,              SEC_ADMINISTRATOR, Console::Yes },
             { "dungeon_access_requirements",   HandleReloadDungeonAccessCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "achievement_criteria_data",     HandleReloadAchievementCriteriaDataCommand,    SEC_ADMINISTRATOR, Console::Yes },
-            { "achievement_reward",            HandleReloadAchievementRewardCommand,          SEC_ADMINISTRATOR, Console::Yes },
+            { "world_achievement_criteria_data", HandleReloadAchievementCriteriaDataCommand,    SEC_ADMINISTRATOR, Console::Yes },
+            { "world_achievement_reward",            HandleReloadAchievementRewardCommand,          SEC_ADMINISTRATOR, Console::Yes },
             { "all", reloadAllCommandTable },
             { "areatrigger",                   HandleReloadQuestAreaTriggersCommand,          SEC_ADMINISTRATOR, Console::Yes },
             { "areatrigger_involvedrelation",  HandleReloadQuestAreaTriggersCommand,          SEC_ADMINISTRATOR, Console::Yes },
             { "areatrigger_tavern",            HandleReloadAreaTriggerTavernCommand,          SEC_ADMINISTRATOR, Console::Yes },
             { "areatrigger_teleport",          HandleReloadAreaTriggerTeleportCommand,        SEC_ADMINISTRATOR, Console::Yes },
-            { "autobroadcast",                 HandleReloadAutobroadcastCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "motd",                          HandleReloadMotdCommand,                       SEC_ADMINISTRATOR, Console::Yes },
-            { "broadcast_text",                HandleReloadBroadcastTextCommand,              SEC_ADMINISTRATOR, Console::Yes },
             { "battleground_template",         HandleReloadBattlegroundTemplate,              SEC_ADMINISTRATOR, Console::Yes },
             { "command",                       HandleReloadCommandCommand,                    SEC_ADMINISTRATOR, Console::Yes },
             { "conditions",                    HandleReloadConditions,                        SEC_ADMINISTRATOR, Console::Yes },
-            { "config",                        HandleReloadConfigCommand,                     SEC_ADMINISTRATOR, Console::Yes },
             { "creature_text",                 HandleReloadCreatureText,                      SEC_ADMINISTRATOR, Console::Yes },
             { "creature_questender",           HandleReloadCreatureQuestEnderCommand,         SEC_ADMINISTRATOR, Console::Yes },
             { "creature_linked_respawn",       HandleReloadLinkedRespawnCommand,              SEC_ADMINISTRATOR, Console::Yes },
@@ -112,19 +85,6 @@ public:
             { "item_loot_template",            HandleReloadLootTemplatesItemCommand,          SEC_ADMINISTRATOR, Console::Yes },
             { "item_set_names",                HandleReloadItemSetNamesCommand,               SEC_ADMINISTRATOR, Console::Yes },
             { "lfg_dungeon_rewards",           HandleReloadLfgRewardsCommand,                 SEC_ADMINISTRATOR, Console::Yes },
-            { "achievement_reward_locale",     HandleReloadLocalesAchievementRewardCommand,   SEC_ADMINISTRATOR, Console::Yes },
-            { "creature_template_locale",      HandleReloadLocalesCreatureCommand,            SEC_ADMINISTRATOR, Console::Yes },
-            { "creature_text_locale",          HandleReloadLocalesCreatureTextCommand,        SEC_ADMINISTRATOR, Console::Yes },
-            { "gameobject_template_locale",    HandleReloadLocalesGameobjectCommand,          SEC_ADMINISTRATOR, Console::Yes },
-            { "gossip_menu_option_locale",     HandleReloadLocalesGossipMenuOptionCommand,    SEC_ADMINISTRATOR, Console::Yes },
-            { "item_template_locale",          HandleReloadLocalesItemCommand,                SEC_ADMINISTRATOR, Console::Yes },
-            { "item_set_name_locale",          HandleReloadLocalesItemSetNameCommand,         SEC_ADMINISTRATOR, Console::Yes },
-            { "npc_text_locale",               HandleReloadLocalesNpcTextCommand,             SEC_ADMINISTRATOR, Console::Yes },
-            { "page_text_locale",              HandleReloadLocalesPageTextCommand,            SEC_ADMINISTRATOR, Console::Yes },
-            { "points_of_interest_locale",     HandleReloadLocalesPointsOfInterestCommand,    SEC_ADMINISTRATOR, Console::Yes },
-            { "quest_template_locale",         HandleReloadLocalesQuestCommand,               SEC_ADMINISTRATOR, Console::Yes },
-            { "quest_offer_reward_locale",     HandleReloadLocalesQuestOfferRewardCommand,    SEC_ADMINISTRATOR, Console::Yes },
-            { "quest_request_item_locale",     HandleReloadLocalesQuestRequestItemsCommand,   SEC_ADMINISTRATOR, Console::Yes },
             { "mail_level_reward",             HandleReloadMailLevelRewardCommand,            SEC_ADMINISTRATOR, Console::Yes },
             { "mail_loot_template",            HandleReloadLootTemplatesMailCommand,          SEC_ADMINISTRATOR, Console::Yes },
             { "mail_server_template",          HandleReloadMailServerTemplateCommand,         SEC_ADMINISTRATOR, Console::Yes },
@@ -163,9 +123,7 @@ public:
             { "spell_threats",                 HandleReloadSpellThreatsCommand,               SEC_ADMINISTRATOR, Console::Yes },
             { "spell_group_stack_rules",       HandleReloadSpellGroupStackRulesCommand,       SEC_ADMINISTRATOR, Console::Yes },
             { "player_loot_template",          HandleReloadLootTemplatesPlayerCommand,        SEC_ADMINISTRATOR, Console::Yes },
-            { "module_string",                 HandleReloadModuleStringCommand,               SEC_ADMINISTRATOR, Console::Yes },
             { "acore_string",                  HandleReloadAcoreStringCommand,                SEC_ADMINISTRATOR, Console::Yes },
-            { "warden_action",                 HandleReloadWardenactionCommand,               SEC_ADMINISTRATOR, Console::Yes },
             { "waypoint_scripts",              HandleReloadWpScriptsCommand,                  SEC_ADMINISTRATOR, Console::Yes },
             { "waypoint_data",                 HandleReloadWpCommand,                         SEC_ADMINISTRATOR, Console::Yes },
             { "vehicle_accessory",             HandleReloadVehicleAccessoryCommand,           SEC_ADMINISTRATOR, Console::Yes },
@@ -197,7 +155,6 @@ public:
         HandleReloadAllSpellCommand(handler);
         HandleReloadAllItemCommand(handler);
         HandleReloadAllGossipsCommand(handler);
-        HandleReloadAllLocalesCommand(handler);
 
         HandleReloadDungeonAccessCommand(handler);
         HandleReloadMailLevelRewardCommand(handler);
@@ -212,9 +169,6 @@ public:
         HandleReloadVehicleAccessoryCommand(handler);
         HandleReloadVehicleTemplateAccessoryCommand(handler);
 
-        HandleReloadAutobroadcastCommand(handler);
-        HandleReloadMotdCommand(handler);
-        HandleReloadBroadcastTextCommand(handler);
         HandleReloadBattlegroundTemplate(handler);
         return true;
     }
@@ -324,32 +278,6 @@ public:
         return true;
     }
 
-    static bool HandleReloadAllLocalesCommand(ChatHandler* handler)
-    {
-        HandleReloadLocalesAchievementRewardCommand(handler);
-        HandleReloadLocalesCreatureCommand(handler);
-        HandleReloadLocalesCreatureTextCommand(handler);
-        HandleReloadLocalesGameobjectCommand(handler);
-        HandleReloadLocalesGossipMenuOptionCommand(handler);
-        HandleReloadLocalesItemCommand(handler);
-        HandleReloadLocalesNpcTextCommand(handler);
-        HandleReloadLocalesPageTextCommand(handler);
-        HandleReloadLocalesPointsOfInterestCommand(handler);
-        HandleReloadLocalesQuestCommand(handler);
-        HandleReloadLocalesQuestOfferRewardCommand(handler);
-        HandleReloadLocalesQuestRequestItemsCommand(handler);
-        return true;
-    }
-
-    static bool HandleReloadConfigCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading config settings...");
-        sWorld->LoadConfigSettings(true);
-        sMapMgr->InitializeVisibilityDistanceInfo();
-        handler->SendGlobalGMSysMessage("World config settings reloaded.");
-        return true;
-    }
-
     static bool HandleReloadDungeonAccessCommand(ChatHandler* handler)
     {
         LOG_INFO("server.loading", "Reloading Dungeon Access Requirement definitions...");
@@ -362,7 +290,7 @@ public:
     {
         LOG_INFO("server.loading", "Reloading Additional Achievement Criteria Data...");
         sAchievementMgr->LoadAchievementCriteriaData();
-        handler->SendGlobalGMSysMessage("DB table `achievement_criteria_data` reloaded.");
+        handler->SendGlobalGMSysMessage("DB table `world_achievement_criteria_data` reloaded.");
         return true;
     }
 
@@ -370,7 +298,7 @@ public:
     {
         LOG_INFO("server.loading", "Reloading Achievement Reward Data...");
         sAchievementMgr->LoadRewards();
-        handler->SendGlobalGMSysMessage("DB table `achievement_reward` reloaded.");
+        handler->SendGlobalGMSysMessage("DB table `world_achievement_reward` reloaded.");
         return true;
     }
 
@@ -382,50 +310,11 @@ public:
         return true;
     }
 
-    static bool HandleReloadAreaTriggerCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Area Trigger definitions...");
-        sObjectMgr->LoadAreaTriggers();
-        handler->SendGlobalGMSysMessage("DB table `areatrigger` reloaded.");
-        return true;
-    }
-
     static bool HandleReloadAreaTriggerTeleportCommand(ChatHandler* handler)
     {
         LOG_INFO("server.loading", "Reloading Area Trigger teleport definitions...");
         sObjectMgr->LoadAreaTriggerTeleports();
         handler->SendGlobalGMSysMessage("DB table `areatrigger_teleport` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadAutobroadcastCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Autobroadcasts...");
-        sAutobroadcastMgr->LoadAutobroadcasts();
-        handler->SendGlobalGMSysMessage("DB table `autobroadcast` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadMotdCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Motd...");
-        sMotdMgr->LoadMotd();
-        handler->SendGlobalGMSysMessage("DB table `motd` reloaded.");
-        LocaleConstant locale = DEFAULT_LOCALE;
-
-        if (Player* player = handler->GetPlayer())
-            locale = player->GetSession()->GetSessionDbLocaleIndex();
-
-        handler->SendGlobalSysMessage(sMotdMgr->GetMotd(locale));
-        return true;
-    }
-
-    static bool HandleReloadBroadcastTextCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Broadcast texts...");
-        sObjectMgr->LoadBroadcastTexts();
-        sObjectMgr->LoadBroadcastTextLocales();
-        handler->SendGlobalGMSysMessage("DB table `broadcast_text` reloaded.");
         return true;
     }
 
@@ -459,7 +348,7 @@ public:
 
             WorldDatabasePreparedStatement* stmt = WorldDatabase.GetPreparedStatement(WORLD_SEL_CREATURE_TEMPLATE);
             stmt->SetData(0, entry);
-            PreparedQueryResult result = WorldDatabase.Query(stmt);
+            QueryResult result = WorldDatabase.Query(stmt);
 
             if (!result)
             {
@@ -476,8 +365,7 @@ public:
 
             LOG_INFO("server.loading", "Reloading creature template entry {}", entry);
 
-            Field* fields = result->Fetch();
-
+            const Field* fields = result->Fetch();
             sObjectMgr->LoadCreatureTemplate(fields, true);
             sObjectMgr->CheckCreatureTemplate(cInfo);
         }
@@ -532,7 +420,7 @@ public:
     static bool HandleReloadGOQuestStarterCommand(ChatHandler* handler)
     {
         LOG_INFO("server.loading", "Loading Quests Relations... (`gameobject_queststarter`)");
-        sObjectMgr->LoadGameobjectQuestStarters();
+        sObjectMgr->LoadGameObjectQuestStarters();
         sPoolMgr->ReSpawnPoolQuests();
         handler->SendGlobalGMSysMessage("DB table `gameobject_queststarter` reloaded.");
         return true;
@@ -541,7 +429,7 @@ public:
     static bool HandleReloadGOQuestEnderCommand(ChatHandler* handler)
     {
         LOG_INFO("server.loading", "Loading Quests Relations... (`gameobject_questender`)");
-        sObjectMgr->LoadGameobjectQuestEnders();
+        sObjectMgr->LoadGameObjectQuestEnders();
         handler->SendGlobalGMSysMessage("DB table `gameobject_questender` reloaded.");
         return true;
     }
@@ -558,10 +446,7 @@ public:
     {
         LOG_INFO("server.loading", "Reloading Quest Greeting ...");
         sObjectMgr->LoadQuestGreetings();
-        handler->SendGlobalGMSysMessage("DB table `quest_greeting` reloaded.");
-        LOG_INFO("server.loading", "Reloading Quest Greeting locales...");
-        sObjectMgr->LoadQuestGreetingsLocales(); // Must be after LoadQuestGreetings()
-        handler->SendGlobalGMSysMessage("DB table `quest_greeting_locale` reloaded.");
+        handler->SendGlobalGMSysMessage("DB table `world_quest_greeting` reloaded.");
         return true;
     }
 
@@ -715,36 +600,11 @@ public:
         return true;
     }
 
-    static bool HandleReloadModuleStringCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading module_string Table!");
-        sObjectMgr->LoadModuleStrings();
-        handler->SendGlobalGMSysMessage("DB table `module_string` reloaded.");
-        LOG_INFO("server.loading", "Reloading module_string_locale Table!");
-        sObjectMgr->LoadModuleStringsLocale();
-        handler->SendGlobalGMSysMessage("DB table `module_string_locale` reloaded.");
-        return true;
-    }
-
     static bool HandleReloadAcoreStringCommand(ChatHandler* handler)
     {
         LOG_INFO("server.loading", "Reloading acore_string Table!");
         sObjectMgr->LoadAcoreStrings();
         handler->SendGlobalGMSysMessage("DB table `acore_string` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadWardenactionCommand(ChatHandler* handler)
-    {
-        if (!sWorld->getBoolConfig(CONFIG_WARDEN_ENABLED))
-        {
-            handler->SendErrorMessage("Warden system disabled by config - reloading warden_action skipped.");
-            return false;
-        }
-
-        LOG_INFO("server.loading", "Reloading warden_action Table!");
-        sWardenCheckMgr->LoadWardenOverrides();
-        handler->SendGlobalGMSysMessage("DB table `warden_action` reloaded.");
         return true;
     }
 
@@ -823,14 +683,6 @@ public:
         LOG_INFO("server.loading", "Reloading `reputation_reward_rate` Table!" );
         sObjectMgr->LoadReputationRewardRate();
         handler->SendGlobalGMSysMessage("DB table `reputation_reward_rate` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadReputationSpilloverTemplateCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading `reputation_spillover_template` Table!" );
-        sObjectMgr->LoadReputationSpilloverTemplate();
-        handler->SendGlobalGMSysMessage("DB table `reputation_spillover_template` reloaded.");
         return true;
     }
 
@@ -1064,116 +916,11 @@ public:
         return true;
     }
 
-    static bool HandleReloadLocalesAchievementRewardCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Achievement Reward Data Locale...");
-        sAchievementMgr->LoadRewardLocales();
-        handler->SendGlobalGMSysMessage("DB table `achievement_reward_locale` reloaded.");
-        return true;
-    }
-
     static bool HandleReloadLfgRewardsCommand(ChatHandler* handler)
     {
         LOG_INFO("server.loading", "Reloading lfg dungeon rewards...");
         sLFGMgr->LoadRewards();
         handler->SendGlobalGMSysMessage("DB table `lfg_dungeon_rewards` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesCreatureCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Creature Template Locale...");
-        sObjectMgr->LoadCreatureLocales();
-        handler->SendGlobalGMSysMessage("DB table `creature_template_locale` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesCreatureTextCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Creature Texts Locale...");
-        sCreatureTextMgr->LoadCreatureTextLocales();
-        handler->SendGlobalGMSysMessage("DB table `creature_text_locale` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesGameobjectCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Gameobject Template Locale ... ");
-        sObjectMgr->LoadGameObjectLocales();
-        handler->SendGlobalGMSysMessage("DB table `gameobject_template_locale` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesGossipMenuOptionCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Gossip Menu Option Locale ... ");
-        sObjectMgr->LoadGossipMenuItemsLocales();
-        handler->SendGlobalGMSysMessage("DB table `gossip_menu_option_locale` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesItemCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Item Template Locale ... ");
-        sObjectMgr->LoadItemLocales();
-        handler->SendGlobalGMSysMessage("DB table `item_template_locale` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesItemSetNameCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Item set name Locale... ");
-        sObjectMgr->LoadItemSetNameLocales();
-        handler->SendGlobalGMSysMessage("DB table `item_set_name_locale` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesNpcTextCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading NPC Text Locale ... ");
-        sObjectMgr->LoadNpcTextLocales();
-        handler->SendGlobalGMSysMessage("DB table `npc_text_locale` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesPageTextCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Page Text Locale ... ");
-        sObjectMgr->LoadPageTextLocales();
-        handler->SendGlobalGMSysMessage("DB table `page_text_locale` reloaded.");
-        handler->SendGlobalGMSysMessage("You need to delete your client cache or change the cache number in config in order for your players see the changes.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesPointsOfInterestCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Points Of Interest Locale ... ");
-        sObjectMgr->LoadPointOfInterestLocales();
-        handler->SendGlobalGMSysMessage("DB table `points_of_interest_locale` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesQuestCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Locales Quest ... ");
-        sObjectMgr->LoadQuestLocales();
-        handler->SendGlobalGMSysMessage("DB table `quest_template_locale` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesQuestOfferRewardCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Quest Offer Reward Locale... ");
-        sObjectMgr->LoadQuestOfferRewardLocale();
-        handler->SendGlobalGMSysMessage("DB table `quest_offer_reward_locale` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadLocalesQuestRequestItemsCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading Quest Request Item Locale... ");
-        sObjectMgr->LoadQuestRequestItemsLocale();
-        handler->SendGlobalGMSysMessage("DB table `quest_request_item_locale` reloaded.");
         return true;
     }
 
@@ -1190,14 +937,6 @@ public:
         LOG_INFO("server.loading", "Reloading `server_mail_template` table");
         sServerMailMgr->LoadMailServerTemplates();
         handler->SendGlobalGMSysMessage("DB table `server_mail_template` reloaded.");
-        return true;
-    }
-
-    static bool HandleReloadAntiDosOpcodePoliciesCommand(ChatHandler* handler)
-    {
-        LOG_INFO("server.loading", "Reloading AntiDos opcode policies...");
-        sWorldGlobals->LoadAntiDosOpcodePolicies();
-        handler->SendGlobalGMSysMessage("AntiDos opcode policies reloaded.");
         return true;
     }
 

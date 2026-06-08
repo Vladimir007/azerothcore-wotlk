@@ -31,12 +31,12 @@ class ChannelMgr
     typedef std::map<std::string, ChannelRights> ChannelRightsMap;
 
 public:
-    ChannelMgr(TeamId teamId) : _teamId(teamId)
+    ChannelMgr(TeamID teamId) : _teamId(teamId)
     { }
 
     ~ChannelMgr();
 
-    static ChannelMgr* forTeam(TeamId teamId);
+    static ChannelMgr* forTeam(TeamID teamId);
 
     Channel* GetJoinChannel(std::string const& name, uint32 channel_id);
     Channel* GetChannel(std::string const& name, Player* p, bool pkt = true);
@@ -49,7 +49,7 @@ public:
 
 private:
     ChannelMap channels;
-    TeamId _teamId;
+    TeamID _teamId;
     static ChannelRightsMap channels_rights;
     static ChannelRights channelRightsEmpty; // when not found in the map, reference to this is returned
 

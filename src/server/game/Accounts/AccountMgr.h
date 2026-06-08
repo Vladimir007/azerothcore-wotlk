@@ -40,20 +40,15 @@ enum AccountOpResult
 namespace AccountMgr
 {
     AccountOpResult CreateAccount(std::string username, std::string password, std::string email = "");
-    AccountOpResult DeleteAccount(uint32 accountId);
-    AccountOpResult ChangeUsername(uint32 accountId, std::string newUsername, std::string newPassword);
-    AccountOpResult ChangePassword(uint32 accountId, std::string newPassword);
-    AccountOpResult ChangeEmail(uint32 accountId, std::string email);
     bool CheckPassword(uint32 accountId, std::string password);
 
     uint32 GetId(std::string const& username);
-    uint32 GetSecurity(uint32 accountId);
-    uint32 GetSecurity(uint32 accountId, int32 realmId);
+    bool IsGameMaster(uint32 accountId);
+    bool IsStaff(uint32 accountId);
     bool GetName(uint32 accountId, std::string& name);
     uint32 GetCharactersCount(uint32 accountId);
 
     bool IsPlayerAccount(uint32 gmlevel);
-    bool IsGMAccount(uint32 gmlevel);
     bool IsAdminAccount(uint32 gmlevel);
     bool IsConsoleAccount(uint32 gmlevel);
 };

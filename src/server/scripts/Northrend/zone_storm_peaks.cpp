@@ -149,7 +149,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
         {
-            if (spellInfo->Id == SPELL_STORM_HAMMER)
+            if (spellInfo->ID == SPELL_STORM_HAMMER)
             {
                 me->CastSpell(caster, SPELL_STORM_HAMMER_DUMMY, true);
                 if (charging)
@@ -305,7 +305,7 @@ class spell_q13007_iron_colossus : public SpellScript
         if (!caster)
             return;
 
-        if (GetSpellInfo()->Id == SPELL_JORMUNGAR_SUBMERGE)
+        if (GetSpellInfo()->ID == SPELL_JORMUNGAR_SUBMERGE)
         {
             caster->CastSpell(caster, SPELL_JORMUNGAR_SUBMERGE_VISUAL, true);
             caster->ApplySpellImmune(SPELL_COLOSSUS_GROUND_SLAM, IMMUNITY_ID, SPELL_COLOSSUS_GROUND_SLAM, true);
@@ -384,7 +384,7 @@ public:
 
         void SpellHit(Unit* caster, SpellInfo const* spell) override
         {
-            if (spell->Id != SPELL_ICE_LANCE)
+            if (spell->ID != SPELL_ICE_LANCE)
                 return;
 
             if (caster->GetVehicleKit()->GetAvailableSeatCount() != 0)
@@ -912,7 +912,7 @@ struct npc_wild_wyrm : public VehicleAI
 
     void SpellHit(Unit* caster, SpellInfo const* spellInfo) override
     {
-        if (!_playerGuid.IsEmpty() || spellInfo->Id != SPELL_SPEAR_OF_HODIR)
+        if (!_playerGuid.IsEmpty() || spellInfo->ID != SPELL_SPEAR_OF_HODIR)
             return;
 
         _playerGuid = caster->GetGUID();

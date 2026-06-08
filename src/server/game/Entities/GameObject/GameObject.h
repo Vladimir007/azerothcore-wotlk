@@ -48,23 +48,23 @@ typedef std::unordered_map<uint32, GameObjectQuestItemList> GameObjectQuestItemM
 
 union GameObjectValue
 {
-    //11 GAMEOBJECT_TYPE_TRANSPORT
+    //11 GAME_OBJECT_TYPE_TRANSPORT
     struct
     {
         uint32 PathProgress;
         TransportAnimation const* AnimationInfo;
     } Transport;
-    //25 GAMEOBJECT_TYPE_FISHINGHOLE
+    //25 GAME_OBJECT_TYPE_FISHINGHOLE
     struct
     {
         uint32 MaxOpens;
     } FishingHole;
-    //29 GAMEOBJECT_TYPE_CAPTURE_POINT
+    //29 GAME_OBJECT_TYPE_CAPTURE_POINT
     struct
     {
         OPvPCapturePoint* OPvPObj;
     } CapturePoint;
-    //33 GAMEOBJECT_TYPE_DESTRUCTIBLE_BUILDING
+    //33 GAME_OBJECT_TYPE_DESTRUCTIBLE_BUILDING
     struct
     {
         uint32 Health;
@@ -151,11 +151,8 @@ public:
     [[nodiscard]] int64 GetPackedWorldRotation() const { return m_packedRotation; }
     [[nodiscard]] G3D::Quat GetFinalWorldRotation() const;
 
-    // overwrite WorldObject function for proper name localization
-    [[nodiscard]] std::string const& GetNameForLocaleIdx(LocaleConstant locale_idx) const override;
-
     void SaveToDB(bool saveAddon = false);
-    void SaveToDB(uint32 mapid, uint8 spawnMask, uint32 phaseMask, bool saveAddon = false);
+    void SaveToDB(uint32 mapID, uint8 spawnMask, uint32 phaseMask, bool saveAddon = false);
     virtual bool LoadFromDB(ObjectGuid::LowType guid, Map* map) { return LoadGameObjectFromDB(guid, map, false); }
     virtual bool LoadGameObjectFromDB(ObjectGuid::LowType guid, Map* map, bool addToMap = true);
     void DeleteFromDB();
@@ -199,8 +196,8 @@ public:
     void DespawnOrUnsummon(Milliseconds delay = 0ms, Seconds forcedRespawnTime = 0s);
     void Delete();
     void GetFishLoot(Loot* fishLoot, Player* lootOwner, bool junk = false);
-    [[nodiscard]] GameobjectTypes GetGoType() const { return GameobjectTypes(GetByteValue(GAMEOBJECT_BYTES_1, 1)); }
-    void SetGoType(GameobjectTypes type) { SetByteValue(GAMEOBJECT_BYTES_1, 1, type); }
+    [[nodiscard]] GameObjectTypes GetGoType() const { return GameObjectTypes(GetByteValue(GAMEOBJECT_BYTES_1, 1)); }
+    void SetGoType(GameObjectTypes type) { SetByteValue(GAMEOBJECT_BYTES_1, 1, type); }
     [[nodiscard]] GOState GetGoState() const { return GOState(GetByteValue(GAMEOBJECT_BYTES_1, 0)); }
     void SetGoState(GOState state);
     [[nodiscard]] uint8 GetGoArtKit() const { return GetByteValue(GAMEOBJECT_BYTES_1, 2); }
@@ -315,22 +312,22 @@ public:
     void SetPosition(float x, float y, float z, float o);
     void SetPosition(const Position& pos) { SetPosition(pos.GetPositionX(), pos.GetPositionY(), pos.GetPositionZ(), pos.GetOrientation()); }
 
-    [[nodiscard]] bool IsStaticTransport() const { return GetGOInfo()->type == GAMEOBJECT_TYPE_TRANSPORT; }
-    [[nodiscard]] bool IsMotionTransport() const { return GetGOInfo()->type == GAMEOBJECT_TYPE_MO_TRANSPORT; }
+    [[nodiscard]] bool IsStaticTransport() const { return GetGOInfo()->Type == GAME_OBJECT_TYPE_TRANSPORT; }
+    [[nodiscard]] bool IsMotionTransport() const { return GetGOInfo()->Type == GAME_OBJECT_TYPE_MO_TRANSPORT; }
 
-    Transport* ToTransport() { if (GetGOInfo()->type == GAMEOBJECT_TYPE_MO_TRANSPORT || GetGOInfo()->type == GAMEOBJECT_TYPE_TRANSPORT) return reinterpret_cast<Transport*>(this); else return nullptr; }
-    [[nodiscard]] Transport const* ToTransport() const { if (GetGOInfo()->type == GAMEOBJECT_TYPE_MO_TRANSPORT || GetGOInfo()->type == GAMEOBJECT_TYPE_TRANSPORT) return reinterpret_cast<Transport const*>(this); else return nullptr; }
+    Transport* ToTransport() { if (GetGOInfo()->Type == GAME_OBJECT_TYPE_MO_TRANSPORT || GetGOInfo()->Type == GAME_OBJECT_TYPE_TRANSPORT) return reinterpret_cast<Transport*>(this); else return nullptr; }
+    [[nodiscard]] Transport const* ToTransport() const { if (GetGOInfo()->Type == GAME_OBJECT_TYPE_MO_TRANSPORT || GetGOInfo()->Type == GAME_OBJECT_TYPE_TRANSPORT) return reinterpret_cast<Transport const*>(this); else return nullptr; }
 
-    StaticTransport* ToStaticTransport() { if (GetGOInfo()->type == GAMEOBJECT_TYPE_TRANSPORT) return reinterpret_cast<StaticTransport*>(this); else return nullptr; }
-    [[nodiscard]] StaticTransport const* ToStaticTransport() const { if (GetGOInfo()->type == GAMEOBJECT_TYPE_TRANSPORT) return reinterpret_cast<StaticTransport const*>(this); else return nullptr; }
+    StaticTransport* ToStaticTransport() { if (GetGOInfo()->Type == GAME_OBJECT_TYPE_TRANSPORT) return reinterpret_cast<StaticTransport*>(this); else return nullptr; }
+    [[nodiscard]] StaticTransport const* ToStaticTransport() const { if (GetGOInfo()->Type == GAME_OBJECT_TYPE_TRANSPORT) return reinterpret_cast<StaticTransport const*>(this); else return nullptr; }
 
-    MotionTransport* ToMotionTransport() { if (GetGOInfo()->type == GAMEOBJECT_TYPE_MO_TRANSPORT) return reinterpret_cast<MotionTransport*>(this); else return nullptr; }
-    [[nodiscard]] MotionTransport const* ToMotionTransport() const { if (GetGOInfo()->type == GAMEOBJECT_TYPE_MO_TRANSPORT) return reinterpret_cast<MotionTransport const*>(this); else return nullptr; }
+    MotionTransport* ToMotionTransport() { if (GetGOInfo()->Type == GAME_OBJECT_TYPE_MO_TRANSPORT) return reinterpret_cast<MotionTransport*>(this); else return nullptr; }
+    [[nodiscard]] MotionTransport const* ToMotionTransport() const { if (GetGOInfo()->Type == GAME_OBJECT_TYPE_MO_TRANSPORT) return reinterpret_cast<MotionTransport const*>(this); else return nullptr; }
 
-    [[nodiscard]] float GetStationaryX() const override { if (GetGOInfo()->type != GAMEOBJECT_TYPE_MO_TRANSPORT) return m_stationaryPosition.GetPositionX(); return GetPositionX(); }
-    [[nodiscard]] float GetStationaryY() const override { if (GetGOInfo()->type != GAMEOBJECT_TYPE_MO_TRANSPORT) return m_stationaryPosition.GetPositionY(); return GetPositionY(); }
-    [[nodiscard]] float GetStationaryZ() const override { if (GetGOInfo()->type != GAMEOBJECT_TYPE_MO_TRANSPORT) return m_stationaryPosition.GetPositionZ(); return GetPositionZ(); }
-    [[nodiscard]] float GetStationaryO() const override { if (GetGOInfo()->type != GAMEOBJECT_TYPE_MO_TRANSPORT) return m_stationaryPosition.GetOrientation(); return GetOrientation(); }
+    [[nodiscard]] float GetStationaryX() const override { if (GetGOInfo()->Type != GAME_OBJECT_TYPE_MO_TRANSPORT) return m_stationaryPosition.GetPositionX(); return GetPositionX(); }
+    [[nodiscard]] float GetStationaryY() const override { if (GetGOInfo()->Type != GAME_OBJECT_TYPE_MO_TRANSPORT) return m_stationaryPosition.GetPositionY(); return GetPositionY(); }
+    [[nodiscard]] float GetStationaryZ() const override { if (GetGOInfo()->Type != GAME_OBJECT_TYPE_MO_TRANSPORT) return m_stationaryPosition.GetPositionZ(); return GetPositionZ(); }
+    [[nodiscard]] float GetStationaryO() const override { if (GetGOInfo()->Type != GAME_OBJECT_TYPE_MO_TRANSPORT) return m_stationaryPosition.GetOrientation(); return GetOrientation(); }
 
     [[nodiscard]] float GetInteractionDistance() const;
 
@@ -381,7 +378,7 @@ protected:
     // For traps this: spell casting cooldown, for doors/buttons: reset time.
     std::unordered_map<ObjectGuid, int32> m_SkillupList;
 
-    ObjectGuid m_ritualOwnerGUID;                       // used for GAMEOBJECT_TYPE_SUMMONING_RITUAL where GO is not summoned (no owner)
+    ObjectGuid m_ritualOwnerGUID;                       // used for GAME_OBJECT_TYPE_SUMMONING_RITUAL where GO is not summoned (no owner)
     GuidSet m_unique_users;
     uint32 m_usetimes;
 

@@ -980,7 +980,7 @@ struct npc_living_constellation : public ScriptedAI
 
     void SpellHit(Unit* caster, SpellInfo const* spell) override
     {
-        if (spell->Id != SPELL_CONSTELLATION_PHASE_EFFECT || !caster->IsCreature())
+        if (spell->ID != SPELL_CONSTELLATION_PHASE_EFFECT || !caster->IsCreature())
             return;
 
         if (InstanceScript* instance = me->GetInstanceScript())
@@ -1067,7 +1067,7 @@ public:
         bool GossipHello(Player* player, bool  /*reportUse*/) override
         {
             bool hasKey = true;
-            if (LockEntry const* lock = sLockStore.LookupEntry(me->GetGOInfo()->goober.lockId))
+            if (LockEntry const* lock = sLockStore.LookupEntry(me->GetGOInfo()->Goober.lockId))
             {
                 hasKey = false;
                 for (uint32 i = 0; i < MAX_LOCK_CASE; ++i)
@@ -1305,7 +1305,7 @@ class spell_algalon_supermassive_fail : public SpellScript
         if (!GetHitPlayer())
             return;
 
-        GetHitPlayer()->ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_CONDITION_NO_SPELL_HIT, GetSpellInfo()->Id, true);
+        GetHitPlayer()->ResetAchievementCriteria(ACHIEVEMENT_CRITERIA_CONDITION_NO_SPELL_HIT, GetSpellInfo()->ID, true);
     }
 
     void Register() override

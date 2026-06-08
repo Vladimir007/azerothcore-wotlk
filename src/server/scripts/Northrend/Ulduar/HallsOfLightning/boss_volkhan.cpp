@@ -227,7 +227,7 @@ struct boss_volkhan : public BossAI
 
     void SpellHitTarget(Unit* /*who*/, SpellInfo const* spellInfo) override
     {
-        if (spellInfo->Id == SPELL_TEMPER)
+        if (spellInfo->ID == SPELL_TEMPER)
         {
             DoCastSelf(SPELL_SUMMON_MOLTEN_GOLEM, true);
             DoCastSelf(SPELL_SUMMON_MOLTEN_GOLEM, true);

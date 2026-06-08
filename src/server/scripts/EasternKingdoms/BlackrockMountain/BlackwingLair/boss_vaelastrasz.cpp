@@ -86,7 +86,7 @@ struct boss_vaelastrasz : public BossAI
         _introDone = false;
         _burningAdrenalineCast = 0;
         me->SetNpcFlag(UNIT_NPC_FLAG_GOSSIP);
-        me->SetNpcFlag(UNIT_NPC_FLAG_QUESTGIVER);
+        me->SetNpcFlag(UNIT_NPC_FLAG_QUEST_GIVER);
         me->SetFaction(FACTION_FRIENDLY);
         me->RemoveUnitFlag(UNIT_FLAG_NOT_SELECTABLE);
     }

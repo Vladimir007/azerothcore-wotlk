@@ -85,9 +85,9 @@ uint16 MAKE_PAIR16(uint8 l, uint8 h)
     return uint16(l | (uint16(h) << 8));
 }
 
-uint32 MAKE_PAIR32(uint16 l, uint16 h)
+uint32 MAKE_PAIR32(const uint16 l, const uint16 h)
 {
-    return uint32(l | (uint32(h) << 16));
+    return l | static_cast<uint32>(h) << 16;
 }
 
 uint16 PAIR32_HIPART(uint32 x)

@@ -1,32 +1,15 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef MAP_TREE_H
+#define MAP_TREE_H
 
-#ifndef _MAPTREE_H
-#define _MAPTREE_H
-
+#include <unordered_map>
 #include "BoundingIntervalHierarchy.h"
 #include "Define.h"
-#include <unordered_map>
 
 namespace VMAP
 {
     class ModelInstance;
     class GroupModel;
-    class VMapMgr2;
+    class VMapMgr;
     enum class ModelIgnoreFlags : uint32;
     enum class LoadResult : uint8;
 
@@ -49,27 +32,25 @@ namespace VMAP
     {
         typedef std::unordered_map<uint32, bool> loadedTileMap;
         typedef std::unordered_map<uint32, uint32> loadedSpawnMap;
-    private:
+
         uint32 iMapID;
         bool iIsTiled;
         BIH iTree;
-        ModelInstance* iTreeValues; // the tree entries
+        ModelInstance* iTreeValues;
         uint32 iNTreeValues;
 
-        // Store all the map tile idents that are loaded for that map
-        // some maps are not splitted into tiles and we have to make sure, not removing the map before all tiles are removed
-        // empty tiles have no tile file, hence map with bool instead of just a set (consistency check)
+        // Store all the map tile idents that are loaded for that map.
+        // Some maps are not split into tiles, and we have to make sure, not removing the map before all tiles are removed.
+        // Empty tiles have no tile file, hence map with bool instead of just a set (consistency check).
         loadedTileMap iLoadedTiles;
         std::string iBasePath;
 
-    private:
         bool GetIntersectionTime(const G3D::Ray& pRay, float& pMaxDist, bool StopAtFirstHit, ModelIgnoreFlags ignoreFlags) const;
-        //bool containsLoadedMapTile(unsigned int pTileIdent) const { return(iLoadedMapTiles.containsKey(pTileIdent)); }
     public:
         static std::string getTileFileName(uint32 mapID, uint32 tileX, uint32 tileY);
-        static uint32 packTileID(uint32 tileX, uint32 tileY) { return tileX << 16 | tileY; }
-        static void unpackTileID(uint32 ID, uint32& tileX, uint32& tileY) { tileX = ID >> 16; tileY = ID & 0xFF; }
-        static LoadResult CanLoadMap(const std::string& basePath, uint32 mapID, uint32 tileX, uint32 tileY);
+        static uint32 packTileID(const uint32 tileX, const uint32 tileY) { return tileX << 16 | tileY; }
+        static void unpackTileID(const uint32 ID, uint32& tileX, uint32& tileY) { tileX = ID >> 16; tileY = ID & 0xFF; }
+        static LoadResult CanLoadMap(const std::string& vmapPath, uint32 mapID, uint32 tileX, uint32 tileY);
 
         StaticMapTree(uint32 mapID, const std::string& basePath);
         ~StaticMapTree();
@@ -79,7 +60,7 @@ namespace VMAP
         [[nodiscard]] float getHeight(const G3D::Vector3& pPos, float maxSearchDist) const;
         bool GetLocationInfo(const G3D::Vector3& pos, LocationInfo& info) const;
 
-        bool InitMap(const std::string& fname);
+        bool InitMap(const std::string& fName);
         void UnloadMap();
         bool LoadMapTile(uint32 tileX, uint32 tileY);
         void UnloadMapTile(uint32 tileX, uint32 tileY);
@@ -98,6 +79,6 @@ namespace VMAP
         int32 rootId{0};
         int32 groupId{0};
     };
-}                                                           // VMAP
+}
 
-#endif // _MAPTREE_H
+#endif

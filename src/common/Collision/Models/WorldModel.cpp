@@ -1,26 +1,10 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "WorldModel.h"
+#include <array>
+
 #include "MapTree.h"
 #include "ModelIgnoreFlags.h"
 #include "ModelInstance.h"
 #include "VMapDefinitions.h"
-#include <array>
 
 using G3D::Vector3;
 
@@ -31,11 +15,9 @@ template<> struct BoundsTrait<VMAP::GroupModel>
 
 namespace VMAP
 {
-    bool IntersectTriangle(const MeshTriangle& tri, std::vector<Vector3>::const_iterator points, const G3D::Ray& ray, float& distance)
+    bool IntersectTriangle(const MeshTriangle& tri, const std::vector<Vector3>::const_iterator points, const G3D::Ray& ray, float& distance)
     {
-        static const float EPS = 1e-5f;
-
-        // See RTR2 ch. 13.7 for the algorithm.
+        static constexpr float EPS = 1e-5f;
 
         const Vector3 e1 = points[tri.idx1] - points[tri.idx0];
         const Vector3 e2 = points[tri.idx2] - points[tri.idx0];
@@ -43,43 +25,27 @@ namespace VMAP
         const float a = e1.dot(p);
 
         if (std::fabs(a) < EPS)
-        {
-            // Determinant is ill-conditioned; abort early
-            return false;
-        }
+            return false;  // Determinant is ill-conditioned; abort early
 
         const float f = 1.0f / a;
         const Vector3 s(ray.origin() - points[tri.idx0]);
         const float u = f * s.dot(p);
 
-        if ((u < 0.0f) || (u > 1.0f))
-        {
-            // We hit the plane of the m_geometry, but outside the m_geometry
-            return false;
-        }
+        if (u < 0.0f || u > 1.0f)
+            return false;  // We hit the plane of the m_geometry, but outside the m_geometry
 
         const Vector3 q(s.cross(e1));
-        const float v = f * ray.direction().dot(q);
 
-        if ((v < 0.0f) || ((u + v) > 1.0f))
-        {
-            // We hit the plane of the triangle, but outside the triangle
-            return false;
-        }
+        if (const float v = f * ray.direction().dot(q); v < 0.0f || u + v > 1.0f)
+            return false;  // We hit the plane of the triangle, but outside the triangle
 
-        const float t = f * e2.dot(q);
-
-        if ((t > 0.0f) && (t < distance))
+        if (const float t = f * e2.dot(q); t > 0.0f && t < distance)
         {
             // This is a new hit, closer than the previous one
             distance = t;
-
-            /* baryCoord[0] = 1.0 - u - v;
-            baryCoord[1] = u;
-            baryCoord[2] = v; */
-
             return true;
         }
+
         // This hit is after the previous hit, so ignore it
         return false;
     }
@@ -87,14 +53,14 @@ namespace VMAP
     class TriBoundFunc
     {
     public:
-        TriBoundFunc(std::vector<Vector3>& vert): vertices(vert.begin()) { }
+        explicit TriBoundFunc(std::vector<Vector3>& vert): vertices(vert.begin()) { }
         void operator()(const MeshTriangle& tri, G3D::AABox& out) const
         {
-            G3D::Vector3 lo = vertices[tri.idx0];
-            G3D::Vector3 hi = lo;
+            Vector3 lo = vertices[tri.idx0];
+            Vector3 hi = lo;
 
-            lo = (lo.min(vertices[tri.idx1])).min(vertices[tri.idx2]);
-            hi = (hi.max(vertices[tri.idx1])).max(vertices[tri.idx2]);
+            lo = lo.min(vertices[tri.idx1]).min(vertices[tri.idx2]);
+            hi = hi.max(vertices[tri.idx1]).max(vertices[tri.idx2]);
 
             out = G3D::AABox(lo, hi);
         }
@@ -102,9 +68,7 @@ namespace VMAP
         const std::vector<Vector3>::const_iterator vertices;
     };
 
-    // ===================== WmoLiquid ==================================
-
-    WmoLiquid::WmoLiquid(uint32 width, uint32 height, const Vector3& corner, uint32 type):
+    WmoLiquid::WmoLiquid(const uint32 width, const uint32 height, const Vector3& corner, const uint32 type):
         iTilesX(width), iTilesY(height), iCorner(corner), iType(type)
     {
         if (width && height)
@@ -119,9 +83,9 @@ namespace VMAP
         }
     }
 
-    WmoLiquid::WmoLiquid(const WmoLiquid& other): iHeight(0), iFlags(0)
+    WmoLiquid::WmoLiquid(const WmoLiquid& other)
     {
-        *this = other; // use assignment operator...
+        *this = other; // Use assignment operator
     }
 
     WmoLiquid::~WmoLiquid()
@@ -133,9 +97,7 @@ namespace VMAP
     WmoLiquid& WmoLiquid::operator=(const WmoLiquid& other)
     {
         if (this == &other)
-        {
             return *this;
-        }
         iTilesX = other.iTilesX;
         iTilesY = other.iTilesY;
         iCorner = other.iCorner;
@@ -148,56 +110,49 @@ namespace VMAP
             memcpy(iHeight, other.iHeight, (iTilesX + 1) * (iTilesY + 1)*sizeof(float));
         }
         else
-        {
-            iHeight = 0;
-        }
+            iHeight = nullptr;
         if (other.iFlags)
         {
             iFlags = new uint8[iTilesX * iTilesY];
             memcpy(iFlags, other.iFlags, iTilesX * iTilesY);
         }
         else
-        {
-            iFlags = 0;
-        }
+            iFlags = nullptr;
         return *this;
     }
 
     bool WmoLiquid::GetLiquidHeight(const Vector3& pos, float& liqHeight) const
     {
-        // simple case
+        if (!iHeight)
+            return false;
+
+        // Simple case
         if (!iFlags)
         {
             liqHeight = iHeight[0];
             return true;
         }
 
-        float tx_f = (pos.x - iCorner.x) / LIQUID_TILE_SIZE;
-        uint32 tx = uint32(tx_f);
+        const float tx_f = (pos.x - iCorner.x) / LIQUID_TILE_SIZE;
+        const uint32 tx = static_cast<uint32>(tx_f);
         if (tx_f < 0.0f || tx >= iTilesX)
-        {
             return false;
-        }
-        float ty_f = (pos.y - iCorner.y) / LIQUID_TILE_SIZE;
-        uint32 ty = uint32(ty_f);
-        if (ty_f < 0.0f || ty >= iTilesY)
-        {
-            return false;
-        }
 
-        // check if tile shall be used for liquid level
-        // checking for 0x08 *might* be enough, but disabled tiles always are 0x?F:
-        if (iFlags && (iFlags[tx + ty * iTilesX] & 0x0F) == 0x0F)
-        {
+        const float ty_f = (pos.y - iCorner.y) / LIQUID_TILE_SIZE;
+        const uint32 ty = static_cast<uint32>(ty_f);
+        if (ty_f < 0.0f || ty >= iTilesY)
             return false;
-        }
+
+        // Check if tile shall be used for liquid level.
+        // Checking for 0x08 *might* be enough, but disabled tiles always are 0x?F.
+        if ((iFlags[tx + ty * iTilesX] & 0x0F) == 0x0F)
+            return false;
 
         // (dx, dy) coordinates inside tile, in [0, 1]^2
-        float dx = tx_f - (float)tx;
-        float dy = ty_f - (float)ty;
+        const float dx = tx_f - static_cast<float>(tx);
+        const float dy = ty_f - static_cast<float>(ty);
 
-        /* Tesselate tile to two triangles (not sure if client does it exactly like this)
-
+        /* Tessellate tile to two triangles (not sure if client does it exactly like this)
             ^ dy
             |
           1 x---------x (1, 1)
@@ -208,23 +163,17 @@ namespace VMAP
             x---------x---> dx
           0           1
         */
-
-        if (!iHeight)
-        {
-            return false;
-        }
-
         const uint32 rowOffset = iTilesX + 1;
-        if (dx > dy) // case (a)
+        if (dx > dy) // Case (a)
         {
-            float sx = iHeight[tx + 1 +  ty    * rowOffset] - iHeight[tx   + ty * rowOffset];
-            float sy = iHeight[tx + 1 + (ty + 1) * rowOffset] - iHeight[tx + 1 + ty * rowOffset];
+            const float sx = iHeight[tx + 1 +  ty    * rowOffset] - iHeight[tx   + ty * rowOffset];
+            const float sy = iHeight[tx + 1 + (ty + 1) * rowOffset] - iHeight[tx + 1 + ty * rowOffset];
             liqHeight = iHeight[tx + ty * rowOffset] + dx * sx + dy * sy;
         }
-        else // case (b)
+        else // Case (b)
         {
-            float sx = iHeight[tx + 1 + (ty + 1) * rowOffset] - iHeight[tx + (ty + 1) * rowOffset];
-            float sy = iHeight[tx   + (ty + 1) * rowOffset] - iHeight[tx +  ty    * rowOffset];
+            const float sx = iHeight[tx + 1 + (ty + 1) * rowOffset] - iHeight[tx + (ty + 1) * rowOffset];
+            const float sy = iHeight[tx   + (ty + 1) * rowOffset] - iHeight[tx +  ty    * rowOffset];
             liqHeight = iHeight[tx + ty * rowOffset] + dx * sx + dy * sy;
         }
         return true;
@@ -232,19 +181,17 @@ namespace VMAP
 
     uint32 WmoLiquid::GetFileSize()
     {
-        return 2 * sizeof(uint32) +
-               sizeof(Vector3) +
-               sizeof(uint32) +
-               (iFlags ? ((iTilesX + 1) * (iTilesY + 1) * sizeof(float) + iTilesX * iTilesY) : sizeof(float));
+        return 2 * sizeof(uint32) + sizeof(Vector3) + sizeof(uint32) +
+            (iFlags ? (iTilesX + 1) * (iTilesY + 1) * sizeof(float) + iTilesX * iTilesY : sizeof(float));
     }
 
     bool WmoLiquid::writeToFile(FILE* wf)
     {
         bool result = false;
         if (fwrite(&iTilesX, sizeof(uint32), 1, wf) == 1 &&
-                fwrite(&iTilesY, sizeof(uint32), 1, wf) == 1 &&
-                fwrite(&iCorner, sizeof(Vector3), 1, wf) == 1 &&
-                fwrite(&iType, sizeof(uint32), 1, wf) == 1)
+            fwrite(&iTilesY, sizeof(uint32), 1, wf) == 1 &&
+            fwrite(&iCorner, sizeof(Vector3), 1, wf) == 1 &&
+            fwrite(&iType, sizeof(uint32), 1, wf) == 1)
         {
             if (iTilesX && iTilesY)
             {
@@ -265,12 +212,12 @@ namespace VMAP
     bool WmoLiquid::readFromFile(FILE* rf, WmoLiquid*& out)
     {
         bool result = false;
-        WmoLiquid* liquid = new WmoLiquid();
+        const auto liquid = new WmoLiquid();
 
         if (fread(&liquid->iTilesX, sizeof(uint32), 1, rf) == 1 &&
-                fread(&liquid->iTilesY, sizeof(uint32), 1, rf) == 1 &&
-                fread(&liquid->iCorner, sizeof(Vector3), 1, rf) == 1 &&
-                fread(&liquid->iType, sizeof(uint32), 1, rf) == 1)
+            fread(&liquid->iTilesY, sizeof(uint32), 1, rf) == 1 &&
+            fread(&liquid->iCorner, sizeof(Vector3), 1, rf) == 1 &&
+            fread(&liquid->iType, sizeof(uint32), 1, rf) == 1)
         {
             if (liquid->iTilesX && liquid->iTilesY)
             {
@@ -291,34 +238,26 @@ namespace VMAP
         }
 
         if (!result)
-        {
             delete liquid;
-        }
         else
-        {
             out = liquid;
-        }
 
         return result;
     }
 
-    void WmoLiquid::GetPosInfo(uint32& tilesX, uint32& tilesY, G3D::Vector3& corner) const
+    void WmoLiquid::GetPosInfo(uint32& tilesX, uint32& tilesY, Vector3& corner) const
     {
         tilesX = iTilesX;
         tilesY = iTilesY;
         corner = iCorner;
     }
 
-    // ===================== GroupModel ==================================
-
     GroupModel::GroupModel(const GroupModel& other):
-        iBound(other.iBound), iMogpFlags(other.iMogpFlags), iGroupWMOID(other.iGroupWMOID),
-        vertices(other.vertices), triangles(other.triangles), meshTree(other.meshTree), iLiquid(0)
+        iBound(other.iBound), iMogpFlags(other.iMogpFlags), iGroupWMOid(other.iGroupWMOid),
+        vertices(other.vertices), triangles(other.triangles), meshTree(other.meshTree)
     {
         if (other.iLiquid)
-        {
             iLiquid = new WmoLiquid(*other.iLiquid);
-        }
     }
 
     void GroupModel::setMeshData(std::vector<Vector3>& vert, std::vector<MeshTriangle>& tri)
@@ -331,56 +270,54 @@ namespace VMAP
 
     bool GroupModel::writeToFile(FILE* wf)
     {
-        bool result = true;
         uint32 chunkSize, count;
 
-        if (fwrite(&iBound, sizeof(G3D::AABox), 1, wf) != 1) { result = false; }
-        if (result && fwrite(&iMogpFlags, sizeof(uint32), 1, wf) != 1) { result = false; }
-        if (result && fwrite(&iGroupWMOID, sizeof(uint32), 1, wf) != 1) { result = false; }
+        if (fwrite(&iBound, sizeof(G3D::AABox), 1, wf) != 1) return false;
+        if (fwrite(&iMogpFlags, sizeof(uint32), 1, wf) != 1) return false;
+        if (fwrite(&iGroupWMOid, sizeof(uint32), 1, wf) != 1) return false;
 
-        // write vertices
-        if (result && fwrite("VERT", 1, 4, wf) != 4) { result = false; }
+        // Write vertices
+        if (fwrite("VERT", 1, 4, wf) != 4) return false;
         count = vertices.size();
         chunkSize = sizeof(uint32) + sizeof(Vector3) * count;
-        if (result && fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) { result = false; }
-        if (result && fwrite(&count, sizeof(uint32), 1, wf) != 1) { result = false; }
-        if (!count) // models without (collision) geometry end here, unsure if they are useful
-        {
-            return result;
-        }
-        if (result && fwrite(&vertices[0], sizeof(Vector3), count, wf) != count) { result = false; }
+        if (fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) return false;
+        if (fwrite(&count, sizeof(uint32), 1, wf) != 1) return false;
 
-        // write triangle mesh
-        if (result && fwrite("TRIM", 1, 4, wf) != 4) { result = false; }
+        // Models without (collision) geometry end here, unsure if they are useful
+        if (!count) return true;
+
+        if (fwrite(&vertices[0], sizeof(Vector3), count, wf) != count) return false;
+
+        // Write triangle mesh
+        if (fwrite("TRIM", 1, 4, wf) != 4) return false;
         count = triangles.size();
         chunkSize = sizeof(uint32) + sizeof(MeshTriangle) * count;
-        if (result && fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) { result = false; }
-        if (result && fwrite(&count, sizeof(uint32), 1, wf) != 1) { result = false; }
-        if (result && fwrite(&triangles[0], sizeof(MeshTriangle), count, wf) != count) { result = false; }
+        if (fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) return false;
+        if (fwrite(&count, sizeof(uint32), 1, wf) != 1) return false;
+        if (fwrite(&triangles[0], sizeof(MeshTriangle), count, wf) != count) return false;
 
-        // write mesh BIH
-        if (result && fwrite("MBIH", 1, 4, wf) != 4) { result = false; }
-        if (result) { result = meshTree.writeToFile(wf); }
+        // Write mesh BIH
+        if (fwrite("MBIH", 1, 4, wf) != 4) return false;
+        if (!meshTree.writeToFile(wf)) return false;
 
-        // write liquid data
-        if (result && fwrite("LIQU", 1, 4, wf) != 4) { result = false; }
+        // Write liquid data
+        if (fwrite("LIQU", 1, 4, wf) != 4) return false;
         if (!iLiquid)
         {
             chunkSize = 0;
-            if (result && fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) { result = false; }
-            return result;
+            if (fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) return false;
+            return true;
         }
-        chunkSize = iLiquid->GetFileSize();
-        if (result && fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) { result = false; }
-        if (result) { result = iLiquid->writeToFile(wf); }
 
-        return result;
+        chunkSize = iLiquid->GetFileSize();
+        if (fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) return false;
+        if (!iLiquid->writeToFile(wf)) return false;
+        return true;
     }
 
     bool GroupModel::readFromFile(FILE* rf)
     {
         char chunk[8];
-        bool result = true;
         uint32 chunkSize = 0;
         uint32 count = 0;
         triangles.clear();
@@ -388,76 +325,66 @@ namespace VMAP
         delete iLiquid;
         iLiquid = nullptr;
 
-        if (fread(&iBound, sizeof(G3D::AABox), 1, rf) != 1) { result = false; }
-        if (result && fread(&iMogpFlags, sizeof(uint32), 1, rf) != 1) { result = false; }
-        if (result && fread(&iGroupWMOID, sizeof(uint32), 1, rf) != 1) { result = false; }
+        if (fread(&iBound, sizeof(G3D::AABox), 1, rf) != 1) return false;
+        if (fread(&iMogpFlags, sizeof(uint32), 1, rf) != 1) return false;
+        if (fread(&iGroupWMOid, sizeof(uint32), 1, rf) != 1) return false;
 
-        // read vertices
-        if (result && !readChunk(rf, chunk, "VERT", 4)) { result = false; }
-        if (result && fread(&chunkSize, sizeof(uint32), 1, rf) != 1) { result = false; }
-        if (result && fread(&count, sizeof(uint32), 1, rf) != 1) { result = false; }
-        if (!count) // models without (collision) geometry end here, unsure if they are useful
-        {
-            return result;
-        }
-        if (result) { vertices.resize(count); }
-        if (result && fread(&vertices[0], sizeof(Vector3), count, rf) != count) { result = false; }
+        // Read vertices
+        if (!readChunk(rf, chunk, "VERT", 4)) return false;
+        if (fread(&chunkSize, sizeof(uint32), 1, rf) != 1) return false;
+        if (fread(&count, sizeof(uint32), 1, rf) != 1) return false;
 
-        // read triangle mesh
-        if (result && !readChunk(rf, chunk, "TRIM", 4)) { result = false; }
-        if (result && fread(&chunkSize, sizeof(uint32), 1, rf) != 1) { result = false; }
-        if (result && fread(&count, sizeof(uint32), 1, rf) != 1) { result = false; }
-        if (result) { triangles.resize(count); }
-        if (result && fread(&triangles[0], sizeof(MeshTriangle), count, rf) != count) { result = false; }
+        // Models without (collision) geometry end here, unsure if they are useful
+        if (!count) return true;
 
-        // read mesh BIH
-        if (result && !readChunk(rf, chunk, "MBIH", 4)) { result = false; }
-        if (result) { result = meshTree.readFromFile(rf); }
+        vertices.resize(count);
+        if (fread(&vertices[0], sizeof(Vector3), count, rf) != count) return false;
 
-        // write liquid data
-        if (result && !readChunk(rf, chunk, "LIQU", 4)) { result = false; }
-        if (result && fread(&chunkSize, sizeof(uint32), 1, rf) != 1) { result = false; }
-        if (result && chunkSize > 0)
-        {
-            result = WmoLiquid::readFromFile(rf, iLiquid);
-        }
-        return result;
+        // Read triangle mesh
+        if (!readChunk(rf, chunk, "TRIM", 4)) return false;
+        if (fread(&chunkSize, sizeof(uint32), 1, rf) != 1) return false;
+        if (fread(&count, sizeof(uint32), 1, rf) != 1) return false;
+        triangles.resize(count);
+        if (fread(&triangles[0], sizeof(MeshTriangle), count, rf) != count) return false;
+
+        // Read mesh BIH
+        if (!readChunk(rf, chunk, "MBIH", 4)) return false;
+        if (!meshTree.readFromFile(rf)) return false;
+
+        // Write liquid data
+        if (!readChunk(rf, chunk, "LIQU", 4)) return false;
+        if (fread(&chunkSize, sizeof(uint32), 1, rf) != 1) return false;
+        if (chunkSize > 0)
+            if (!WmoLiquid::readFromFile(rf, iLiquid)) return false;
+        return true;
     }
 
     struct GModelRayCallback
     {
         GModelRayCallback(const std::vector<MeshTriangle>& tris, const std::vector<Vector3>& vert):
-            vertices(vert.begin()), triangles(tris.begin()), hit(false) { }
-        bool operator()(const G3D::Ray& ray, uint32 entry, float& distance, bool /*StopAtFirstHit*/)
+            vertices(vert.begin()), triangles(tris.begin()) { }
+
+        bool operator()(const G3D::Ray& ray, const uint32 entry, float& distance, bool /*StopAtFirstHit*/)
         {
-            bool result = IntersectTriangle(triangles[entry], vertices, ray, distance);
-            if (result) { hit = true; }
-            return hit;
+            return IntersectTriangle(triangles[entry], vertices, ray, distance);
         }
+
         std::vector<Vector3>::const_iterator vertices;
         std::vector<MeshTriangle>::const_iterator triangles;
-        bool hit;
     };
 
-    bool GroupModel::IntersectRay(const G3D::Ray& ray, float& distance, bool stopAtFirstHit) const
+    bool GroupModel::IntersectRay(const G3D::Ray& ray, float& distance, const bool stopAtFirstHit) const
     {
         if (triangles.empty())
-        {
             return false;
-        }
-
         GModelRayCallback callback(triangles, vertices);
-        meshTree.intersectRay(ray, callback, distance, stopAtFirstHit);
-        return callback.hit;
+        return meshTree.intersectRay(ray, callback, distance, stopAtFirstHit);
     }
 
     inline bool IsInsideOrAboveBound(G3D::AABox const& bounds, const G3D::Point3& point)
     {
-        return point.x >= bounds.low().x
-            && point.y >= bounds.low().y
-            && point.z >= bounds.low().z
-            && point.x <= bounds.high().x
-            && point.y <= bounds.high().y;
+        return point.x >= bounds.low().x && point.y >= bounds.low().y && point.z >= bounds.low().z &&
+            point.x <= bounds.high().x && point.y <= bounds.high().y;
     }
 
     GroupModel::InsideResult GroupModel::IsInsideObject(G3D::Ray const& ray, float& z_dist) const
@@ -478,8 +405,8 @@ namespace VMAP
         }
         else
         {
-            // some group models don't have any floor to intersect with
-            // so we should attempt to intersect with a model part below this group
+            // Some group models don't have any floor to intersect with,
+            // so we should attempt to intersect with a model part below this group,
             // then find back where we originated from (in WorldModel::GetLocationInfo)
             float dist = G3D::finf();
             float delta = ray.origin().z - meshTree.bound().high().z;
@@ -496,29 +423,23 @@ namespace VMAP
     bool GroupModel::GetLiquidLevel(const Vector3& pos, float& liqHeight) const
     {
         if (iLiquid)
-        {
             return iLiquid->GetLiquidHeight(pos, liqHeight);
-        }
         return false;
     }
 
     uint32 GroupModel::GetLiquidType() const
     {
         if (iLiquid)
-        {
             return iLiquid->GetType();
-        }
         return 0;
     }
 
-    void GroupModel::GetMeshData(std::vector<G3D::Vector3>& outVertices, std::vector<MeshTriangle>& outTriangles, WmoLiquid*& liquid)
+    void GroupModel::GetMeshData(std::vector<Vector3>& outVertices, std::vector<MeshTriangle>& outTriangles, WmoLiquid*& liquid)
     {
         outVertices = vertices;
         outTriangles = triangles;
         liquid = iLiquid;
     }
-
-    // ===================== WorldModel ==================================
 
     void WorldModel::setGroupModels(std::vector<GroupModel>& models)
     {
@@ -528,52 +449,47 @@ namespace VMAP
 
     struct WModelRayCallBack
     {
-        WModelRayCallBack(const std::vector<GroupModel>& mod): models(mod.begin()), hit(false) { }
-        bool operator()(const G3D::Ray& ray, uint32 entry, float& distance, bool StopAtFirstHit)
+        explicit WModelRayCallBack(const std::vector<GroupModel>& mod): models(mod.begin()) { }
+
+        bool operator()(const G3D::Ray& ray, const uint32 entry, float& distance, const bool StopAtFirstHit)
         {
-            bool result = models[entry].IntersectRay(ray, distance, StopAtFirstHit);
-            if (result) { hit = true; }
-            return hit;
+            return models[entry].IntersectRay(ray, distance, StopAtFirstHit);
         }
+
         std::vector<GroupModel>::const_iterator models;
-        bool hit;
     };
 
-    bool WorldModel::IntersectRay(const G3D::Ray& ray, float& distance, bool stopAtFirstHit, ModelIgnoreFlags ignoreFlags) const
+    bool WorldModel::IntersectRay(const G3D::Ray& ray, float& distance, const bool stopAtFirstHit, const ModelIgnoreFlags ignoreFlags) const
     {
         // If the caller asked us to ignore certain objects we should check flags
         if ((ignoreFlags & ModelIgnoreFlags::M2) != ModelIgnoreFlags::Nothing)
         {
             // M2 models are not taken into account for LoS calculation if caller requested their ignoring.
             if (Flags & MOD_M2)
-            {
                 return false;
-            }
         }
 
-        // small M2 workaround, maybe better make separate class with virtual intersection funcs
+        // Small M2 workaround, maybe better make separate class with virtual intersection funcs
         // in any case, there's no need to use a bound tree if we only have one submodel
         if (groupModels.size() == 1)
-        {
             return groupModels[0].IntersectRay(ray, distance, stopAtFirstHit);
-        }
 
         WModelRayCallBack isc(groupModels);
-        groupTree.intersectRay(ray, isc, distance, stopAtFirstHit);
-        return isc.hit;
+        return groupTree.intersectRay(ray, isc, distance, stopAtFirstHit);
     }
 
     class WModelAreaCallback
     {
     public:
-        WModelAreaCallback(std::vector<GroupModel> const& vals) :
-            prims(vals), hit() { }
+        explicit WModelAreaCallback(std::vector<GroupModel> const& vals) : prims(vals), hit() { }
+
         std::vector<GroupModel> const& prims;
         std::array<GroupModel const*, 3> hit;
-        bool operator()(G3D::Ray const& ray, uint32 entry, float& distance, bool /*stopAtFirstHit*/)
+
+        bool operator()(G3D::Ray const& ray, const uint32 entry, float& distance, bool /*stopAtFirstHit*/)
         {
             float group_Z;
-            if (GroupModel::InsideResult result = prims[entry].IsInsideObject(ray, group_Z); result != GroupModel::OUT_OF_BOUNDS)
+            if (const GroupModel::InsideResult result = prims[entry].IsInsideObject(ray, group_Z); result != GroupModel::OUT_OF_BOUNDS)
             {
                 if (result != GroupModel::MAYBE_INSIDE)
                 {
@@ -591,7 +507,7 @@ namespace VMAP
         }
     };
 
-    bool WorldModel::GetLocationInfo(const G3D::Vector3& p, const G3D::Vector3& down, float& dist, GroupLocationInfo& info) const
+    bool WorldModel::GetLocationInfo(const Vector3& p, const Vector3& down, float& dist, GroupLocationInfo& info) const
     {
         if (groupModels.empty())
         {
@@ -599,23 +515,23 @@ namespace VMAP
         }
 
         WModelAreaCallback callback(groupModels);
-        G3D::Ray r(p - down * 0.1f, down);
+        const G3D::Ray r(p - down * 0.1f, down);
         float zDist = groupTree.bound().extent().length();
         groupTree.intersectRay(r, callback, zDist, false);
         if (callback.hit[GroupModel::INSIDE])
         {
-            info.rootId = RootWMOID;
+            info.rootId = RootWMOid;
             info.hitModel = callback.hit[GroupModel::INSIDE];
             dist = zDist;
             return true;
         }
 
-        // some group models don't have any floor to intersect with
-        // so we should attempt to intersect with a model part below the group `p` is in (stored in GroupModel::ABOVE)
-        // then find back where we originated from (GroupModel::MAYBE_INSIDE)
+        // Some group models don't have any floor to intersect with,
+        // so we should attempt to intersect with a model part below the group `p` is in (stored in GroupModel::ABOVE),
+        // then find back where we originated from (GroupModel::MAYBE_INSIDE).
         if (callback.hit[GroupModel::MAYBE_INSIDE] && callback.hit[GroupModel::ABOVE])
         {
-            info.rootId   = RootWMOID;
+            info.rootId   = RootWMOid;
             info.hitModel = callback.hit[GroupModel::MAYBE_INSIDE];
             dist = zDist;
             return true;
@@ -623,82 +539,65 @@ namespace VMAP
         return false;
     }
 
-    bool WorldModel::writeFile(const std::string& filename)
+    bool WorldModel::writeFile(FILE* wf)
     {
-        FILE* wf = fopen(filename.c_str(), "wb");
-        if (!wf)
-        {
-            return false;
-        }
-
-        uint32 chunkSize, count;
-        bool result = fwrite(VMAP_MAGIC, 1, 8, wf) == 8;
-        if (result && fwrite("WMOD", 1, 4, wf) != 4) { result = false; }
+        uint32 chunkSize;
+        if (fwrite(VMAP_MAGIC, 1, 8, wf) != 8) return false;
+        if (fwrite("WMOD", 1, 4, wf) != 4) return false;
         chunkSize = sizeof(uint32) + sizeof(uint32);
-        if (result && fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) { result = false; }
-        if (result && fwrite(&RootWMOID, sizeof(uint32), 1, wf) != 1) { result = false; }
+        if (fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) return false;
+        if (fwrite(&RootWMOid, sizeof(uint32), 1, wf) != 1) return false;
 
-        // write group models
-        count = groupModels.size();
-        if (count)
-        {
-            if (result && fwrite("GMOD", 1, 4, wf) != 4) { result = false; }
-            //chunkSize = sizeof(uint32)+ sizeof(GroupModel)*count;
-            //if (result && fwrite(&chunkSize, sizeof(uint32), 1, wf) != 1) result = false;
-            if (result && fwrite(&count, sizeof(uint32), 1, wf) != 1) { result = false; }
-            for (uint32 i = 0; i < groupModels.size() && result; ++i)
-            {
-                result = groupModels[i].writeToFile(wf);
-            }
+        // Write group models
+        const uint32 count = groupModels.size();
+        if (!count)
+            return true;
+        if (fwrite("GMOD", 1, 4, wf) != 4) return false;
+        if (fwrite(&count, sizeof(uint32), 1, wf) != 1) return false;
+        for (uint32 i = 0; i < groupModels.size(); ++i)
+            if (!groupModels[i].writeToFile(wf)) return false;
 
-            // write group BIH
-            if (result && fwrite("GBIH", 1, 4, wf) != 4) { result = false; }
-            if (result) { result = groupTree.writeToFile(wf); }
-        }
-
-        fclose(wf);
-        return result;
+        // Write group BIH
+        if (fwrite("GBIH", 1, 4, wf) != 4) return false;
+        return groupTree.writeToFile(wf);
     }
 
+#define RAD_MAGIC_OR_RETURN(V, L) if (!readChunk(rf, chunk, V, L)) { fclose(rf); return false; }
+#define READ_OR_RETURN(V) if (!(V)) { fclose(rf); return false; }
     bool WorldModel::readFile(const std::string& filename)
     {
         FILE* rf = fopen(filename.c_str(), "rb");
         if (!rf)
-        {
             return false;
-        }
 
-        bool result = true;
         uint32 chunkSize = 0;
         uint32 count = 0;
-        char chunk[8];                          // Ignore the added magic header
-        if (!readChunk(rf, chunk, VMAP_MAGIC, 8)) { result = false; }
+        char chunk[8];
 
-        if (result && !readChunk(rf, chunk, "WMOD", 4)) { result = false; }
-        if (result && fread(&chunkSize, sizeof(uint32), 1, rf) != 1) { result = false; }
-        if (result && fread(&RootWMOID, sizeof(uint32), 1, rf) != 1) { result = false; }
+        RAD_MAGIC_OR_RETURN(VMAP_MAGIC, 8)
+        RAD_MAGIC_OR_RETURN("WMOD", 4)
+        READ_OR_RETURN(fread(&chunkSize, sizeof(uint32), 1, rf) == 1)
+        READ_OR_RETURN(fread(&RootWMOid, sizeof(uint32), 1, rf) == 1)
 
-        // read group models
-        if (result && readChunk(rf, chunk, "GMOD", 4))
+        // Read group models
+        RAD_MAGIC_OR_RETURN("GMOD", 4)
+        READ_OR_RETURN(fread(&count, sizeof(uint32), 1, rf) == 1)
+
+        groupModels.resize(count);
+        for (uint32 i = 0; i < count; ++i)
         {
-            //if (fread(&chunkSize, sizeof(uint32), 1, rf) != 1) result = false;
-
-            if (fread(&count, sizeof(uint32), 1, rf) != 1) { result = false; }
-            if (result) { groupModels.resize(count); }
-            //if (result && fread(&groupModels[0], sizeof(GroupModel), count, rf) != count) result = false;
-            for (uint32 i = 0; i < count && result; ++i)
-            {
-                result = groupModels[i].readFromFile(rf);
-            }
-
-            // read group BIH
-            if (result && !readChunk(rf, chunk, "GBIH", 4)) { result = false; }
-            if (result) { result = groupTree.readFromFile(rf); }
+            READ_OR_RETURN(groupModels[i].readFromFile(rf))
         }
 
+        // Read group BIH
+        RAD_MAGIC_OR_RETURN("GBIH", 4)
+        READ_OR_RETURN(groupTree.readFromFile(rf))
+
         fclose(rf);
-        return result;
+        return true;
     }
+#undef RAD_MAGIC_OR_RETURN
+#undef READ_OR_RETURN
 
     void WorldModel::GetGroupModels(std::vector<GroupModel>& outGroupModels)
     {

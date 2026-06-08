@@ -91,7 +91,7 @@ bool BattlefieldWG::SetupBattlefield()
     }
 
     Active = bool(sWorldState->getWorldState(WORLD_STATE_BATTLEFIELD_WG_ACTIVE));
-    DefenderTeam = TeamId(sWorldState->getWorldState(WORLD_STATE_BATTLEFIELD_WG_DEFENDER));
+    DefenderTeam = TeamID(sWorldState->getWorldState(WORLD_STATE_BATTLEFIELD_WG_DEFENDER));
 
     Timer = sWorldState->getWorldState(ClockWorldState[0]);
     if (Active)
@@ -561,7 +561,7 @@ void BattlefieldWG::OnCreatureCreate(Creature* creature)
         case NPC_DWARVEN_SPIRIT_GUIDE:
         case NPC_TAUNKA_SPIRIT_GUIDE:
             {
-                TeamId teamId = (creature->GetEntry() == NPC_DWARVEN_SPIRIT_GUIDE ? TEAM_ALLIANCE : TEAM_HORDE);
+                TeamID teamId = (creature->GetEntry() == NPC_DWARVEN_SPIRIT_GUIDE ? TEAM_ALLIANCE : TEAM_HORDE);
                 uint8 graveyardId = GetSpiritGraveyardId(creature->GetAreaId());
                 // xinef: little workaround, there are 2 spirit guides in same area
                 if (creature->IsWithinDist2d(5103.0f, 3461.5f, 5.0f))
@@ -589,7 +589,7 @@ void BattlefieldWG::OnCreatureCreate(Creature* creature)
                     Player* creator = ObjectAccessor::FindPlayer(creature->ToTempSummon()->GetSummonerGUID());
                     if (!creator)
                         return;
-                    TeamId team = creator->GetTeamId();
+                    TeamID team = creator->GetTeamId();
 
                     if (team == TEAM_HORDE)
                     {
@@ -717,7 +717,7 @@ void BattlefieldWG::HandleKill(Player* killer, Unit* victim)
         return;
     }
 
-    TeamId killerTeam = killer->GetTeamId();
+    TeamID killerTeam = killer->GetTeamId();
 
     // xinef: tower cannons also grant rank
     if (victim->IsPlayer() || IsKeepNpc(victim->GetEntry()) || victim->GetEntry() == NPC_WINTERGRASP_TOWER_CANNON)
@@ -1016,7 +1016,7 @@ void BattlefieldWG::SendUpdateWorldStateMessage(uint32 variable, uint32 value, P
         sWorldSessionMgr->SendGlobalMessage(worldState.Write());
 }
 
-void BattlefieldWG::BrokenWallOrTower(TeamId  /*team*/)
+void BattlefieldWG::BrokenWallOrTower(TeamID  /*team*/)
 {
     // might be some use for this in the future. old code commented out below. KL
     /*    if (team == GetDefenderTeam())
@@ -1030,7 +1030,7 @@ void BattlefieldWG::BrokenWallOrTower(TeamId  /*team*/)
 }
 
 // Called when a tower is broke
-void BattlefieldWG::UpdatedDestroyedTowerCount(TeamId team, GameObject* go)
+void BattlefieldWG::UpdatedDestroyedTowerCount(TeamID team, GameObject* go)
 {
     // Destroy an attack tower
     if (team == GetAttackerTeam())
@@ -1109,10 +1109,10 @@ void BattlefieldWG::ProcessEvent(WorldObject* obj, uint32 eventId)
         {
             if (go->GetEntry() == build->GetEntry())
             {
-                if (build->GetGOInfo()->building.damagedEvent == eventId)
+                if (build->GetGOInfo()->Building.damagedEvent == eventId)
                     building->Damaged();
 
-                if (build->GetGOInfo()->building.destroyedEvent == eventId)
+                if (build->GetGOInfo()->Building.destroyedEvent == eventId)
                     building->Destroyed();
 
                 break;
@@ -1122,7 +1122,7 @@ void BattlefieldWG::ProcessEvent(WorldObject* obj, uint32 eventId)
 }
 
 // Called when a tower is damaged, used for honor reward calcul
-void BattlefieldWG::UpdateDamagedTowerCount(TeamId team)
+void BattlefieldWG::UpdateDamagedTowerCount(TeamID team)
 {
     if (team == GetAttackerTeam())
     {
@@ -1155,7 +1155,7 @@ void BattlefieldWG::RemoveUpdateTenacity(Player* player)
 
 void BattlefieldWG::UpdateTenacity()
 {
-    TeamId team = TEAM_NEUTRAL;
+    TeamID team = TEAM_NEUTRAL;
     uint32 alliancePlayers = PlayersInWar[TEAM_ALLIANCE].size();
     uint32 hordePlayers = PlayersInWar[TEAM_HORDE].size();
     int32 newStack = 0;
@@ -1230,14 +1230,14 @@ void BattlefieldWG::UpdateTenacity()
     }
 }
 
-WintergraspCapturePoint::WintergraspCapturePoint(BattlefieldWG* battlefield, TeamId teamInControl) : BfCapturePoint(battlefield)
+WintergraspCapturePoint::WintergraspCapturePoint(BattlefieldWG* battlefield, TeamID teamInControl) : BfCapturePoint(battlefield)
 {
     Bf = battlefield;
     Team = teamInControl;
     LinkedWorkshop = nullptr;
 }
 
-void WintergraspCapturePoint::ChangeTeam(TeamId /*oldTeam*/)
+void WintergraspCapturePoint::ChangeTeam(TeamID /*oldTeam*/)
 {
     ASSERT(LinkedWorkshop);
     LinkedWorkshop->GiveControlTo(Team, false);
