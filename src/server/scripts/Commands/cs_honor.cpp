@@ -19,6 +19,7 @@
 #include "CommandScript.h"
 #include "Language.h"
 #include "Player.h"
+#include "WorldSession.h"
 
 using namespace Acore::ChatCommands;
 
@@ -31,14 +32,14 @@ public:
     {
         static ChatCommandTable honorAddCommandTable =
         {
-            { "kill", HandleHonorAddKillCommand, SEC_GAME_MASTER, Console::No },
-            { "",     HandleHonorAddCommand,     SEC_GAME_MASTER, Console::No }
+            { "kill", HandleHonorAddKillCommand, SuperuserOnly::No },
+            { "",     HandleHonorAddCommand,     SuperuserOnly::No }
         };
 
         static ChatCommandTable honorCommandTable =
         {
             { "add",    honorAddCommandTable },
-            { "update", HandleHonorUpdateCommand, SEC_GAME_MASTER, Console::No }
+            { "update", HandleHonorUpdateCommand, SuperuserOnly::No }
         };
 
         static ChatCommandTable commandTable =

@@ -38,13 +38,13 @@ public:
     {
         static ChatCommandTable commandTable =
         {
-            { "nameannounce",   HandleNameAnnounceCommand,   SEC_GAME_MASTER, Console::Yes },
-            { "gmnameannounce", HandleGMNameAnnounceCommand, SEC_GAME_MASTER, Console::Yes },
-            { "announce",       HandleAnnounceCommand,       SEC_GAME_MASTER, Console::Yes },
-            { "gmannounce",     HandleGMAnnounceCommand,     SEC_GAME_MASTER, Console::Yes },
-            { "notify",         HandleNotifyCommand,         SEC_GAME_MASTER, Console::Yes },
-            { "gmnotify",       HandleGMNotifyCommand,       SEC_GAME_MASTER, Console::Yes },
-            { "whispers",       HandleWhispersCommand,       SEC_MODERATOR,  Console::No },
+            { "nameannounce",   HandleNameAnnounceCommand,   SuperuserOnly::No },
+            { "gmnameannounce", HandleGMNameAnnounceCommand, SuperuserOnly::No },
+            { "announce",       HandleAnnounceCommand,       SuperuserOnly::No },
+            { "gmannounce",     HandleGMAnnounceCommand,     SuperuserOnly::No },
+            { "notify",         HandleNotifyCommand,         SuperuserOnly::No },
+            { "gmnotify",       HandleGMNotifyCommand,       SuperuserOnly::No },
+            { "whispers",       HandleWhispersCommand,       SuperuserOnly::No },
         };
         return commandTable;
     }

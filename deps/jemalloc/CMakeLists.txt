@@ -1,5 +1,5 @@
 include(CheckSymbolExists)
-CHECK_SYMBOL_EXISTS(MADV_FREE "sys/mman.h" HAVE_MADV_FREE)
+check_symbol_exists(MADV_FREE "sys/mman.h" HAVE_MADV_FREE)
 
 set(JEM_SIZEDEF 3)
 set(JEM_TLSMODEL "__attribute__\(\(tls_model\(\"initial-exec\"\)\)\)")

@@ -291,13 +291,13 @@ void WorldSession::HandleWhoOpcode(WorldPacket& recvData)
     for (auto const& target : sWhoListCacheMgr->GetWhoList())
     {
         // Player can't see GAME MASTER
-        if (!IsGameMaster() && target.IsGameMaster())
+        if (!IsStaff() && target.IsGameMaster())
         {
             continue;
         }
 
         // check if target is globally visible for player
-        if (_player->GetGUID() != target.GetGuid() && !target.IsVisible() && !_player->GetSession()->IsGameMaster())
+        if (_player->GetGUID() != target.GetGuid() && !target.IsVisible() && !_player->GetSession()->IsStaff())
         {
             continue;
         }
@@ -408,12 +408,12 @@ void WorldSession::HandleWhoOpcode(WorldPacket& recvData)
 
 void WorldSession::HandleLogoutRequestOpcode(WorldPackets::Character::LogoutRequest& /*logoutRequest*/)
 {
-    LOG_DEBUG("network", "WORLD: Recvd CMSG_LOGOUT_REQUEST Message, is GM = {}", IsGameMaster());
+    LOG_DEBUG("network", "WORLD: Recvd CMSG_LOGOUT_REQUEST Message, is Staff = {}", IsStaff());
 
     if (ObjectGuid lguid = GetPlayer()->GetLootGUID())
         DoLootRelease(lguid);
 
-    bool instantLogout = IsGameMaster() || (GetPlayer()->HasPlayerFlag(PLAYER_FLAGS_RESTING) && !GetPlayer()->IsInCombat()) || GetPlayer()->IsInFlight();
+    bool instantLogout = IsStaff() || (GetPlayer()->HasPlayerFlag(PLAYER_FLAGS_RESTING) && !GetPlayer()->IsInCombat()) || GetPlayer()->IsInFlight();
 
     bool preventAfkSanctuaryLogout = sWorld->getIntConfig(CONFIG_AFK_PREVENT_LOGOUT) == 1
                                      && GetPlayer()->isAFK() && sAreaTableStore.LookupEntry(GetPlayer()->GetAreaId())->IsSanctuary();
@@ -983,7 +983,7 @@ void WorldSession::HandleInspectOpcode(WorldPacket& recv_data)
     WorldPacket data(SMSG_INSPECT_TALENT, guid_size + 4 + talent_points);
     data << player->GetPackGUID();
 
-    if (sWorld->getBoolConfig(CONFIG_TALENTS_INSPECTING) || _player->IsGameMaster())
+    if (sWorld->getBoolConfig(CONFIG_TALENTS_INSPECTING) || _player->CanBeGameMaster())
     {
         player->BuildPlayerTalentsInfoData(&data);
     }
@@ -1054,7 +1054,7 @@ void WorldSession::HandleWorldTeleportOpcode(WorldPacket& recv_data)
 
     LOG_DEBUG("network", "CMSG_WORLD_TELEPORT: Player = {}, Time = {}, map = {}, x = {}, y = {}, z = {}, o = {}", GetPlayer()->GetName(), time, mapid, PositionX, PositionY, PositionZ, Orientation);
 
-    if (IsGameMaster())
+    if (IsStaff())
         GetPlayer()->TeleportTo(mapid, PositionX, PositionY, PositionZ, Orientation);
     else
         ChatHandler(this).SendNotification(LANG_PERMISSION_DENIED);
@@ -1066,7 +1066,7 @@ void WorldSession::HandleWhoisOpcode(WorldPacket& recv_data)
     std::string charname;
     recv_data >> charname;
 
-    if (!IsGameMaster())
+    if (!IsStaff())
     {
         ChatHandler(this).SendNotification(LANG_PERMISSION_DENIED);
         return;
@@ -1124,8 +1124,21 @@ void WorldSession::HandleComplainOpcode(WorldPackets::Misc::Complain& packet)
     // Complaint Received message
     SendPacket(WorldPackets::Misc::ComplainResult().Write());
 
-    LOG_DEBUG("network", "REPORT SPAM: type {}, {}, unk1 {}, unk2 {}, unk3 {}, unk4 {}, message {}",
-        packet.SpamType, packet.SpammerGuid.ToString(), packet.Unk1, packet.Unk2, packet.Unk3, packet.Unk4, packet.Description);
+    if (sWorld->getBoolConfig(CONFIG_LOGSPAMREPORTS))
+    {
+        CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_SPAM_REPORT);
+
+        stmt->SetData(0, packet.SpamType);
+        stmt->SetData(1, packet.SpammerGuid.GetCounter());
+        stmt->SetData(2, packet.Unk1);
+        stmt->SetData(3, packet.MailIdOrMessageType);
+        stmt->SetData(4, packet.ChannelId);
+        stmt->SetData(5, packet.SecondsSinceMessage);
+        stmt->SetData(6, packet.Description);
+        stmt->SetData(7, GameTime::GetGameTime().count());
+
+        CharacterDatabase.Execute(stmt);
+    }
 }
 
 void WorldSession::HandleRealmSplitOpcode(WorldPacket& recv_data)

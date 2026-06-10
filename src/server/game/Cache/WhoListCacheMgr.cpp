@@ -55,7 +55,7 @@ void WhoListCacheMgr::Update()
 
         wstrToLower(wideGuildName);
 
-        _whoListStorage.emplace_back(player->GetGUID(), player->GetTeamId(), player->GetSession()->IsGameMaster(), player->GetLevel(),
+        _whoListStorage.emplace_back(player->GetGUID(), player->GetTeamId(), player->GetSession()->IsStaff(), player->GetLevel(),
             player->getClass(), player->getRace(),
             (player->IsSpectator() ? AREA_DALARAN : player->GetZoneId()), player->getGender(), player->IsVisible(),
             widePlayerName, wideGuildName, playerName, guildName);

@@ -15,9 +15,9 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "ArenaTeamMgr.h"
 #include "ArenaSeasonMgr.h"
 #include "ArenaTeamFilter.h"
+#include "ArenaTeamMgr.h"
 #include "Chat.h"
 #include "CommandScript.h"
 #include "Player.h"
@@ -33,25 +33,25 @@ public:
     {
         static ChatCommandTable arenaSeasonSetCommandTable =
         {
-            { "state",          HandleArenaSeasonSetStateCommand, SEC_ADMINISTRATOR, Console::Yes }
+            { "state",          HandleArenaSeasonSetStateCommand, SuperuserOnly::Yes }
         };
 
         static ChatCommandTable arenaSeasonCommandTable =
         {
-            { "reward",         HandleArenaSeasonRewardCommand,      SEC_ADMINISTRATOR, Console::Yes },
-            { "deleteteams",    HandleArenaSeasonDeleteTeamsCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "start",          HandleArenaSeasonStartCommand,       SEC_ADMINISTRATOR, Console::Yes },
+            { "reward",         HandleArenaSeasonRewardCommand,      SuperuserOnly::Yes },
+            { "deleteteams",    HandleArenaSeasonDeleteTeamsCommand, SuperuserOnly::Yes },
+            { "start",          HandleArenaSeasonStartCommand,       SuperuserOnly::Yes },
             { "set",            arenaSeasonSetCommandTable }
         };
 
         static ChatCommandTable arenaCommandTable =
         {
-            { "create",         HandleArenaCreateCommand,   SEC_ADMINISTRATOR, Console::Yes },
-            { "disband",        HandleArenaDisbandCommand,  SEC_ADMINISTRATOR, Console::Yes },
-            { "rename",         HandleArenaRenameCommand,   SEC_ADMINISTRATOR, Console::Yes },
-            { "captain",        HandleArenaCaptainCommand,  SEC_ADMINISTRATOR, Console::No  },
-            { "info",           HandleArenaInfoCommand,     SEC_GAME_MASTER,    Console::Yes },
-            { "lookup",         HandleArenaLookupCommand,   SEC_GAME_MASTER,    Console::Yes },
+            { "create",         HandleArenaCreateCommand,   SuperuserOnly::Yes },
+            { "disband",        HandleArenaDisbandCommand,  SuperuserOnly::Yes },
+            { "rename",         HandleArenaRenameCommand,   SuperuserOnly::Yes },
+            { "captain",        HandleArenaCaptainCommand,  SuperuserOnly::Yes  },
+            { "info",           HandleArenaInfoCommand,     SuperuserOnly::No },
+            { "lookup",         HandleArenaLookupCommand,   SuperuserOnly::No },
             { "season",         arenaSeasonCommandTable  }
         };
 
@@ -67,7 +67,7 @@ public:
     {
         if (sArenaTeamMgr->GetArenaTeamByName(name))
         {
-            handler->SendErrorMessage(LANG_ARENA_ERROR_NAME_EXISTS, name);
+            handler->SendErrorMessage(LANG_ARENA_ERROR_NAME_EXISTS, name.c_str());
             return false;
         }
 
@@ -128,13 +128,13 @@ public:
         ArenaTeam* arena = sArenaTeamMgr->GetArenaTeamByName(oldName);
         if (!arena)
         {
-            handler->SendErrorMessage(LANG_ARENA_ERROR_NAME_NOT_FOUND, oldName);
+            handler->SendErrorMessage(LANG_ARENA_ERROR_NAME_NOT_FOUND, oldName.c_str());
             return false;
         }
 
         if (sArenaTeamMgr->GetArenaTeamByName(newName))
         {
-            handler->SendErrorMessage(LANG_ARENA_ERROR_NAME_EXISTS, oldName);
+            handler->SendErrorMessage(LANG_ARENA_ERROR_NAME_EXISTS, oldName.c_str());
             return false;
         }
 
@@ -150,7 +150,7 @@ public:
             return false;
         }
 
-        handler->PSendSysMessage(LANG_ARENA_RENAME, arena->GetId(), oldName, newName);
+        handler->PSendSysMessage(LANG_ARENA_RENAME, arena->GetId(), oldName.c_str(), newName.c_str());
 
         return true;
     }

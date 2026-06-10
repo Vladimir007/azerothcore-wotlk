@@ -33,13 +33,13 @@ public:
     {
         static ChatCommandTable wpCommandTable =
         {
-            { "add",        HandleWpAddCommand,      SEC_ADMINISTRATOR, Console::No },
-            { "event",      HandleWpEventCommand,    SEC_ADMINISTRATOR, Console::No },
-            { "load",       HandleWpLoadCommand,     SEC_ADMINISTRATOR, Console::No },
-            { "modify",     HandleWpModifyCommand,   SEC_ADMINISTRATOR, Console::No },
-            { "unload",     HandleWpUnLoadCommand,   SEC_ADMINISTRATOR, Console::No },
-            { "reload",     HandleWpReloadCommand,   SEC_ADMINISTRATOR, Console::No },
-            { "show",       HandleWpShowCommand,     SEC_ADMINISTRATOR, Console::No }
+            { "add",        HandleWpAddCommand,      SuperuserOnly::Yes },
+            { "event",      HandleWpEventCommand,    SuperuserOnly::Yes },
+            { "load",       HandleWpLoadCommand,     SuperuserOnly::Yes },
+            { "modify",     HandleWpModifyCommand,   SuperuserOnly::Yes },
+            { "unload",     HandleWpUnLoadCommand,   SuperuserOnly::Yes },
+            { "reload",     HandleWpReloadCommand,   SuperuserOnly::Yes },
+            { "show",       HandleWpShowCommand,     SuperuserOnly::Yes }
         };
         static ChatCommandTable commandTable =
         {

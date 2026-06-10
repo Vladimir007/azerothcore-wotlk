@@ -352,7 +352,7 @@ bool ServerMailCondition::CheckCondition(Player* player) const
     case ServerMailConditionType::Class:
         return (player->getClassMask() & value) != 0;
     case ServerMailConditionType::AccountFlags:
-        return !value || player->GetSession()->IsGameMaster();
+        return !value || player->GetSession()->IsStaff();
     default:
         [[unlikely]] LOG_ERROR("server.mail", "Unknown server mail condition type '{}'", static_cast<uint32>(type));
         return false;

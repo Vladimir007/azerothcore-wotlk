@@ -29,8 +29,8 @@ public:
     {
         static ChatCommandTable playerCommandTable =
         {
-            { "learn",   HandlePlayerLearnCommand,   SEC_GAME_MASTER, Console::Yes },
-            { "unlearn", HandlePlayerUnLearnCommand, SEC_GAME_MASTER, Console::Yes }
+            { "learn",   HandlePlayerLearnCommand,   SuperuserOnly::No },
+            { "unlearn", HandlePlayerUnLearnCommand, SuperuserOnly::No }
         };
 
         static ChatCommandTable commandTable =

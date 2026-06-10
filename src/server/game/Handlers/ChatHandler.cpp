@@ -325,8 +325,8 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                 }
 
                 Player* receiver = ObjectAccessor::FindPlayerByName(to, false);
-                bool senderIsPlayer = !IsGameMaster();
-                bool receiverIsPlayer = receiver ? !receiver->GetSession()->IsGameMaster() : true;
+                bool senderIsPlayer = !IsStaff();
+                bool receiverIsPlayer = receiver ? !receiver->GetSession()->IsStaff() : true;
 
                 if (sender->GetLevel() < sWorld->getIntConfig(CONFIG_CHAT_WHISPER_LEVEL_REQ) && receiver != sender && receiver && !receiver->IsGameMaster())
                 {
@@ -334,7 +334,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                     return;
                 }
 
-                if (!receiver || (senderIsPlayer && !receiverIsPlayer && !receiver->isAcceptWhispers() && !receiver->IsInWhisperWhiteList(sender->GetGUID())))
+                if (!receiver || (lang != LANG_ADDON && !receiver->isAcceptWhispers() && !receiver->IsInWhisperWhiteList(sender->GetGUID())))
                 {
                     SendPlayerNotFoundNotice(to);
                     return;
@@ -347,7 +347,6 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                         return;
                     }
 
-                // pussywizard: optimization
                 if (GetPlayer()->HasAura(1852) && !receiver->IsGameMaster())
                 {
                     ChatHandler(this).SendNotification(LANG_GM_SILENCE, GetPlayer()->GetName());
@@ -355,7 +354,9 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
                 }
 
                 // If player is a Gamemaster and doesn't accept whisper, we auto-whitelist every player that the Gamemaster is talking to
-                if (!senderIsPlayer && !sender->isAcceptWhispers() && !sender->IsInWhisperWhiteList(receiver->GetGUID()))
+                // We also do that if a player is under the required level for whispers.
+                if (receiver->GetLevel() < sWorld->getIntConfig(CONFIG_CHAT_WHISPER_LEVEL_REQ) ||
+                    (!sender->isAcceptWhispers() && !sender->IsInWhisperWhiteList(receiver->GetGUID())))
                     sender->AddWhisperWhiteList(receiver->GetGUID());
 
                 GetPlayer()->Whisper(msg, Language(lang), receiver);
@@ -497,7 +498,7 @@ void WorldSession::HandleMessagechatOpcode(WorldPacket& recvData)
             break;
         case CHAT_MSG_CHANNEL:
             {
-                if (!IsGameMaster())
+                if (!IsStaff())
                 {
                     if (sender->GetLevel() < sWorld->getIntConfig(CONFIG_CHAT_CHANNEL_LEVEL_REQ))
                     {

@@ -5024,7 +5024,9 @@ bool Player::LoadFromDB(ObjectGuid playerGuid, CharacterDatabaseQueryHolder cons
     m_name = fields[2].Get<std::string>();
 
     // check name limitations
-    if (ObjectMgr::CheckPlayerName(m_name) != CHAR_NAME_SUCCESS)
+    uint8 nameResult = ObjectMgr::CheckPlayerName(m_name);
+    if (nameResult != CHAR_NAME_SUCCESS &&
+        !(nameResult == CHAR_NAME_RESERVED && GetSession()->IsStaff()))
     {
         CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
         stmt->SetData(0, uint16(AT_LOGIN_RENAME));
@@ -5397,6 +5399,11 @@ bool Player::LoadFromDB(ObjectGuid playerGuid, CharacterDatabaseQueryHolder cons
 
     uint32 extraflags = fields[36].Get<uint16>();
 
+    // Mirror before the gate below so saved bits survive when the gate
+    // skips effect application; otherwise the next SaveToDB writes 0
+    // over them.
+    m_ExtraFlags = extraflags;
+
     _LoadPetStable(fields[37].Get<uint8>(), holder.GetPreparedResult(PLAYER_LOGIN_QUERY_LOAD_PET_SLOTS));
 
     m_atLoginFlags = fields[38].Get<uint16>();
@@ -5568,7 +5575,7 @@ bool Player::LoadFromDB(ObjectGuid playerGuid, CharacterDatabaseQueryHolder cons
     outDebugValues();
 
     // GM state
-    if (GetSession()->IsGameMaster())
+    if (GetSession()->IsStaff())
     {
         switch (sWorld->getIntConfig(CONFIG_GM_LOGIN_STATE))
         {
@@ -6194,6 +6201,32 @@ Item* Player::_LoadMailedItem(ObjectGuid const& playerGuid, Player* player, uint
         CharacterDatabaseTransaction temp = CharacterDatabaseTransaction(nullptr);
         item->SaveToDB(temp);
         return nullptr;
+    }
+
+    // Rehydrate looters for BoP-tradeable mail items; only the LFG mail path writes this flag, gated on the same config.
+    if (item->IsBOPTradable() && sWorld->getBoolConfig(CONFIG_SET_BOP_ITEM_TRADEABLE))
+    {
+        CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_ITEM_BOP_TRADE);
+        stmt->SetData(0, item->GetGUID().GetCounter());
+
+        if (QueryResult result = CharacterDatabase.Query(stmt))
+        {
+            AllowedLooterSet looters;
+            for (std::string_view guidStr : Acore::Tokenize((*result)[0].Get<std::string_view>(), ' ', false))
+            {
+                if (Optional<ObjectGuid::LowType> guid = Acore::StringTo<ObjectGuid::LowType>(guidStr))
+                    looters.insert(ObjectGuid::Create<HighGuid::Player>(*guid));
+                else
+                    LOG_WARN("entities.player.loading", "Player::_LoadMailedItem: invalid item_soulbound_trade_data GUID '{}' for item {}. Skipped.", guidStr, item->GetGUID().ToString());
+            }
+
+            if (looters.size() > 1 && proto->GetMaxStackSize() == 1 && item->IsSoulBound())
+                item->SetSoulboundTradeable(looters);
+            else
+                item->RemoveFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_BOP_TRADEABLE);
+        }
+        else
+            item->RemoveFlag(ITEM_FIELD_FLAGS, ITEM_FIELD_FLAG_BOP_TRADEABLE);
     }
 
     if (mail)

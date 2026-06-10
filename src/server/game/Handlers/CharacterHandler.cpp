@@ -324,7 +324,7 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
 
     // check name limitations
     uint8 res = ObjectMgr::CheckPlayerName(createInfo->Name, true);
-    if (res != CHAR_NAME_SUCCESS)
+    if (res != CHAR_NAME_SUCCESS && res != CHAR_NAME_RESERVED)
     {
         SendCharCreate(ResponseCodes(res));
         return;
@@ -332,7 +332,7 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
 
     // speedup check for heroic class disabled case
     uint32 req_level_for_heroic = StartHeroicPlayerLevel;
-    if (!IsGameMaster() && createInfo->Class == CLASS_DEATH_KNIGHT && req_level_for_heroic > sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL))
+    if (!IsStaff() && createInfo->Class == CLASS_DEATH_KNIGHT && req_level_for_heroic > sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL))
     {
         SendCharCreate(CHAR_CREATE_LEVEL_REQUIREMENT);
         return;
@@ -394,7 +394,7 @@ void WorldSession::HandleCharCreateOpcode(WorldPacket& recvData)
                 return;
             }
             bool hasHeroicReqLevel = false;
-            bool checkDeathKnightReqs = !IsGameMaster() && createInfo->Class == CLASS_DEATH_KNIGHT;
+            bool checkDeathKnightReqs = !IsStaff() && createInfo->Class == CLASS_DEATH_KNIGHT;
 
             if (result)
             {
@@ -1014,6 +1014,13 @@ void WorldSession::HandlePlayerLoginToCharInWorld(Player* pCurrChar)
     ChatHandler chH = ChatHandler(this);
     m_playerLoading = true;
 
+    // Exit vehicle on reconnect - the client has fully reset so
+    // the player can no longer control the vehicle. Without this
+    // the player is stuck: server-side still seated, but the
+    // client has no vehicle UI or movement control.
+    if (pCurrChar->GetVehicle())
+        pCurrChar->ExitVehicle();
+
     pCurrChar->SendDungeonDifficulty(false);
 
     WorldPacket data(SMSG_LOGIN_VERIFY_WORLD, 20);
@@ -1236,7 +1243,7 @@ void WorldSession::HandleCharRenameOpcode(WorldPacket& recvData)
     }
 
     uint8 res = ObjectMgr::CheckPlayerName(renameInfo->Name, true);
-    if (res != CHAR_NAME_SUCCESS)
+    if (res != CHAR_NAME_SUCCESS && res != CHAR_NAME_RESERVED)
     {
         SendCharRename(ResponseCodes(res), renameInfo.get());
         return;
@@ -1573,7 +1580,7 @@ void WorldSession::HandleCharCustomizeCallback(std::shared_ptr<CharacterCustomiz
     }
 
     ResponseCodes res = static_cast<ResponseCodes>(ObjectMgr::CheckPlayerName(customizeInfo->Name, true));
-    if (res != CHAR_NAME_SUCCESS)
+    if (res != CHAR_NAME_SUCCESS && res != CHAR_NAME_RESERVED)
     {
         SendCharCustomize(res, customizeInfo.get());
         return;
@@ -1964,8 +1971,11 @@ void WorldSession::HandleCharFactionOrRaceChangeCallback(std::shared_ptr<Charact
     ResponseCodes res = static_cast<ResponseCodes>(ObjectMgr::CheckPlayerName(factionChangeInfo->Name, true));
     if (res != CHAR_NAME_SUCCESS)
     {
-        SendCharFactionChange(res, factionChangeInfo.get());
-        return;
+        if (res != CHAR_NAME_RESERVED || !IsStaff())
+        {
+            SendCharFactionChange(res, factionChangeInfo.get());
+            return;
+        }
     }
 
     // character with this name already exist

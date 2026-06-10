@@ -25,8 +25,6 @@
 #include "Realm.h"
 #include "StringConvert.h"
 #include "UpdateTime.h"
-#include "VMapFactory.h"
-#include "VMapMgr.h"
 #include "WorldSessionMgr.h"
 #include <filesystem>
 #include <numeric>
@@ -42,37 +40,37 @@ public:
     {
         static ChatCommandTable serverIdleRestartCommandTable =
         {
-            { "cancel",       HandleServerShutDownCancelCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "",             HandleServerIdleRestartCommand,    SEC_CONSOLE,       Console::Yes }
+            { "cancel",       HandleServerShutDownCancelCommand, SuperuserOnly::Yes },
+            { "",             HandleServerIdleRestartCommand,    SuperuserOnly::Yes }
         };
 
         static ChatCommandTable serverIdleShutdownCommandTable =
         {
-            { "cancel",       HandleServerShutDownCancelCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "",             HandleServerIdleShutDownCommand,   SEC_CONSOLE,       Console::Yes }
+            { "cancel",       HandleServerShutDownCancelCommand, SuperuserOnly::Yes },
+            { "",             HandleServerIdleShutDownCommand,   SuperuserOnly::Yes }
         };
 
         static ChatCommandTable serverRestartCommandTable =
         {
-            { "cancel",       HandleServerShutDownCancelCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "",             HandleServerRestartCommand,        SEC_ADMINISTRATOR, Console::Yes }
+            { "cancel",       HandleServerShutDownCancelCommand, SuperuserOnly::Yes },
+            { "",             HandleServerRestartCommand,        SuperuserOnly::Yes }
         };
 
         static ChatCommandTable serverShutdownCommandTable =
         {
-            { "cancel",       HandleServerShutDownCancelCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "",             HandleServerShutDownCommand,       SEC_ADMINISTRATOR, Console::Yes }
+            { "cancel",       HandleServerShutDownCancelCommand, SuperuserOnly::Yes },
+            { "",             HandleServerShutDownCommand,       SuperuserOnly::Yes }
         };
 
         static ChatCommandTable serverCommandTable =
         {
-            { "corpses",      HandleServerCorpsesCommand,        SEC_GAME_MASTER,    Console::Yes },
-            { "debug",        HandleServerDebugCommand,          SEC_ADMINISTRATOR, Console::Yes },
-            { "exit",         HandleServerExitCommand,           SEC_CONSOLE,       Console::Yes },
+            { "corpses",      HandleServerCorpsesCommand,        SuperuserOnly::No },
+            { "debug",        HandleServerDebugCommand,          SuperuserOnly::Yes },
+            { "exit",         HandleServerExitCommand,           SuperuserOnly::Yes },
             { "idlerestart",  serverIdleRestartCommandTable },
             { "idleshutdown", serverIdleShutdownCommandTable },
-            { "info",         HandleServerInfoCommand,           SEC_PLAYER,        Console::Yes },
-            { "motd",         HandleServerMotdCommand,           SEC_PLAYER,        Console::Yes },
+            { "info",         HandleServerInfoCommand,           SuperuserOnly::No },
+            { "motd",         HandleServerMotdCommand,           SuperuserOnly::No },
             { "restart",      serverRestartCommandTable },
             { "shutdown",     serverShutdownCommandTable },
         };

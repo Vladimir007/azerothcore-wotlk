@@ -289,8 +289,9 @@ ObjectMgr::ObjectMgr():
     for (auto & i : _playerClassInfo)
         i = nullptr;
 
-    // Initialize default spawn group
-    _spawnGroupDataStore[0] = {0, "Default Group", 0, SPAWNGROUP_FLAG_SYSTEM};
+    // Initialize default spawn groups
+    _spawnGroupDataStore[0] = {0, "Default Group", SPAWNGROUP_MAP_UNSET, SPAWNGROUP_FLAG_SYSTEM};
+    _spawnGroupDataStore[1] = {1, "Legacy Group", SPAWNGROUP_MAP_UNSET, static_cast<SpawnGroupFlags>(SPAWNGROUP_FLAG_SYSTEM | SPAWNGROUP_FLAG_COMPATIBILITY_MODE)};
 }
 
 ObjectMgr::~ObjectMgr()
@@ -1612,7 +1613,10 @@ uint32 ObjectMgr::GetModelForShapeshift(ShapeshiftForm form, const Player* playe
     else
         customizationID = player->GetByteValue(PLAYER_BYTES, 0); // Use Skin Color
 
-    auto itr = _playerShapeshiftModel.find(std::make_tuple(form, player->getRace(), customizationID, player->getGender()));
+    // getGender() tracks the active display model; real gender lives in PLAYER_BYTES_3
+    uint8 gender = player->GetByteValue(PLAYER_BYTES_3, PLAYER_BYTES_3_OFFSET_GENDER);
+
+    auto itr = _playerShapeshiftModel.find(std::make_tuple(form, player->getRace(), customizationID, gender));
     if (itr != _playerShapeshiftModel.end())
         return itr->second; // Explicit combination
 
@@ -1620,7 +1624,7 @@ uint32 ObjectMgr::GetModelForShapeshift(ShapeshiftForm form, const Player* playe
     if (itr != _playerShapeshiftModel.end())
         return itr->second; // Combination applied to both genders
 
-    itr = _playerShapeshiftModel.find(std::make_tuple(form, player->getRace(), 255, player->getGender()));
+    itr = _playerShapeshiftModel.find(std::make_tuple(form, player->getRace(), 255, gender));
     if (itr != _playerShapeshiftModel.end())
         return itr->second; // Default gender-dependent model
 
@@ -2091,6 +2095,7 @@ void ObjectMgr::LoadCreatures()
             continue;
         }
         CreatureData& data = _creatureDataStore[spawnID];
+        data.spawnId = spawnID;
         data.id1 = id1;
         data.id2 = id2;
         data.id3 = id3;
@@ -2132,9 +2137,14 @@ void ObjectMgr::LoadCreatures()
             data.spawnTimeSecs = 14 * DAY;
 
         // Skip spawnMask check for transport maps
-        if (!_transportMaps.contains(data.mapID) && data.spawnMask & ~spawnMasks[data.mapID])
-            LOG_ERROR("sql.sql", "Table `world_creature` have creature (SpawnId: {}) that have wrong spawn mask {} including not supported difficulty modes for map (Id: {}).",
-                spawnID, data.spawnMask, data.mapID);
+        if (!_transportMaps.contains(data.mapID))
+        {
+            if (data.spawnMask & ~spawnMasks[data.mapID])
+                LOG_ERROR("sql.sql", "Table `world_creature` have creature (SpawnId: {}) that have wrong spawn mask {} including not supported difficulty modes for map (Id: {}).",
+                    spawnID, data.spawnMask, data.mapID);
+        }
+        else
+            data.spawnGroupID = 1; // force compatibility group for transport spawns
 
         bool ok = true;
         for (uint32 diff = 0; diff < MAX_DIFFICULTY - 1 && ok; ++diff)
@@ -2426,8 +2436,8 @@ void ObjectMgr::AddCreatureToGrid(const ObjectGuid::LowType guid, const Creature
         if (mask & 1)
         {
             GridCoord gridCoord = Acore::ComputeGridCoord(data->posX, data->posY);
-            CellObjectGuids& cellGUIDs = _mapObjectGuidsStore[MAKE_PAIR32(data->mapID, i)][gridCoord.GetId()];
-            cellGUIDs.creatures.insert(guid);
+            auto& [creatures, gameObjects] = _mapObjectGuidsStore[MAKE_PAIR32(data->mapID, i)][gridCoord.GetId()];
+            creatures.insert(guid);
         }
     }
 }
@@ -2461,6 +2471,7 @@ ObjectGuid::LowType ObjectMgr::AddGOData(uint32 entry, const uint32 mapID,
     ObjectGuid::LowType spawnId = GenerateGameObjectSpawnID();
 
     GameObjectData& data = NewGOData(spawnId);
+    data.spawnId        = spawnId;
     data.id             = entry;
     data.mapID          = mapID;
     data.posX           = x;
@@ -2516,6 +2527,7 @@ ObjectGuid::LowType ObjectMgr::AddCreData(uint32 entry, const uint32 mapID, cons
 
     const ObjectGuid::LowType spawnID = GenerateCreatureSpawnID();
     CreatureData& data = NewOrExistCreatureData(spawnID);
+    data.spawnId = spawnID;
     data.spawnMask = spawnID;
     data.id1 = entry;
     data.id2 = 0;
@@ -2621,6 +2633,7 @@ void ObjectMgr::LoadGameObjects()
 
         GameObjectData& data = _gameObjectDataStore[guid];
 
+        data.spawnId = guid;
         data.id = entry;
         data.mapID = fields[2].Get<uint16>();
         const auto position = fields[3].GetArray<float, 3>();
@@ -2663,8 +2676,13 @@ void ObjectMgr::LoadGameObjects()
 
         data.spawnMask = fields[9].Get<uint8>();
 
-        if (!_transportMaps.contains(data.mapID) && data.spawnMask & ~spawnMasks[data.mapID])
-            LOG_ERROR("sql.sql", "Table `{}` has GameObject (GUID: {} Entry: {}) that has wrong spawn mask {} including not supported difficulty modes for map (Id: {}), skip", tableName, guid, data.id, data.spawnMask, data.mapID);
+        if (!_transportMaps.contains(data.mapID))
+        {
+            if (data.spawnMask & ~spawnMasks[data.mapID])
+                LOG_ERROR("sql.sql", "Table `{}` has GameObject (GUID: {} Entry: {}) that has wrong spawn mask {} including not supported difficulty modes for map (Id: {}), skip", tableName, guid, data.id, data.spawnMask, data.mapID);
+        }
+        else
+            data.spawnGroupID = 1; // force compatibility group for transport spawns
 
         data.phaseMask = fields[10].Get<uint32>();
         const int16 gameEvent = fields[11].Get<int16>();
@@ -2979,13 +2997,17 @@ void ObjectMgr::LoadItemTemplates()
         const auto statValues = fields[28].GetArray<int32, MAX_ITEM_PROTO_STATS>();
 
         uint8 statsCount = 0;
-        while (statsCount < MAX_ITEM_PROTO_STATS)
+        uint8 statsIterator = 0;
+        while (statsIterator < MAX_ITEM_PROTO_STATS)
         {
-            uint32 statType = statTypes[statsCount];
-            if (statType == 0)
-                break;
+            uint32 statType = statTypes[statsIterator];
+            int32 statValue = statValues[statsIterator];
+            statsIterator++;
+            if (statValue == 0)
+                continue;
+
             itemTemplate.ItemStat[statsCount].ItemStatType = statType;
-            itemTemplate.ItemStat[statsCount].ItemStatValue = statValues[statsCount];
+            itemTemplate.ItemStat[statsCount].ItemStatValue = statValue;
             statsCount++;
         }
         itemTemplate.StatsCount = statsCount;
@@ -7817,7 +7839,171 @@ const SpawnData* ObjectMgr::GetSpawnData(const SpawnObjectType type, const Objec
     }
 }
 
-void ObjectMgr::LoadQuestRelationsHelper(QuestRelations& map, const std::string& table, const bool starter, const bool go) const {
+void ObjectMgr::LoadSpawnGroupTemplates()
+{
+    const uint32 oldMSTime = getMSTime();
+
+    _spawnGroupDataStore.clear();
+
+    if (const QueryResult result = WorldDatabase.Query("SELECT id, name, flags FROM world_spawn_group_template"))
+    {
+        do
+        {
+            const Field* fields = result->Fetch();
+            uint32 groupID = fields[0].Get<uint32>();
+            SpawnGroupTemplateData& group = _spawnGroupDataStore[groupID];
+            group.groupId = groupID;
+            group.name = fields[1].Get<std::string>();
+            group.mapId = SPAWNGROUP_MAP_UNSET;
+            uint32 flags = fields[2].Get<uint32>();
+            if (flags & ~static_cast<uint32>(SPAWNGROUP_FLAG_ALL))
+            {
+                flags &= static_cast<uint32>(SPAWNGROUP_FLAG_ALL);
+                LOG_ERROR("sql.sql", "Invalid spawn group flag {} on group ID {} ({}), reduced to valid flags {}.",
+                    fields[2].Get<uint32>(), groupID, group.name, flags);
+            }
+            if ((flags & SPAWNGROUP_FLAG_SYSTEM) && (flags & SPAWNGROUP_FLAG_MANUAL_SPAWN))
+            {
+                flags &= ~SPAWNGROUP_FLAG_MANUAL_SPAWN;
+                LOG_ERROR("sql.sql", "System spawn group {} ({}) has invalid manual spawn flag. Ignored.", groupID, group.name);
+            }
+            group.flags = static_cast<SpawnGroupFlags>(flags);
+        } while (result->NextRow());
+    }
+
+    if (!_spawnGroupDataStore.contains(0))
+    {
+        LOG_ERROR("sql.sql", "Default spawn group (index 0) is missing from DB! Manually inserted.");
+        SpawnGroupTemplateData& data = _spawnGroupDataStore[0];
+        data.groupId = 0;
+        data.name = "Default Group";
+        data.mapId = SPAWNGROUP_MAP_UNSET;
+        data.flags = SPAWNGROUP_FLAG_SYSTEM;
+    }
+    if (!_spawnGroupDataStore.contains(1))
+    {
+        LOG_ERROR("sql.sql", "Default legacy spawn group (index 1) is missing from DB! Manually inserted.");
+        SpawnGroupTemplateData& data = _spawnGroupDataStore[1];
+        data.groupId = 1;
+        data.name = "Legacy Group";
+        data.mapId = SPAWNGROUP_MAP_UNSET;
+        data.flags = static_cast<SpawnGroupFlags>(SPAWNGROUP_FLAG_SYSTEM | SPAWNGROUP_FLAG_COMPATIBILITY_MODE);
+    }
+
+    LOG_INFO("server.loading", ">> Loaded {} spawn group templates in {} ms", _spawnGroupDataStore.size(), GetMSTimeDiffToNow(oldMSTime));
+    LOG_INFO("server.loading", " ");
+}
+
+void ObjectMgr::LoadSpawnGroups()
+{
+    const uint32 oldMSTime = getMSTime();
+
+    // Reset prior state for hot-reload support
+    // Preserve the forced legacy group for spawns on transport maps (set in LoadCreatures/LoadGameobjects).
+    _spawnGroupMapStore.clear();
+    for (auto &data: _creatureDataStore | std::views::values)
+        data.spawnGroupID = _transportMaps.contains(data.mapID) ? 1 : 0;
+    for (auto &data: _gameObjectDataStore | std::views::values)
+        data.spawnGroupID = _transportMaps.contains(data.mapID) ? 1 : 0;
+
+    const QueryResult result = WorldDatabase.Query("SELECT group, type, spawn FROM world_spawn_group");
+    if (!result)
+    {
+        LOG_INFO("server.loading", ">> Loaded 0 spawn group members. DB table `world_spawn_group` is empty.");
+        LOG_INFO("server.loading", " ");
+        return;
+    }
+
+    uint32 numMembers = 0;
+    do
+    {
+        const Field* fields = result->Fetch();
+        uint32 groupID = fields[0].Get<uint32>();
+        uint32 type = fields[1].Get<uint8>();
+        if (type >= SPAWN_TYPE_MAX)
+        {
+            LOG_ERROR("sql.sql", "Spawn data with invalid type {} listed for spawn group {}. Skipped.", type, groupID);
+            continue;
+        }
+        const auto spawnType = static_cast<SpawnObjectType>(type);
+        ObjectGuid::LowType spawnId = fields[2].Get<uint32>();
+
+        SpawnData const* data = GetSpawnData(spawnType, spawnId);
+        if (!data)
+        {
+            LOG_ERROR("sql.sql", "Spawn data with ID ({},{}) not found, but is listed as a member of spawn group {}!",
+                static_cast<uint32>(spawnType), spawnId, groupID);
+            continue;
+        }
+        if (data->spawnGroupID)
+        {
+            LOG_ERROR("sql.sql", "Spawn with ID ({},{}) is listed as a member of spawn group {}, but is already a member of spawn group {}. Skipping.",
+                static_cast<uint32>(spawnType), spawnId, groupID, data->spawnGroupID);
+            continue;
+        }
+
+        auto it = _spawnGroupDataStore.find(groupID);
+        if (it == _spawnGroupDataStore.end())
+        {
+            LOG_ERROR("sql.sql", "Spawn group {} assigned to spawn ID ({},{}), but group is not found!",
+                groupID, static_cast<uint32>(spawnType), spawnId);
+            continue;
+        }
+
+        SpawnGroupTemplateData& groupTemplate = it->second;
+        if (groupTemplate.mapId == SPAWNGROUP_MAP_UNSET)
+            groupTemplate.mapId = data->mapID;
+        else if (groupTemplate.mapId != data->mapID && !(groupTemplate.flags & SPAWNGROUP_FLAG_SYSTEM))
+        {
+            LOG_ERROR("sql.sql", "Spawn group {} has map ID {}, but spawn ({},{}) has map id {} - spawn NOT added to group!",
+                groupID, groupTemplate.mapId, static_cast<uint32>(spawnType), spawnId, data->mapID);
+            continue;
+        }
+
+        // Warn if spawn is also in a pool (non-system groups and pools are mutually exclusive)
+        if (!(groupTemplate.flags & SPAWNGROUP_FLAG_SYSTEM))
+        {
+            uint32 poolId = 0;
+            if (spawnType == SPAWN_TYPE_CREATURE)
+                poolId = sPoolMgr->IsPartOfAPool<Creature>(spawnId);
+            else if (spawnType == SPAWN_TYPE_GAMEOBJECT)
+                poolId = sPoolMgr->IsPartOfAPool<GameObject>(spawnId);
+
+            if (poolId)
+                LOG_WARN("sql.sql", "Spawn ({},{}) is a member of spawn group {} and also part of pool {}. This may cause issues!",
+                    static_cast<uint32>(spawnType), spawnId, groupID, poolId);
+        }
+
+        const_cast<SpawnData*>(data)->spawnGroupID = groupID;
+        if (!(groupTemplate.flags & SPAWNGROUP_FLAG_SYSTEM))
+            _spawnGroupMapStore.emplace(groupID, data);
+        ++numMembers;
+    } while (result->NextRow());
+
+    LOG_INFO("server.loading", ">> Loaded {} spawn group members in {} ms", numMembers, GetMSTimeDiffToNow(oldMSTime));
+    LOG_INFO("server.loading", " ");
+}
+
+void ObjectMgr::OnDeleteSpawnData(SpawnData const* data)
+{
+    const auto templateIt = _spawnGroupDataStore.find(data->spawnGroupID);
+    ASSERT(templateIt != _spawnGroupDataStore.end(), "Spawn data is being deleted and has invalid spawn group index {}!", data->spawnGroupID);
+    if (templateIt->second.flags & SPAWNGROUP_FLAG_SYSTEM)
+        return;
+
+    auto [fst, snd] = _spawnGroupMapStore.equal_range(data->spawnGroupID);
+    for (auto it = fst; it != snd; ++it)
+    {
+        if (it->second != data)
+            continue;
+        _spawnGroupMapStore.erase(it);
+        return;
+    }
+    ASSERT(false, "Spawn data being removed is member of spawn group {}, but not found in lookup table!", data->spawnGroupID);
+}
+
+void ObjectMgr::LoadQuestRelationsHelper(QuestRelations& map, const std::string& table, const bool starter, const bool go) const
+{
     const uint32 oldMSTime = getMSTime();
 
     map.clear();
@@ -8097,6 +8283,73 @@ void ObjectMgr::AddProfanityPlayerName(const std::string& name)
     CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_INS_PROFANITY_PLAYER_NAME);
     stmt->SetData(0, name);
     CharacterDatabase.Execute(stmt);
+}
+
+void ObjectMgr::LoadChatFilter()
+{
+    uint32 oldMSTime = getMSTime();
+
+    _chatFilterAutomaton.reset();                               // need for reload case
+
+    CharacterDatabasePreparedStatement* stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAT_FILTER);
+    QueryResult result = CharacterDatabase.Query(stmt);
+
+    if (!result)
+    {
+        LOG_WARN("server.loading", ">> Loaded 0 chat filter words. DB table `chat_filter` is empty!");
+        LOG_INFO("server.loading", " ");
+        return;
+    }
+
+    auto automaton = std::make_unique<Acore::AhoCorasick<wchar_t>>();
+    uint32 count = 0;
+
+    do
+    {
+        Field* fields = result->Fetch();
+        std::string word = fields[1].Get<std::string>();
+
+        if (word.empty())
+            continue;
+
+        std::wstring wstr;
+        if (!Utf8toWStr(word, wstr))
+        {
+            LOG_ERROR("sql.sql", "Table `chat_filter` has invalid word: {}", word);
+            continue;
+        }
+
+        wstrToLower(wstr);
+
+        if (wstr.empty())
+            continue;
+
+        automaton->Insert(wstr);
+        ++count;
+    } while (result->NextRow());
+
+    if (count > 0)
+    {
+        automaton->Build();
+        _chatFilterAutomaton = std::move(automaton);
+    }
+
+    LOG_INFO("server.loading", ">> Loaded {} chat filter words in {} ms", count, GetMSTimeDiffToNow(oldMSTime));
+    LOG_INFO("server.loading", " ");
+}
+
+bool ObjectMgr::IsChatFiltered(const std::string_view text) const
+{
+    if (!_chatFilterAutomaton || text.empty())
+        return false;
+
+    std::wstring wText;
+    if (!Utf8toWStr(text, wText))
+        return false;
+
+    wstrToLower(wText);
+
+    return _chatFilterAutomaton->ContainsAny(wText);
 }
 
 enum LanguageType

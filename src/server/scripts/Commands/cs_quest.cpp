@@ -35,11 +35,11 @@ public:
     {
         static ChatCommandTable questCommandTable =
         {
-            { "add",      HandleQuestAdd,      SEC_GAME_MASTER, Console::Yes },
-            { "complete", HandleQuestComplete, SEC_GAME_MASTER, Console::Yes },
-            { "remove",   HandleQuestRemove,   SEC_GAME_MASTER, Console::Yes },
-            { "reward",   HandleQuestReward,   SEC_GAME_MASTER, Console::Yes },
-            { "status",   HandleQuestStatus,   SEC_GAME_MASTER, Console::Yes },
+            { "add",      HandleQuestAdd,      SuperuserOnly::No },
+            { "complete", HandleQuestComplete, SuperuserOnly::No },
+            { "remove",   HandleQuestRemove,   SuperuserOnly::No },
+            { "reward",   HandleQuestReward,   SuperuserOnly::No },
+            { "status",   HandleQuestStatus,   SuperuserOnly::No },
         };
         static ChatCommandTable commandTable =
         {

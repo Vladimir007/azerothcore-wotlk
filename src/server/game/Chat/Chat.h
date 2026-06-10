@@ -226,10 +226,12 @@ public:
     bool HasSentErrorMessage() const { return sentErrorMessage; }
     void SetSentErrorMessage(bool val) { sentErrorMessage = val; }
 
-    bool IsConsole() const { return (m_session == nullptr); }
+    bool IsConsole() const { return m_session == nullptr; }
     Player* GetPlayer() const;
-    WorldSession* GetSession() { return m_session; }
-    bool IsAvailable(bool requireGM) const;
+    WorldSession* GetSession() const { return m_session; }
+    bool IsAvailable(bool superuserOnly) const;
+    bool HasPermissionStaff() const;
+    bool HasPermissionSuperuser() const;
 protected:
     explicit ChatHandler() : m_session(nullptr), sentErrorMessage(false) {}      // for CLI subclass
 

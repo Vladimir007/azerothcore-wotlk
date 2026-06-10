@@ -1,26 +1,8 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef ACCOUNT_MANAGER_H
+#define ACCOUNT_MANAGER_H
 
-#ifndef _ACCMGR_H
-#define _ACCMGR_H
-
-#include "Define.h"
-#include "Common.h"
 #include <string>
+#include "Define.h"
 
 enum AccountOpResult
 {
@@ -37,20 +19,22 @@ enum AccountOpResult
 #define MAX_PASS_STR 16
 #define MAX_EMAIL_STR 255
 
-namespace AccountMgr
+class AccountMgr
 {
-    AccountOpResult CreateAccount(std::string username, std::string password, std::string email = "");
-    bool CheckPassword(uint32 accountId, std::string password);
+    AccountMgr();
+    ~AccountMgr();
 
-    uint32 GetId(std::string const& username);
-    bool IsGameMaster(uint32 accountId);
-    bool IsStaff(uint32 accountId);
-    bool GetName(uint32 accountId, std::string& name);
-    uint32 GetCharactersCount(uint32 accountId);
+public:
+    static AccountMgr* instance();
+    static bool CheckPassword(uint32 accountId, std::string password);
 
-    bool IsPlayerAccount(uint32 gmlevel);
-    bool IsAdminAccount(uint32 gmlevel);
-    bool IsConsoleAccount(uint32 gmlevel);
+    static uint32 GetId(std::string const& username);
+    static bool IsSuperuser(uint32 accountId);
+    static bool IsStaff(uint32 accountId);
+    static bool GetName(uint32 accountId, std::string& name);
+    static uint32 GetCharactersCount(uint32 accountId);
 };
+
+#define sAccountMgr AccountMgr::instance()
 
 #endif

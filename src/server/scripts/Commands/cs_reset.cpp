@@ -36,25 +36,25 @@ public:
     {
         static ChatCommandTable resetItemsCommandTable =
         {
-            { "equipped",       HandleResetItemsEquippedCommand,             SEC_ADMINISTRATOR, Console::Yes },
-            { "bags",           HandleResetItemsInBagsCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "bank",           HandleResetItemsInBankCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "keyring",        HandleResetItemsKeyringCommand,             SEC_ADMINISTRATOR, Console::Yes },
-            { "currency",       HandleResetItemsInCurrenciesListCommand,    SEC_ADMINISTRATOR, Console::Yes },
-            { "vendor_buyback", HandleResetItemsInVendorBuyBackTabCommand,  SEC_ADMINISTRATOR, Console::Yes },
-            { "all",            HandleResetItemsAllCommand,                 SEC_ADMINISTRATOR, Console::Yes },
-            { "allbags",        HandleResetItemsAllAndDeleteBagsCommand,    SEC_ADMINISTRATOR, Console::Yes },
+            { "equipped",       HandleResetItemsEquippedCommand,             SuperuserOnly::Yes },
+            { "bags",           HandleResetItemsInBagsCommand,              SuperuserOnly::Yes },
+            { "bank",           HandleResetItemsInBankCommand,              SuperuserOnly::Yes },
+            { "keyring",        HandleResetItemsKeyringCommand,             SuperuserOnly::Yes },
+            { "currency",       HandleResetItemsInCurrenciesListCommand,    SuperuserOnly::Yes },
+            { "vendor_buyback", HandleResetItemsInVendorBuyBackTabCommand,  SuperuserOnly::Yes },
+            { "all",            HandleResetItemsAllCommand,                 SuperuserOnly::Yes },
+            { "allbags",        HandleResetItemsAllAndDeleteBagsCommand,    SuperuserOnly::Yes },
         };
         static ChatCommandTable resetCommandTable =
         {
-            { "achievements",   HandleResetAchievementsCommand, SEC_CONSOLE,       Console::Yes },
-            { "honor",          HandleResetHonorCommand,        SEC_ADMINISTRATOR, Console::Yes },
-            { "level",          HandleResetLevelCommand,        SEC_ADMINISTRATOR, Console::Yes },
-            { "spells",         HandleResetSpellsCommand,       SEC_ADMINISTRATOR, Console::Yes },
-            { "stats",          HandleResetStatsCommand,        SEC_ADMINISTRATOR, Console::Yes },
-            { "talents",        HandleResetTalentsCommand,      SEC_ADMINISTRATOR, Console::Yes },
-            { "items",          resetItemsCommandTable                                          },
-            { "all",            HandleResetAllCommand,          SEC_CONSOLE,       Console::Yes }
+            { "achievements",   HandleResetAchievementsCommand, SuperuserOnly::Yes },
+            { "honor",          HandleResetHonorCommand,        SuperuserOnly::Yes },
+            { "level",          HandleResetLevelCommand,        SuperuserOnly::Yes },
+            { "spells",         HandleResetSpellsCommand,       SuperuserOnly::Yes },
+            { "stats",          HandleResetStatsCommand,        SuperuserOnly::Yes },
+            { "talents",        HandleResetTalentsCommand,      SuperuserOnly::Yes },
+            { "items",          resetItemsCommandTable                                                                    },
+            { "all",            HandleResetAllCommand,          SuperuserOnly::Yes }
         };
         static ChatCommandTable commandTable =
         {

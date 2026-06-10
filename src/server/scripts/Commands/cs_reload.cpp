@@ -1,3 +1,4 @@
+#include "AccountMgr.h"
 #include "AchievementMgr.h"
 #include "AuctionHouseMgr.h"
 #include "BattlegroundMgr.h"
@@ -9,7 +10,6 @@
 #include "ItemEnchantmentMgr.h"
 #include "LFGMgr.h"
 #include "Language.h"
-#include "MotdMgr.h"
 #include "ObjectMgr.h"
 #include "PoolMgr.h"
 #include "ScriptMgr.h"
@@ -34,100 +34,103 @@ public:
     {
         static ChatCommandTable reloadAllCommandTable =
         {
-            { "achievement",                   HandleReloadAllAchievementCommand,             SEC_ADMINISTRATOR, Console::Yes },
-            { "area",                          HandleReloadAllAreaCommand,                    SEC_ADMINISTRATOR, Console::Yes },
-            { "gossips",                       HandleReloadAllGossipsCommand,                 SEC_ADMINISTRATOR, Console::Yes },
-            { "item",                          HandleReloadAllItemCommand,                    SEC_ADMINISTRATOR, Console::Yes },
-            { "loot",                          HandleReloadAllLootCommand,                    SEC_ADMINISTRATOR, Console::Yes },
-            { "npc",                           HandleReloadAllNpcCommand,                     SEC_ADMINISTRATOR, Console::Yes },
-            { "quest",                         HandleReloadAllQuestCommand,                   SEC_ADMINISTRATOR, Console::Yes },
-            { "scripts",                       HandleReloadAllScriptsCommand,                 SEC_ADMINISTRATOR, Console::Yes },
-            { "spell",                         HandleReloadAllSpellCommand,                   SEC_ADMINISTRATOR, Console::Yes },
-            { "",                              HandleReloadAllCommand,                        SEC_ADMINISTRATOR, Console::Yes },
+            { "achievement",                   HandleReloadAllAchievementCommand,             SuperuserOnly::Yes },
+            { "area",                          HandleReloadAllAreaCommand,                    SuperuserOnly::Yes },
+            { "gossips",                       HandleReloadAllGossipsCommand,                 SuperuserOnly::Yes },
+            { "item",                          HandleReloadAllItemCommand,                    SuperuserOnly::Yes },
+            { "loot",                          HandleReloadAllLootCommand,                    SuperuserOnly::Yes },
+            { "npc",                           HandleReloadAllNpcCommand,                     SuperuserOnly::Yes },
+            { "quest",                         HandleReloadAllQuestCommand,                   SuperuserOnly::Yes },
+            { "scripts",                       HandleReloadAllScriptsCommand,                 SuperuserOnly::Yes },
+            { "spell",                         HandleReloadAllSpellCommand,                   SuperuserOnly::Yes },
+            { "",                              HandleReloadAllCommand,                        SuperuserOnly::Yes },
         };
         static ChatCommandTable reloadCommandTable =
         {
-            { "auctions",                      HandleReloadAuctionsCommand,                   SEC_ADMINISTRATOR, Console::Yes },
-            { "dungeon_access_template",       HandleReloadDungeonAccessCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "dungeon_access_requirements",   HandleReloadDungeonAccessCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "world_achievement_criteria_data", HandleReloadAchievementCriteriaDataCommand,    SEC_ADMINISTRATOR, Console::Yes },
-            { "world_achievement_reward",            HandleReloadAchievementRewardCommand,          SEC_ADMINISTRATOR, Console::Yes },
+            { "auctions",                      HandleReloadAuctionsCommand,                   SuperuserOnly::Yes },
+            { "dungeon_access_template",       HandleReloadDungeonAccessCommand,              SuperuserOnly::Yes },
+            { "dungeon_access_requirements",   HandleReloadDungeonAccessCommand,              SuperuserOnly::Yes },
+            { "achievement_criteria_data",     HandleReloadAchievementCriteriaDataCommand,    SuperuserOnly::Yes },
+            { "achievement_reward",            HandleReloadAchievementRewardCommand,          SuperuserOnly::Yes },
             { "all", reloadAllCommandTable },
-            { "areatrigger",                   HandleReloadQuestAreaTriggersCommand,          SEC_ADMINISTRATOR, Console::Yes },
-            { "areatrigger_involvedrelation",  HandleReloadQuestAreaTriggersCommand,          SEC_ADMINISTRATOR, Console::Yes },
-            { "areatrigger_tavern",            HandleReloadAreaTriggerTavernCommand,          SEC_ADMINISTRATOR, Console::Yes },
-            { "areatrigger_teleport",          HandleReloadAreaTriggerTeleportCommand,        SEC_ADMINISTRATOR, Console::Yes },
-            { "battleground_template",         HandleReloadBattlegroundTemplate,              SEC_ADMINISTRATOR, Console::Yes },
-            { "command",                       HandleReloadCommandCommand,                    SEC_ADMINISTRATOR, Console::Yes },
-            { "conditions",                    HandleReloadConditions,                        SEC_ADMINISTRATOR, Console::Yes },
-            { "creature_text",                 HandleReloadCreatureText,                      SEC_ADMINISTRATOR, Console::Yes },
-            { "creature_questender",           HandleReloadCreatureQuestEnderCommand,         SEC_ADMINISTRATOR, Console::Yes },
-            { "creature_linked_respawn",       HandleReloadLinkedRespawnCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "creature_loot_template",        HandleReloadLootTemplatesCreatureCommand,      SEC_ADMINISTRATOR, Console::Yes },
-            { "creature_movement_override",     HandleReloadCreatureMovementOverrideCommand,    SEC_ADMINISTRATOR, Console::Yes},
-            { "creature_onkill_reputation",     HandleReloadOnKillReputationCommand,           SEC_ADMINISTRATOR, Console::Yes },
-            { "creature_queststarter",         HandleReloadCreatureQuestStarterCommand,       SEC_ADMINISTRATOR, Console::Yes },
-            { "creature_template",             HandleReloadCreatureTemplateCommand,           SEC_ADMINISTRATOR, Console::Yes },
-            { "disables",                      HandleReloadDisablesCommand,                   SEC_ADMINISTRATOR, Console::Yes },
-            { "disenchant_loot_template",      HandleReloadLootTemplatesDisenchantCommand,    SEC_ADMINISTRATOR, Console::Yes },
-            { "event_scripts",                 HandleReloadEventScriptsCommand,               SEC_ADMINISTRATOR, Console::Yes },
-            { "fishing_loot_template",         HandleReloadLootTemplatesFishingCommand,       SEC_ADMINISTRATOR, Console::Yes },
-            { "game_graveyard",                HandleReloadGameGraveyardCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "graveyard_zone",                HandleReloadGameGraveyardZoneCommand,          SEC_ADMINISTRATOR, Console::Yes },
-            { "game_tele",                     HandleReloadGameTeleCommand,                   SEC_ADMINISTRATOR, Console::Yes },
-            { "gameobject_questender",         HandleReloadGOQuestEnderCommand,               SEC_ADMINISTRATOR, Console::Yes },
-            { "gameobject_loot_template",      HandleReloadLootTemplatesGameobjectCommand,    SEC_ADMINISTRATOR, Console::Yes },
-            { "gameobject_queststarter",       HandleReloadGOQuestStarterCommand,             SEC_ADMINISTRATOR, Console::Yes },
-            { "gm_tickets",                    HandleReloadGMTicketsCommand,                  SEC_ADMINISTRATOR, Console::Yes },
-            { "gossip_menu",                   HandleReloadGossipMenuCommand,                 SEC_ADMINISTRATOR, Console::Yes },
-            { "gossip_menu_option",            HandleReloadGossipMenuOptionCommand,           SEC_ADMINISTRATOR, Console::Yes },
-            { "item_enchantment_template",     HandleReloadItemEnchantementsCommand,          SEC_ADMINISTRATOR, Console::Yes },
-            { "item_loot_template",            HandleReloadLootTemplatesItemCommand,          SEC_ADMINISTRATOR, Console::Yes },
-            { "item_set_names",                HandleReloadItemSetNamesCommand,               SEC_ADMINISTRATOR, Console::Yes },
-            { "lfg_dungeon_rewards",           HandleReloadLfgRewardsCommand,                 SEC_ADMINISTRATOR, Console::Yes },
-            { "mail_level_reward",             HandleReloadMailLevelRewardCommand,            SEC_ADMINISTRATOR, Console::Yes },
-            { "mail_loot_template",            HandleReloadLootTemplatesMailCommand,          SEC_ADMINISTRATOR, Console::Yes },
-            { "mail_server_template",          HandleReloadMailServerTemplateCommand,         SEC_ADMINISTRATOR, Console::Yes },
-            { "milling_loot_template",         HandleReloadLootTemplatesMillingCommand,       SEC_ADMINISTRATOR, Console::Yes },
-            { "npc_spellclick_spells",         HandleReloadSpellClickSpellsCommand,           SEC_ADMINISTRATOR, Console::Yes },
-            { "trainer",                       HandleReloadTrainerCommand,                    SEC_ADMINISTRATOR, Console::Yes },
-            { "npc_vendor",                    HandleReloadNpcVendorCommand,                  SEC_ADMINISTRATOR, Console::Yes },
-            { "game_event_npc_vendor",         HandleReloadGameEventNPCVendorCommand,         SEC_ADMINISTRATOR, Console::Yes },
-            { "page_text",                     HandleReloadPageTextsCommand,                  SEC_ADMINISTRATOR, Console::Yes },
-            { "pickpocketing_loot_template",   HandleReloadLootTemplatesPickpocketingCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "points_of_interest",            HandleReloadPointsOfInterestCommand,           SEC_ADMINISTRATOR, Console::Yes },
-            { "prospecting_loot_template",     HandleReloadLootTemplatesProspectingCommand,   SEC_ADMINISTRATOR, Console::Yes },
-            { "quest_greeting",                HandleReloadQuestGreetingCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "quest_poi",                     HandleReloadQuestPOICommand,                   SEC_ADMINISTRATOR, Console::Yes },
-            { "quest_template",                HandleReloadQuestTemplateCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "reference_loot_template",       HandleReloadLootTemplatesReferenceCommand,     SEC_ADMINISTRATOR, Console::Yes },
-            { "reserved_name",                 HandleReloadReservedNameCommand,               SEC_ADMINISTRATOR, Console::Yes },
-            { "profanity_name",                HandleReloadProfanityNameCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "reputation_reward_rate",        HandleReloadReputationRewardRateCommand,       SEC_ADMINISTRATOR, Console::Yes },
-            { "reputation_spillover_template", HandleReloadReputationRewardRateCommand,       SEC_ADMINISTRATOR, Console::Yes },
-            { "skill_discovery_template",      HandleReloadSkillDiscoveryTemplateCommand,     SEC_ADMINISTRATOR, Console::Yes },
-            { "skill_extra_item_template",     HandleReloadSkillExtraItemTemplateCommand,     SEC_ADMINISTRATOR, Console::Yes },
-            { "skill_fishing_base_level",      HandleReloadSkillFishingBaseLevelCommand,      SEC_ADMINISTRATOR, Console::Yes },
-            { "skinning_loot_template",        HandleReloadLootTemplatesSkinningCommand,      SEC_ADMINISTRATOR, Console::Yes },
-            { "smart_scripts",                 HandleReloadSmartScripts,                      SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_required",                HandleReloadSpellRequiredCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_area",                    HandleReloadSpellAreaCommand,                  SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_bonus_data",              HandleReloadSpellBonusesCommand,               SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_group",                   HandleReloadSpellGroupsCommand,                SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_loot_template",           HandleReloadLootTemplatesSpellCommand,         SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_linked_spell",            HandleReloadSpellLinkedSpellCommand,           SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_pet_auras",               HandleReloadSpellPetAurasCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_proc",                    HandleReloadSpellProcsCommand,                 SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_scripts",                 HandleReloadSpellScriptsCommand,               SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_target_position",         HandleReloadSpellTargetPositionCommand,        SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_threats",                 HandleReloadSpellThreatsCommand,               SEC_ADMINISTRATOR, Console::Yes },
-            { "spell_group_stack_rules",       HandleReloadSpellGroupStackRulesCommand,       SEC_ADMINISTRATOR, Console::Yes },
-            { "player_loot_template",          HandleReloadLootTemplatesPlayerCommand,        SEC_ADMINISTRATOR, Console::Yes },
-            { "acore_string",                  HandleReloadAcoreStringCommand,                SEC_ADMINISTRATOR, Console::Yes },
-            { "waypoint_scripts",              HandleReloadWpScriptsCommand,                  SEC_ADMINISTRATOR, Console::Yes },
-            { "waypoint_data",                 HandleReloadWpCommand,                         SEC_ADMINISTRATOR, Console::Yes },
-            { "vehicle_accessory",             HandleReloadVehicleAccessoryCommand,           SEC_ADMINISTRATOR, Console::Yes },
-            { "vehicle_template_accessory",    HandleReloadVehicleTemplateAccessoryCommand,   SEC_ADMINISTRATOR, Console::Yes },
+            { "areatrigger",                   HandleReloadQuestAreaTriggersCommand,          SuperuserOnly::Yes },
+            { "areatrigger_involvedrelation",  HandleReloadQuestAreaTriggersCommand,          SuperuserOnly::Yes },
+            { "areatrigger_tavern",            HandleReloadAreaTriggerTavernCommand,          SuperuserOnly::Yes },
+            { "areatrigger_teleport",          HandleReloadAreaTriggerTeleportCommand,        SuperuserOnly::Yes },
+            { "battleground_template",         HandleReloadBattlegroundTemplate,              SuperuserOnly::Yes },
+            { "command",                       HandleReloadCommandCommand,                    SuperuserOnly::Yes },
+            { "conditions",                    HandleReloadConditions,                        SuperuserOnly::Yes },
+            { "creature_text",                 HandleReloadCreatureText,                      SuperuserOnly::Yes },
+            { "creature_questender",           HandleReloadCreatureQuestEnderCommand,         SuperuserOnly::Yes },
+            { "creature_linked_respawn",       HandleReloadLinkedRespawnCommand,              SuperuserOnly::Yes },
+            { "creature_loot_template",        HandleReloadLootTemplatesCreatureCommand,      SuperuserOnly::Yes },
+            { "creature_movement_override",     HandleReloadCreatureMovementOverrideCommand,    SuperuserOnly::Yes},
+            { "creature_onkill_reputation",     HandleReloadOnKillReputationCommand,           SuperuserOnly::Yes },
+            { "creature_queststarter",         HandleReloadCreatureQuestStarterCommand,       SuperuserOnly::Yes },
+            { "creature_template",             HandleReloadCreatureTemplateCommand,           SuperuserOnly::Yes },
+            { "disables",                      HandleReloadDisablesCommand,                   SuperuserOnly::Yes },
+            { "disenchant_loot_template",      HandleReloadLootTemplatesDisenchantCommand,    SuperuserOnly::Yes },
+            { "event_scripts",                 HandleReloadEventScriptsCommand,               SuperuserOnly::Yes },
+            { "fishing_loot_template",         HandleReloadLootTemplatesFishingCommand,       SuperuserOnly::Yes },
+            { "game_graveyard",                HandleReloadGameGraveyardCommand,              SuperuserOnly::Yes },
+            { "graveyard_zone",                HandleReloadGameGraveyardZoneCommand,          SuperuserOnly::Yes },
+            { "game_tele",                     HandleReloadGameTeleCommand,                   SuperuserOnly::Yes },
+            { "gameobject_questender",         HandleReloadGOQuestEnderCommand,               SuperuserOnly::Yes },
+            { "gameobject_loot_template",      HandleReloadLootTemplatesGameobjectCommand,    SuperuserOnly::Yes },
+            { "gameobject_queststarter",       HandleReloadGOQuestStarterCommand,             SuperuserOnly::Yes },
+            { "gm_tickets",                    HandleReloadGMTicketsCommand,                  SuperuserOnly::Yes },
+            { "gossip_menu",                   HandleReloadGossipMenuCommand,                 SuperuserOnly::Yes },
+            { "gossip_menu_option",            HandleReloadGossipMenuOptionCommand,           SuperuserOnly::Yes },
+            { "item_enchantment_template",     HandleReloadItemEnchantementsCommand,          SuperuserOnly::Yes },
+            { "item_loot_template",            HandleReloadLootTemplatesItemCommand,          SuperuserOnly::Yes },
+            { "item_set_names",                HandleReloadItemSetNamesCommand,               SuperuserOnly::Yes },
+            { "lfg_dungeon_rewards",           HandleReloadLfgRewardsCommand,                 SuperuserOnly::Yes },
+            { "mail_level_reward",             HandleReloadMailLevelRewardCommand,            SuperuserOnly::Yes },
+            { "mail_loot_template",            HandleReloadLootTemplatesMailCommand,          SuperuserOnly::Yes },
+            { "mail_server_template",          HandleReloadMailServerTemplateCommand,         SuperuserOnly::Yes },
+            { "milling_loot_template",         HandleReloadLootTemplatesMillingCommand,       SuperuserOnly::Yes },
+            { "npc_spellclick_spells",         HandleReloadSpellClickSpellsCommand,           SuperuserOnly::Yes },
+            { "trainer",                       HandleReloadTrainerCommand,                    SuperuserOnly::Yes },
+            { "npc_vendor",                    HandleReloadNpcVendorCommand,                  SuperuserOnly::Yes },
+            { "game_event_npc_vendor",         HandleReloadGameEventNPCVendorCommand,         SuperuserOnly::Yes },
+            { "page_text",                     HandleReloadPageTextsCommand,                  SuperuserOnly::Yes },
+            { "pickpocketing_loot_template",   HandleReloadLootTemplatesPickpocketingCommand, SuperuserOnly::Yes },
+            { "points_of_interest",            HandleReloadPointsOfInterestCommand,           SuperuserOnly::Yes },
+            { "prospecting_loot_template",     HandleReloadLootTemplatesProspectingCommand,   SuperuserOnly::Yes },
+            { "quest_greeting",                HandleReloadQuestGreetingCommand,              SuperuserOnly::Yes },
+            { "quest_poi",                     HandleReloadQuestPOICommand,                   SuperuserOnly::Yes },
+            { "quest_template",                HandleReloadQuestTemplateCommand,              SuperuserOnly::Yes },
+            { "reference_loot_template",       HandleReloadLootTemplatesReferenceCommand,     SuperuserOnly::Yes },
+            { "reserved_name",                 HandleReloadReservedNameCommand,               SuperuserOnly::Yes },
+            { "profanity_name",                HandleReloadProfanityNameCommand,              SuperuserOnly::Yes },
+            { "chat_filter",                   HandleReloadChatFilterCommand,                 SuperuserOnly::Yes },
+            { "reputation_reward_rate",        HandleReloadReputationRewardRateCommand,       SuperuserOnly::Yes },
+            { "reputation_spillover_template", HandleReloadReputationRewardRateCommand,       SuperuserOnly::Yes },
+            { "skill_discovery_template",      HandleReloadSkillDiscoveryTemplateCommand,     SuperuserOnly::Yes },
+            { "skill_extra_item_template",     HandleReloadSkillExtraItemTemplateCommand,     SuperuserOnly::Yes },
+            { "skill_fishing_base_level",      HandleReloadSkillFishingBaseLevelCommand,      SuperuserOnly::Yes },
+            { "skinning_loot_template",        HandleReloadLootTemplatesSkinningCommand,      SuperuserOnly::Yes },
+            { "smart_scripts",                 HandleReloadSmartScripts,                      SuperuserOnly::Yes },
+            { "spawn_group",                   HandleReloadSpawnGroupCommand,                 SuperuserOnly::Yes },
+            { "spell_required",                HandleReloadSpellRequiredCommand,              SuperuserOnly::Yes },
+            { "spell_area",                    HandleReloadSpellAreaCommand,                  SuperuserOnly::Yes },
+            { "spell_bonus_data",              HandleReloadSpellBonusesCommand,               SuperuserOnly::Yes },
+            { "spell_group",                   HandleReloadSpellGroupsCommand,                SuperuserOnly::Yes },
+            { "spell_loot_template",           HandleReloadLootTemplatesSpellCommand,         SuperuserOnly::Yes },
+            { "spell_linked_spell",            HandleReloadSpellLinkedSpellCommand,           SuperuserOnly::Yes },
+            { "spell_pet_auras",               HandleReloadSpellPetAurasCommand,              SuperuserOnly::Yes },
+            { "spell_proc",                    HandleReloadSpellProcsCommand,                 SuperuserOnly::Yes },
+            { "spell_scripts",                 HandleReloadSpellScriptsCommand,               SuperuserOnly::Yes },
+            { "spell_target_position",         HandleReloadSpellTargetPositionCommand,        SuperuserOnly::Yes },
+            { "spell_cone",                    HandleReloadSpellConeCommand,                  SuperuserOnly::Yes },
+            { "spell_threats",                 HandleReloadSpellThreatsCommand,               SuperuserOnly::Yes },
+            { "spell_group_stack_rules",       HandleReloadSpellGroupStackRulesCommand,       SuperuserOnly::Yes },
+            { "player_loot_template",          HandleReloadLootTemplatesPlayerCommand,        SuperuserOnly::Yes },
+            { "acore_string",                  HandleReloadAcoreStringCommand,                SuperuserOnly::Yes },
+            { "waypoint_scripts",              HandleReloadWpScriptsCommand,                  SuperuserOnly::Yes },
+            { "waypoint_data",                 HandleReloadWpCommand,                         SuperuserOnly::Yes },
+            { "vehicle_accessory",             HandleReloadVehicleAccessoryCommand,           SuperuserOnly::Yes },
+            { "vehicle_template_accessory",    HandleReloadVehicleTemplateAccessoryCommand,   SuperuserOnly::Yes },
         };
         static ChatCommandTable commandTable =
         {
@@ -162,6 +165,7 @@ public:
         HandleReloadCommandCommand(handler);
         HandleReloadReservedNameCommand(handler);
         HandleReloadProfanityNameCommand(handler);
+        HandleReloadChatFilterCommand(handler);
         HandleReloadAcoreStringCommand(handler);
         HandleReloadGameTeleCommand(handler);
         HandleReloadCreatureMovementOverrideCommand(handler);
@@ -678,6 +682,14 @@ public:
         return true;
     }
 
+    static bool HandleReloadChatFilterCommand(ChatHandler* handler)
+    {
+        LOG_INFO("server.loading", "Reloading Chat Filter!");
+        sObjectMgr->LoadChatFilter();
+        handler->SendGlobalGMSysMessage("Chat Filter reloaded.");
+        return true;
+    }
+
     static bool HandleReloadReputationRewardRateCommand(ChatHandler* handler)
     {
         LOG_INFO("server.loading", "Reloading `reputation_reward_rate` Table!" );
@@ -772,6 +784,14 @@ public:
         LOG_INFO("server.loading", "Reloading Spell target coordinates...");
         sSpellMgr->LoadSpellTargetPositions();
         handler->SendGlobalGMSysMessage("DB table `spell_target_position` (destination coordinates for spell targets) reloaded.");
+        return true;
+    }
+
+    static bool HandleReloadSpellConeCommand(ChatHandler* handler)
+    {
+        LOG_INFO("server.loading", "Reloading Spell cone definitions...");
+        sSpellMgr->LoadSpellCones();
+        handler->SendGlobalGMSysMessage("DB table `spell_cone` reloaded.");
         return true;
     }
 
@@ -995,6 +1015,15 @@ public:
         LOG_INFO("server.loading", "Reloading game_graveyard table...");
         sGraveyard->LoadGraveyardFromDB();
         handler->SendGlobalGMSysMessage("DB table `game_graveyard` reloaded.");
+        return true;
+    }
+
+    static bool HandleReloadSpawnGroupCommand(ChatHandler* handler)
+    {
+        LOG_INFO("server.loading", "Reloading spawn_group_template and spawn_group tables...");
+        sObjectMgr->LoadSpawnGroupTemplates();
+        sObjectMgr->LoadSpawnGroups();
+        handler->SendGlobalGMSysMessage("DB tables `spawn_group_template` and `spawn_group` reloaded.");
         return true;
     }
 };

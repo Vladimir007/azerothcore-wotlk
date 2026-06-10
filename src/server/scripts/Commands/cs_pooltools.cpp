@@ -62,12 +62,12 @@ public:
     {
         static ChatCommandTable poolToolsCommandTable =
         {
-            { "start",  HandlePoolStart,  SEC_ADMINISTRATOR, Console::No },
-            { "def",    HandlePoolDef,    SEC_ADMINISTRATOR, Console::No },
-            { "add",    HandlePoolAdd,    SEC_ADMINISTRATOR, Console::No },
-            { "remove", HandlePoolRemove, SEC_ADMINISTRATOR, Console::No },
-            { "end",    HandlePoolEnd,    SEC_ADMINISTRATOR, Console::No },
-            { "clear",  HandlePoolClear,  SEC_ADMINISTRATOR, Console::No }
+            { "start",  HandlePoolStart,  SuperuserOnly::Yes },
+            { "def",    HandlePoolDef,    SuperuserOnly::Yes },
+            { "add",    HandlePoolAdd,    SuperuserOnly::Yes },
+            { "remove", HandlePoolRemove, SuperuserOnly::Yes },
+            { "end",    HandlePoolEnd,    SuperuserOnly::Yes },
+            { "clear",  HandlePoolClear,  SuperuserOnly::Yes }
         };
 
         static ChatCommandTable commandTable =
@@ -343,7 +343,17 @@ public:
                 uniqueNames.insert(goInfo ? goInfo->name : std::to_string(obj.first));
             }
 
-            std::string groupDesc = fmt::format("{}", fmt::join(uniqueNames, " / "));
+            std::string groupDesc;
+            const std::string delim = " / ";
+            bool first = true;
+            for (const auto& str : uniqueNames) {
+                if (!first) {
+                    groupDesc += delim;
+                }
+                groupDesc += str;
+                first = false;
+            }
+
             std::string safeGroupDesc = EscapeSQL(groupDesc);
 
             // Simple pooling
@@ -356,7 +366,7 @@ public:
                         if (tpl.Entry == obj.first)
                             chance = (float)tpl.Chance;
 
-                    bulkInserts.push_back(fmt::format("({}, @mother_pool, {}, '{} - {}')",
+                    bulkInserts.push_back(std::format("({}, @mother_pool, {}, '{} - {}')",
                         obj.second, chance, EscapeSQL(session.ZoneName), safeGroupDesc));
                 }
             }

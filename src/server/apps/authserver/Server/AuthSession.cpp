@@ -105,7 +105,8 @@ void AccountInfo::LoadResult(const Field* fields)
     Id = fields[0].Get<uint32>();
     Login = fields[1].Get<std::string>();
     IsActive = fields[2].Get<bool>();
-    IsGameMaster = fields[3].Get<bool>();
+    IsStaff = fields[3].Get<bool>();
+    IsSuperuser = fields[4].Get<bool>();
 }
 
 AuthSession::AuthSession(IoContextTcpSocket&& socket): Socket(std::move(socket)), _status(STATUS_CHALLENGE), _build(0) { }
@@ -234,8 +235,8 @@ void AuthSession::LogonChallengeCallback(const QueryResult& result)
     _accountInfo.LoadResult(fields);
 
     _srp6.emplace(_accountInfo.Login,
-        fields[4].Get<Binary, Acore::Crypto::SRP6::SALT_LENGTH>(),
-        fields[5].Get<Binary, Acore::Crypto::SRP6::VERIFIER_LENGTH>());
+        fields[5].Get<Binary, Acore::Crypto::SRP6::SALT_LENGTH>(),
+        fields[6].Get<Binary, Acore::Crypto::SRP6::VERIFIER_LENGTH>());
 
     if (_build != ACCEPTED_CLIENT_BUILD)
     {
@@ -304,7 +305,7 @@ bool AuthSession::HandleLogonProof()
                 proof.M2 = M2;
                 proof.cmd = AUTH_LOGON_PROOF;
                 proof.error = 0;
-                proof.AccountFlags = _accountInfo.IsGameMaster ? ACCOUNT_FLAG_GM : 0;
+                proof.AccountFlags = _accountInfo.IsStaff ? ACCOUNT_FLAG_GM : 0;
                 proof.SurveyId = 0;
                 proof.LoginFlags = 0;
 
@@ -382,7 +383,7 @@ void AuthSession::ReconnectChallengeCallback(const QueryResult& result)
     const Field* fields = result->Fetch();
 
     _accountInfo.LoadResult(fields);
-    _sessionKey = fields[4].Get<Binary, SESSION_KEY_LENGTH>();
+    _sessionKey = fields[5].Get<Binary, SESSION_KEY_LENGTH>();
     Acore::Crypto::GetRandomBytes(_reconnectProof);
     _status = STATUS_RECONNECT_PROOF;
 

@@ -309,7 +309,7 @@ void WorldSessionMgr::AddSession_(WorldSession* session)
     // don't count this session when checking player limit
     --Sessions;
 
-    if (pLimit > 0 && Sessions >= pLimit && !session->IsGameMaster() && !session->CanSkipQueue() && !HasRecentlyDisconnected(session))
+    if (pLimit > 0 && Sessions >= pLimit && !session->IsStaff() && !session->CanSkipQueue() && !HasRecentlyDisconnected(session))
     {
         AddQueuedPlayer(session);
         UpdateMaxSessionCounters();
@@ -376,7 +376,7 @@ void WorldSessionMgr::SendGlobalGMMessage(WorldPacket const* packet, WorldSessio
             itr->second->GetPlayer() &&
             itr->second->GetPlayer()->IsInWorld() &&
             itr->second != self &&
-            itr->second->IsGameMaster() &&
+            itr->second->IsStaff() &&
             (teamId == TEAM_NEUTRAL || itr->second->GetPlayer()->GetTeamId() == teamId))
         {
             itr->second->SendPacket(packet);

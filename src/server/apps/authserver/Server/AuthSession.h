@@ -32,7 +32,8 @@ struct AccountInfo
     uint32 Id = 0;
     std::string Login;
     bool IsActive = false;
-    bool IsGameMaster = false;
+    bool IsStaff = false;
+    bool IsSuperuser = false;
 };
 
 class AuthSession final : public Socket<AuthSession>

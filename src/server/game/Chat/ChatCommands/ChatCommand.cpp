@@ -1,25 +1,8 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
 #include "ChatCommand.h"
 #include "AccountMgr.h"
 #include "Chat.h"
-#include "DBCStores.h"
 #include "DatabaseEnv.h"
+#include "DBCStores.h"
 #include "Log.h"
 #include "Player.h"
 #include "ScriptMgr.h"
@@ -29,13 +12,13 @@
 
 using ChatSubCommandMap = std::map<std::string_view, Acore::Impl::ChatCommands::ChatCommandNode, StringCompareLessI_T>;
 
-void Acore::Impl::ChatCommands::ChatCommandNode::LoadFromBuilder(ChatCommandBuilder const& builder)
+void Acore::Impl::ChatCommands::ChatCommandNode::LoadFromBuilder(const ChatCommandBuilder& builder)
 {
     if (std::holds_alternative<ChatCommandBuilder::InvokerEntry>(builder._data))
     {
         ASSERT(!_invoker, "Duplicate blank sub-command.");
         AcoreStrings help;
-        std::tie(_invoker, help, _permission) = *(std::get<ChatCommandBuilder::InvokerEntry>(builder._data));
+        std::tie(_invoker, help, _superuserOnly) = *std::get<ChatCommandBuilder::InvokerEntry>(builder._data);
         if (help)
             _help.emplace<AcoreStrings>(help);
     }
@@ -44,9 +27,9 @@ void Acore::Impl::ChatCommands::ChatCommandNode::LoadFromBuilder(ChatCommandBuil
 }
 
 /*static*/ void Acore::Impl::ChatCommands::ChatCommandNode::LoadCommandsIntoMap(ChatCommandNode* blank,
-    std::map<std::string_view, Acore::Impl::ChatCommands::ChatCommandNode, StringCompareLessI_T>& map, Acore::ChatCommands::ChatCommandTable const& commands)
+    std::map<std::string_view, ChatCommandNode, StringCompareLessI_T>& map, const Acore::ChatCommands::ChatCommandTable& commands)
 {
-    for (ChatCommandBuilder const& builder : commands)
+    for (const ChatCommandBuilder& builder : commands)
     {
         if (builder._name.empty())
         {
@@ -55,18 +38,18 @@ void Acore::Impl::ChatCommands::ChatCommandNode::LoadFromBuilder(ChatCommandBuil
         }
         else
         {
-            std::vector<std::string_view> const tokens = Acore::Tokenize(builder._name, COMMAND_DELIMITER, false);
+            const std::vector<std::string_view> tokens = Tokenize(builder._name, COMMAND_DELIMITER, false);
             ASSERT(!tokens.empty(), "Invalid command name '{}'.", builder._name);
             ChatSubCommandMap* subMap = &map;
-            for (std::size_t i = 0, n = (tokens.size() - 1); i < n; ++i)
-                subMap = &((*subMap)[tokens[i]]._subCommands);
-            ((*subMap)[tokens.back()]).LoadFromBuilder(builder);
+            for (std::size_t i = 0, n = tokens.size() - 1; i < n; ++i)
+                subMap = &(*subMap)[tokens[i]]._subCommands;
+            (*subMap)[tokens.back()].LoadFromBuilder(builder);
         }
     }
 }
 
 static ChatSubCommandMap COMMAND_MAP;
-/*static*/ ChatSubCommandMap const& Acore::Impl::ChatCommands::ChatCommandNode::GetTopLevelMap()
+/*static*/ const ChatSubCommandMap& Acore::Impl::ChatCommands::ChatCommandNode::GetTopLevelMap()
 {
     if (COMMAND_MAP.empty())
         LoadCommandMap();
@@ -88,9 +71,9 @@ static ChatSubCommandMap COMMAND_MAP;
         do
         {
             const Field* fields = result->Fetch();
-            std::string_view const name = fields[0].Get<std::string_view>();
-            const bool gmOnly = fields[1].Get<bool>();
-            std::string_view const help = fields[2].Get<std::string_view>();
+            const std::string_view name = fields[0].Get<std::string_view>();
+            const bool superuserOnly = fields[1].Get<bool>();
+            const std::string_view help = fields[2].Get<std::string_view>();
 
             ChatCommandNode* cmd = nullptr;
             ChatSubCommandMap* map = &COMMAND_MAP;
@@ -105,7 +88,7 @@ static ChatSubCommandMap COMMAND_MAP;
                 }
                 else
                 {
-                    LOG_ERROR("sql.sql", "Table `command` contains data for non-existent command '{}'. Skipped.", name);
+                    LOG_ERROR("sql.sql", "Table `world_command` contains data for non-existent command '{}'. Skipped.", name);
                     cmd = nullptr;
                     break;
                 }
@@ -114,21 +97,21 @@ static ChatSubCommandMap COMMAND_MAP;
             if (!cmd)
                 continue;
 
-            if (cmd->_invoker && (cmd->_permission.RequireGM != gmOnly))
+            if (cmd->_invoker && static_cast<bool>(cmd->_superuserOnly) != superuserOnly)
             {
-                LOG_WARN("sql.sql", "Table `command` has GM permission {} for '{}' which does not match the core ({}). Overriding.",
-                    gmOnly, name, cmd->_permission.RequireGM);
+                LOG_WARN("sql.sql", "Table `world_command` has superuser permission {} for '{}' which does not match the core ({}). Overriding.",
+                    superuserOnly, name, cmd->_superuserOnly);
 
-                cmd->_permission.RequireGM = gmOnly;
+                cmd->_superuserOnly = static_cast<Acore::ChatCommands::SuperuserOnly>(superuserOnly);
             }
 
             if (std::holds_alternative<std::string>(cmd->_help))
-                LOG_ERROR("sql.sql", "Table `command` contains duplicate data for command '{}'. Skipped.", name);
+                LOG_ERROR("sql.sql", "Table `world_command` contains duplicate data for command '{}'. Skipped.", name);
 
             if (std::holds_alternative<std::monostate>(cmd->_help))
                 cmd->_help.emplace<std::string>(help);
             else
-                LOG_ERROR("sql.sql", "Table `command` contains legacy help text for command '{}', which uses `acore_string`. Skipped.", name);
+                LOG_ERROR("sql.sql", "Table `world_command` contains legacy help text for command '{}', which uses `acore_string`. Skipped.", name);
         } while (result->NextRow());
     }
 
@@ -139,7 +122,7 @@ static ChatSubCommandMap COMMAND_MAP;
 void Acore::Impl::ChatCommands::ChatCommandNode::ResolveNames(std::string name)
 {
     if (_invoker && std::holds_alternative<std::monostate>(_help))
-        LOG_WARN("sql.sql", "Table `command` is missing help text for command '{}'.", name);
+        LOG_WARN("sql.sql", "Table `world_command` is missing help text for command '{}'.", name);
 
     _name = name;
 
@@ -154,11 +137,11 @@ void Acore::Impl::ChatCommands::ChatCommandNode::ResolveNames(std::string name)
 
 static void LogCommandUsage(WorldSession const& session, std::string_view cmdStr)
 {
-    if (!session.IsGameMaster())
+    if (!session.IsStaff())
         return;
 
-    Player* player = session.GetPlayer();
-    ObjectGuid targetGuid = player->GetTarget();
+    const Player* player = session.GetPlayer();
+    const ObjectGuid targetGuid = player->GetTarget();
     uint32 areaId = player->GetAreaId();
     uint32 zoneId = player->GetZoneId();
     std::string areaName = "Unknown";
@@ -170,7 +153,7 @@ static void LogCommandUsage(WorldSession const& session, std::string_view cmdStr
     if (AreaTableEntry const* zone = sAreaTableStore.LookupEntry(zoneId))
         zoneName = zone->AreaName;
 
-    std::string logMessage = Acore::StringFormat("Command: {} [Player: {} ({}) (Account: {}) X: {} Y: {} Z: {} Map: {} ({}) Area: {} ({}) Zone: {} ({}) Selected: {} ({})]",
+    const std::string logMessage = Acore::StringFormat("Command: {} [Player: {} ({}) (Account: {}) X: {} Y: {} Z: {} Map: {} ({}) Area: {} ({}) Zone: {} ({}) Selected: {} ({})]",
         cmdStr, player->GetName(), player->GetGUID().ToString(),
         session.GetAccountId(),
         player->GetPositionX(), player->GetPositionY(), player->GetPositionZ(), player->GetMapId(),
@@ -205,16 +188,12 @@ void Acore::Impl::ChatCommands::ChatCommandNode::SendCommandHelp(ChatHandler& ha
         bool const subCommandHasSubCommand = it->second.HasVisibleSubCommands(handler);
 
         if (!subCommandHasSubCommand && !it->second.IsInvokerVisible(handler))
-        {
             continue;
-        }
 
         if (!header)
         {
             if (!hasInvoker)
-            {
                 handler.PSendSysMessage(LANG_CMD_HELP_GENERIC, _name);
-            }
 
             handler.SendSysMessage(LANG_SUBCMDS_LIST);
             header = true;
@@ -228,12 +207,8 @@ namespace Acore::Impl::ChatCommands
 {
     struct FilteredCommandListIterator
     {
-        public:
-            FilteredCommandListIterator(ChatSubCommandMap const& map, ChatHandler const& handler, std::string_view token)
-                : _handler{ handler }, _token{ token }, _it{ map.lower_bound(token) }, _end{ map.end() }
-            {
-                _skip();
-            }
+        FilteredCommandListIterator(ChatSubCommandMap const& map, ChatHandler const& handler, const std::string_view token):
+            _handler{ handler }, _token{ token }, _it{ map.lower_bound(token) }, _end{ map.end() } { _skip(); }
 
             decltype(auto) operator*() const { return _it.operator*(); }
             decltype(auto) operator->() const { return _it.operator->(); }
@@ -243,24 +218,24 @@ namespace Acore::Impl::ChatCommands
                 _skip();
                 return *this;
             }
-            explicit operator bool() const { return (_it != _end); }
+            explicit operator bool() const { return _it != _end; }
             bool operator!() const { return !static_cast<bool>(*this); }
 
         private:
             void _skip()
             {
-                if ((_it != _end) && !StringStartsWithI(_it->first, _token))
+                if (_it != _end && !StringStartsWithI(_it->first, _token))
                     _it = _end;
-                while ((_it != _end) && !_it->second.IsVisible(_handler))
+                while (_it != _end && !_it->second.IsVisible(_handler))
                 {
                     ++_it;
-                    if ((_it != _end) && !StringStartsWithI(_it->first, _token))
+                    if (_it != _end && !StringStartsWithI(_it->first, _token))
                         _it = _end;
                 }
             }
 
-            ChatHandler const& _handler;
-            std::string_view const _token;
+            const ChatHandler& _handler;
+            const std::string_view _token;
             ChatSubCommandMap::const_iterator _it, _end;
 
     };
@@ -268,33 +243,35 @@ namespace Acore::Impl::ChatCommands
 
 /*static*/ bool Acore::Impl::ChatCommands::ChatCommandNode::TryExecuteCommand(ChatHandler& handler, std::string_view cmdStr)
 {
-    ChatCommandNode const* cmd = nullptr;
-    ChatSubCommandMap const* map = &GetTopLevelMap();
+    const ChatCommandNode* cmd = nullptr;
+    const ChatSubCommandMap* map = &GetTopLevelMap();
 
-    while (!cmdStr.empty() && (cmdStr.front() == COMMAND_DELIMITER))
+    while (!cmdStr.empty() && cmdStr.front() == COMMAND_DELIMITER)
         cmdStr.remove_prefix(1);
 
-    while (!cmdStr.empty() && (cmdStr.back() == COMMAND_DELIMITER))
+    while (!cmdStr.empty() && cmdStr.back() == COMMAND_DELIMITER)
         cmdStr.remove_suffix(1);
 
     std::string_view oldTail = cmdStr;
     while (!oldTail.empty())
     {
-        /* oldTail = token DELIMITER newTail */
+        // oldTail = token DELIMITER newTail
         auto [token, newTail] = tokenize(oldTail);
         ASSERT(!token.empty());
 
         FilteredCommandListIterator it1(*map, handler, token);
         if (!it1)
-            break; /* no matching subcommands found */
+            break;  // No matching subcommands found
 
         if (!StringEqualI(it1->first, token))
-        { /* ok, so it1 points at a partially matching subcommand - let's see if there are others */
+        {
+            // OK, so it1 points at a partially matching subcommand - let's see if there are others
             auto it2 = it1;
             ++it2;
 
             if (it2)
-            { /* there are multiple matching subcommands - print possibilities and return */
+            {
+                // There are multiple matching subcommands - print possibilities and return
                 if (cmd)
                     handler.PSendSysMessage(LANG_SUBCMD_AMBIGUOUS, cmd->_name, COMMAND_DELIMITER, token);
                 else
@@ -310,7 +287,7 @@ namespace Acore::Impl::ChatCommands
             }
         }
 
-        /* now we matched exactly one subcommand, and it1 points to it; go down the rabbit hole */
+        // Now we matched exactly one subcommand, and it1 points to it; go down the rabbit hole
         cmd = &it1->second;
         map = &cmd->_subCommands;
 
@@ -320,17 +297,19 @@ namespace Acore::Impl::ChatCommands
     if (!sScriptMgr->OnTryExecuteCommand(handler, cmdStr))
         return true;
 
-    /* if we matched a command at some point, invoke it */
+    // If we matched a command at some point, invoke it
     if (cmd)
     {
         handler.SetSentErrorMessage(false);
         if (cmd->IsInvokerVisible(handler) && cmd->_invoker(&handler, oldTail))
-        { /* invocation succeeded, log this */
+        {
+            // Invocation succeeded, log this
             if (!handler.IsConsole())
                 LogCommandUsage(*handler.GetSession(), cmdStr);
         }
-        else if (!handler.HasSentErrorMessage()) /* invocation failed, we should show usage */
+        else if (!handler.HasSentErrorMessage())
         {
+            // Invocation failed, we should show usage
             cmd->SendCommandHelp(handler);
             handler.SetSentErrorMessage(true);
         }
@@ -346,11 +325,12 @@ namespace Acore::Impl::ChatCommands
     ChatCommandNode const* cmd = nullptr;
     ChatSubCommandMap const* map = &GetTopLevelMap();
 
-    for (std::string_view token : Acore::Tokenize(cmdStr, COMMAND_DELIMITER, false))
+    for (std::string_view token : Tokenize(cmdStr, COMMAND_DELIMITER, false))
     {
         FilteredCommandListIterator it1(*map, handler, token);
         if (!it1)
-        { /* no matching subcommands found */
+        {
+            // No matching subcommands found
             if (cmd)
             {
                 cmd->SendCommandHelp(handler);
@@ -362,12 +342,14 @@ namespace Acore::Impl::ChatCommands
         }
 
         if (!StringEqualI(it1->first, token))
-        { /* ok, so it1 points at a partially matching subcommand - let's see if there are others */
+        {
+            // OK, so it1 points at a partially matching subcommand - let's see if there are others
             auto it2 = it1;
             ++it2;
 
             if (it2)
-            { /* there are multiple matching subcommands - print possibilities and return */
+            {
+                // There are multiple matching subcommands - print possibilities and return
                 if (cmd)
                     handler.PSendSysMessage(LANG_SUBCMD_AMBIGUOUS, cmd->_name, COMMAND_DELIMITER, token);
                 else
@@ -404,47 +386,46 @@ namespace Acore::Impl::ChatCommands
         handler.PSendSysMessage(LANG_CMD_INVALID, cmdStr);
 }
 
-/*static*/ std::vector<std::string> Acore::Impl::ChatCommands::ChatCommandNode::GetAutoCompletionsFor(ChatHandler const& handler, std::string_view cmdStr)
+/*static*/ std::vector<std::string> Acore::Impl::ChatCommands::ChatCommandNode::GetAutoCompletionsFor(const ChatHandler& handler, std::string_view cmdStr)
 {
     std::string path;
     ChatCommandNode const* cmd = nullptr;
     ChatSubCommandMap const* map = &GetTopLevelMap();
 
-    while (!cmdStr.empty() && (cmdStr.front() == COMMAND_DELIMITER))
+    while (!cmdStr.empty() && cmdStr.front() == COMMAND_DELIMITER)
         cmdStr.remove_prefix(1);
 
-    while (!cmdStr.empty() && (cmdStr.back() == COMMAND_DELIMITER))
+    while (!cmdStr.empty() && cmdStr.back() == COMMAND_DELIMITER)
         cmdStr.remove_suffix(1);
 
     std::string_view oldTail = cmdStr;
     while (!oldTail.empty())
     {
-        /* oldTail = token DELIMITER newTail */
+        // oldTail = token DELIMITER newTail
         auto [token, newTail] = tokenize(oldTail);
         ASSERT(!token.empty());
         FilteredCommandListIterator it1(*map, handler, token);
         if (!it1)
-            break; /* no matching subcommands found */
+            break;  // No matching subcommands found
 
         if (!StringEqualI(it1->first, token))
-        { /* ok, so it1 points at a partially matching subcommand - let's see if there are others */
+        {
+            // OK, so it1 points at a partially matching subcommand - let's see if there are others
             auto it2 = it1;
             ++it2;
 
             if (it2)
-            { /* there are multiple matching subcommands - terminate here and show possibilities */
+            {
+                // There are multiple matching subcommands - terminate here and show possibilities
                 std::vector<std::string> vec;
-                auto possibility = ([prefix = std::string_view(path), suffix = std::string_view(newTail)](std::string_view match)
+                auto possibility = [prefix = std::string_view(path), suffix = std::string_view(newTail)](std::string_view match)
                 {
                     if (prefix.empty())
                     {
-                        return Acore::StringFormat("{}{}{}", match, COMMAND_DELIMITER, suffix);
+                        return StringFormat("{}{}{}", match, COMMAND_DELIMITER, suffix);
                     }
-                    else
-                    {
-                        return Acore::StringFormat("{}{}{}{}{}", prefix, COMMAND_DELIMITER, match, COMMAND_DELIMITER, suffix);
-                    }
-                });
+                    return StringFormat("{}{}{}{}{}", prefix, COMMAND_DELIMITER, match, COMMAND_DELIMITER, suffix);
+                };
 
                 vec.emplace_back(possibility(it1->first));
 
@@ -455,13 +436,12 @@ namespace Acore::Impl::ChatCommands
             }
         }
 
-        /* now we matched exactly one subcommand, and it1 points to it; go down the rabbit hole */
+        // Now we matched exactly one subcommand, and it1 points to it; go down the rabbit hole
         if (path.empty())
             path.assign(it1->first);
         else
-        {
-            path = Acore::StringFormat("{}{}{}", path, COMMAND_DELIMITER, it1->first);
-        }
+            path = StringFormat("{}{}{}", path, COMMAND_DELIMITER, it1->first);
+
         cmd = &it1->second;
         map = &cmd->_subCommands;
 
@@ -469,48 +449,39 @@ namespace Acore::Impl::ChatCommands
     }
 
     if (!oldTail.empty())
-    { /* there is some trailing text, leave it as is */
+    {
+        // There is some trailing text, leave it as is
         if (cmd)
-        { /* if we matched a command at some point, auto-complete it */
-            return { Acore::StringFormat("{}{}{}", path, COMMAND_DELIMITER, oldTail) };
-        }
-        else
-            return {};
-    }
-    else
-    { /* offer all subcommands */
-        auto possibility = ([prefix = std::string_view(path)](std::string_view match)
         {
-            if (prefix.empty())
-                return std::string(match);
-            else
-            {
-                return Acore::StringFormat("{}{}{}", prefix, COMMAND_DELIMITER, match);
-            }
-        });
-
-        std::vector<std::string> vec;
-        for (FilteredCommandListIterator it(*map, handler, ""); it; ++it)
-            vec.emplace_back(possibility(it->first));
-        return vec;
+            // If we matched a command at some point, auto-complete it
+            return { StringFormat("{}{}{}", path, COMMAND_DELIMITER, oldTail) };
+        }
+        return {};
     }
+
+    // Offer all subcommands
+    auto possibility = [prefix = std::string_view(path)](std::string_view match)
+    {
+        if (prefix.empty())
+            return std::string(match);
+        return StringFormat("{}{}{}", prefix, COMMAND_DELIMITER, match);
+    };
+
+    std::vector<std::string> vec;
+    for (FilteredCommandListIterator it(*map, handler, ""); it; ++it)
+        vec.emplace_back(possibility(it->first));
+    return vec;
 }
 
-bool Acore::Impl::ChatCommands::ChatCommandNode::IsInvokerVisible(ChatHandler const& who) const
+bool Acore::Impl::ChatCommands::ChatCommandNode::IsInvokerVisible(const ChatHandler& who) const
 {
     if (!_invoker)
         return false;
 
-    if (!sScriptMgr->OnBeforeIsInvokerVisible(_name, _permission, who))
+    if (!sScriptMgr->OnBeforeIsInvokerVisible(_name, _superuserOnly == Acore::ChatCommands::SuperuserOnly::Yes, who))
         return true;
 
-    if (who.IsConsole() && (_permission.AllowConsole == Acore::ChatCommands::Console::No))
-        return false;
-
-    if (who.IsConsole() && (_permission.AllowConsole == Acore::ChatCommands::Console::Yes))
-        return true;
-
-    return !who.IsConsole() && who.IsAvailable(_permission.RequireGM);
+    return !who.IsConsole() && who.IsAvailable(_superuserOnly == Acore::ChatCommands::SuperuserOnly::Yes);
 }
 
 bool Acore::Impl::ChatCommands::ChatCommandNode::HasVisibleSubCommands(ChatHandler const& who) const

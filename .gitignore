@@ -2,6 +2,7 @@
 # NordCore
 #
 
+.cache
 /conf/*
 !/conf/dist
 /build*/
@@ -80,6 +81,10 @@ local.properties
 .loadpath
 .project
 .cproject
+
+# vcpkg integration
+/vcpkg/
+/vcpkg-ports/
 
 
 # ==================

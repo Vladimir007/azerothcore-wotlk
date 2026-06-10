@@ -5,7 +5,6 @@
 #include <unordered_map>
 
 #include "Define.h"
-#include "IoContext.h"
 #include "LogCommon.h"
 #include "StringFormat.h"
 
@@ -94,23 +93,11 @@ private:
 
 #define sLog Log::instance()
 
-#define LOG_EXCEPTION_FREE(filterType__, level__, ...) \
-    { \
-        try \
-        { \
-            sLog->outMessage(filterType__, level__, __VA_ARGS__); \
-        } \
-        catch (const std::exception& e) \
-        { \
-            sLog->outMessage("root", LogLevel::LOG_LEVEL_ERROR, "Wrong format occurred ({}) at '{}:{}'", e.what(), __FILE__, __LINE__); \
-        } \
-    }
-
-#define LOG_MESSAGE_BODY(filterType__, level__, ...)                    \
+#define LOG_MESSAGE_BODY(filterType__, level__, ...)                        \
         do                                                              \
         {                                                               \
             if (sLog->ShouldLog(filterType__, level__))                 \
-                LOG_EXCEPTION_FREE(filterType__, level__, __VA_ARGS__); \
+                sLog->outMessage(filterType__, level__, __VA_ARGS__); \
         } while (0)
 
 

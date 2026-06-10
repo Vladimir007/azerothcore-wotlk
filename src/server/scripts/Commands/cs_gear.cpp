@@ -19,6 +19,7 @@
 #include "CommandScript.h"
 #include "Language.h"
 #include "Player.h"
+#include "WorldSession.h"
 
 using namespace Acore::ChatCommands;
 
@@ -31,8 +32,8 @@ public:
     {
         static ChatCommandTable gearCommandTable =
         {
-            { "repair",  HandleGearRepairCommand, SEC_GAME_MASTER, Console::No },
-            { "stats",   HandleGearStatsCommand,  SEC_PLAYER,     Console::No }
+            { "repair",  HandleGearRepairCommand, SuperuserOnly::No },
+            { "stats",   HandleGearStatsCommand,  SuperuserOnly::No }
         };
 
         static ChatCommandTable commandTable =

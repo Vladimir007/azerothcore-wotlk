@@ -40,44 +40,44 @@ public:
     {
         static ChatCommandTable characterDeletedCommandTable =
         {
-            { "delete",         HandleCharacterDeletedDeleteCommand,   SEC_CONSOLE,       Console::Yes },
-            { "list",           HandleCharacterDeletedListCommand,     SEC_ADMINISTRATOR, Console::Yes },
-            { "restore",        HandleCharacterDeletedRestoreCommand,  SEC_ADMINISTRATOR, Console::Yes },
-            { "purge",          HandleCharacterDeletedPurgeCommand,    SEC_CONSOLE,       Console::Yes }
+            { "delete",         HandleCharacterDeletedDeleteCommand,   SuperuserOnly::Yes },
+            { "list",           HandleCharacterDeletedListCommand,     SuperuserOnly::Yes },
+            { "restore",        HandleCharacterDeletedRestoreCommand,  SuperuserOnly::Yes },
+            { "purge",          HandleCharacterDeletedPurgeCommand,    SuperuserOnly::Yes }
         };
 
         static ChatCommandTable characterCheckCommandTable =
         {
-            { "bank",          HandleCharacterCheckBankCommand,          SEC_GAME_MASTER, Console::Yes },
-            { "bag",           HandleCharacterCheckBagCommand,           SEC_GAME_MASTER, Console::Yes },
-            { "profession",    HandleCharacterCheckProfessionCommand,    SEC_GAME_MASTER, Console::Yes }
+            { "bank",          HandleCharacterCheckBankCommand,          SuperuserOnly::No },
+            { "bag",           HandleCharacterCheckBagCommand,           SuperuserOnly::No },
+            { "profession",    HandleCharacterCheckProfessionCommand,    SuperuserOnly::No }
         };
 
         static ChatCommandTable characterCommandTable =
         {
-            { "customize",      HandleCharacterCustomizeCommand,        SEC_GAME_MASTER, Console::Yes },
-            { "changefaction",  HandleCharacterChangeFactionCommand,    SEC_GAME_MASTER, Console::Yes },
-            { "changerace",     HandleCharacterChangeRaceCommand,       SEC_GAME_MASTER, Console::Yes },
-            { "changeaccount",  HandleCharacterChangeAccountCommand,    SEC_ADMINISTRATOR, Console::Yes },
+            { "customize",      HandleCharacterCustomizeCommand,        SuperuserOnly::No },
+            { "changefaction",  HandleCharacterChangeFactionCommand,    SuperuserOnly::No },
+            { "changerace",     HandleCharacterChangeRaceCommand,       SuperuserOnly::No },
+            { "changeaccount",  HandleCharacterChangeAccountCommand,    SuperuserOnly::Yes },
             { "check",          characterCheckCommandTable },
-            { "erase",          HandleCharacterEraseCommand,            SEC_CONSOLE,    Console::Yes },
+            { "erase",          HandleCharacterEraseCommand,            SuperuserOnly::Yes },
             { "deleted",        characterDeletedCommandTable },
-            { "level",          HandleCharacterLevelCommand,            SEC_GAME_MASTER, Console::Yes },
-            { "rename",         HandleCharacterRenameCommand,           SEC_GAME_MASTER, Console::Yes },
-            { "reputation",     HandleCharacterReputationCommand,       SEC_GAME_MASTER, Console::Yes },
-            { "titles",         HandleCharacterTitlesCommand,           SEC_GAME_MASTER, Console::Yes }
+            { "level",          HandleCharacterLevelCommand,            SuperuserOnly::No },
+            { "rename",         HandleCharacterRenameCommand,           SuperuserOnly::No },
+            { "reputation",     HandleCharacterReputationCommand,       SuperuserOnly::No },
+            { "titles",         HandleCharacterTitlesCommand,           SuperuserOnly::No }
         };
 
         static ChatCommandTable commandTable =
         {
             { "character",      characterCommandTable },
-            { "levelup",        HandleLevelUpCommand, SEC_GAME_MASTER, Console::No }
+            { "levelup",        HandleLevelUpCommand, SuperuserOnly::No }
         };
 
         return commandTable;
     }
 
-    // Stores informations about a deleted character
+    // Stores information about a deleted character
     struct DeletedInfo
     {
         ObjectGuid::LowType lowGuid;                    ///< the low GUID from the character
@@ -85,18 +85,22 @@ public:
         uint32      accountId;                          ///< the account id
         std::string accountName;                        ///< the account name
         time_t      deleteDate;                         ///< the date at which the character has been deleted
+        uint8       level;                              ///< the character level at the time of deletion
     };
 
     typedef std::list<DeletedInfo> DeletedInfoList;
+
+    static constexpr std::size_t MAX_DELETED_CHAR_RESULTS = 50;
 
     /**
     * Collects all GUIDs (and related info) from deleted characters which are still in the database.
     *
     * @param foundList    a reference to an std::list which will be filled with info data
-    * @param searchString the search string which either contains a player GUID or a part fo the character-name
+    * @param searchString the search string which either contains a player GUID or a part of the character-name
+    * @param limitResults if true, caps results at MAX_DELETED_CHAR_RESULTS + 1 using a DB-level LIMIT
     * @return             returns false if there was a problem while selecting the characters (e.g. player name not normalizeable)
     */
-    static bool GetDeletedCharacterInfoList(DeletedInfoList& foundList, std::string searchString)
+    static bool GetDeletedCharacterInfoList(DeletedInfoList& foundList, std::string searchString, bool limitResults = false)
     {
         QueryResult result;
         CharacterDatabasePreparedStatement* stmt = nullptr;
@@ -115,7 +119,8 @@ public:
                 if (!normalizePlayerName(searchString))
                     return false;
 
-                stmt = CharacterDatabase.GetPreparedStatement(CHAR_SEL_CHAR_DEL_INFO_BY_NAME);
+                CharacterDatabaseStatements nameStmt = limitResults ? CHAR_SEL_CHAR_DEL_INFO_BY_NAME_LIMIT : CHAR_SEL_CHAR_DEL_INFO_BY_NAME;
+                stmt = CharacterDatabase.GetPreparedStatement(nameStmt);
                 stmt->SetData(0, searchString);
                 result = CharacterDatabase.Query(stmt);
             }
@@ -141,6 +146,7 @@ public:
                 // account name will be empty for nonexisting account
                 AccountMgr::GetName(info.accountId, info.accountName);
                 info.deleteDate = time_t(fields[3].Get<uint32>());
+                info.level      = fields[4].Get<uint8>();
                 foundList.push_back(info);
             } while (result->NextRow());
         }
@@ -173,11 +179,13 @@ public:
 
             if (!handler->GetSession())
                 handler->PSendSysMessage(LANG_CHARACTER_DELETED_LIST_LINE_CONSOLE,
-                                         itr->lowGuid, itr->name, itr->accountName.empty() ? "<Not existing>" : itr->accountName,
+                                         itr->lowGuid, itr->name, uint32(itr->level),
+                                         itr->accountName.empty() ? "<Not existing>" : itr->accountName,
                                          itr->accountId, dateStr);
             else
                 handler->PSendSysMessage(LANG_CHARACTER_DELETED_LIST_LINE_CHAT,
-                                         itr->lowGuid, itr->name, itr->accountName.empty() ? "<Not existing>" : itr->accountName,
+                                         itr->lowGuid, itr->name, uint32(itr->level),
+                                         itr->accountName.empty() ? "<Not existing>" : itr->accountName,
                                          itr->accountId, dateStr);
         }
 
@@ -578,7 +586,7 @@ public:
         if (needleStr)
             needle.assign(*needleStr);
         DeletedInfoList foundList;
-        if (!GetDeletedCharacterInfoList(foundList, needle))
+        if (!GetDeletedCharacterInfoList(foundList, needle, true))
             return false;
 
         // if no characters have been found, output a warning
@@ -588,7 +596,14 @@ public:
             return false;
         }
 
+        bool truncated = foundList.size() > MAX_DELETED_CHAR_RESULTS;
+        if (truncated)
+            foundList.resize(MAX_DELETED_CHAR_RESULTS);
+
         HandleCharacterDeletedListHelper(foundList, handler);
+
+        if (truncated)
+            handler->SendSysMessage(LANG_CHARACTER_DELETED_LIST_LIMIT);
 
         return true;
     }

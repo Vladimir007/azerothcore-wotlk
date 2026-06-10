@@ -19,7 +19,7 @@ public:
         ASSERT(!_thread && !_acceptor, "StopNetwork must be called prior to SocketMgr destruction");
     }
 
-    virtual bool StartNetwork(Acore::Asio::IoContext& ioContext, std::string const& bindIp, uint16 port)
+    virtual bool StartNetwork(Acore::Asio::IoContext& ioContext, const std::string& bindIp, uint16 port)
     {
         std::unique_ptr<AsyncAcceptor> acceptor;
         try

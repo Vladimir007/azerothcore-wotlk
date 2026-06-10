@@ -353,6 +353,9 @@ void World::SetInitialWorldSettings()
     LOG_INFO("server.loading", ">> Localization Strings loaded in {} ms", GetMSTimeDiffToNow(oldMSTime));
     LOG_INFO("server.loading", " ");
 
+    LOG_INFO("server.loading", "Loading Account Roles and Permissions...");
+    sAccountMgr->LoadRBAC();
+
     LOG_INFO("server.loading", "Loading Page Texts...");
     sObjectMgr->LoadPageTexts();
 
@@ -437,6 +440,9 @@ void World::SetInitialWorldSettings()
     LOG_INFO("server.loading", "Loading Creature Base Stats...");
     sObjectMgr->LoadCreatureClassLevelStats();
 
+    LOG_INFO("server.loading", "Loading Spawn Group Templates...");
+    sObjectMgr->LoadSpawnGroupTemplates();
+
     LOG_INFO("server.loading", "Loading Creature Data...");
     sObjectMgr->LoadCreatures();
 
@@ -463,6 +469,9 @@ void World::SetInitialWorldSettings()
 
     LOG_INFO("server.loading", "Loading Gameobject Data...");
     sObjectMgr->LoadGameObjects();
+
+    LOG_INFO("server.loading", "Loading Spawn Group Data...");
+    sObjectMgr->LoadSpawnGroups();                                 // must be after LoadCreatures() and LoadGameobjects()
 
     LOG_INFO("server.loading", "Loading GameObject Addon Data...");
     sObjectMgr->LoadGameObjectAddons();                          // must be after LoadGameObjectTemplate() and LoadGameobjects()
@@ -555,6 +564,9 @@ void World::SetInitialWorldSettings()
     LOG_INFO("server.loading", "Loading Spell Target Coordinates...");
     sSpellMgr->LoadSpellTargetPositions();
 
+    LOG_INFO("server.loading", "Loading Spell Cone definitions...");
+    sSpellMgr->LoadSpellCones();
+
     LOG_INFO("server.loading", "Loading Enchant Custom Attributes...");
     sSpellMgr->LoadEnchantCustomAttr();
 
@@ -631,6 +643,9 @@ void World::SetInitialWorldSettings()
     LOG_INFO("server.loading", "Loading Profanity Names...");
     sObjectMgr->LoadProfanityNamesFromDB();
     sObjectMgr->LoadProfanityNamesFromDBC(); // Needs to be after LoadProfanityNamesFromDB()
+
+    LOG_INFO("server.loading", "Loading Chat Filter...");
+    sObjectMgr->LoadChatFilter();
 
     LOG_INFO("server.loading", "Loading GameObjects for Quests...");
     sObjectMgr->LoadGameObjectForQuests();
@@ -1393,6 +1408,16 @@ void World::ResetEventSeasonalQuests(uint16 event_id)
     for (WorldSessionMgr::SessionMap::const_iterator itr = sessionMap.begin(); itr != sessionMap.end(); ++itr)
         if (itr->second->GetPlayer())
             itr->second->GetPlayer()->ResetSeasonalQuestStatus(event_id);
+}
+
+void World::ReloadRBAC()
+{
+    // Passive reload, we mark the data as invalidated and next time a permission is checked it will be reloaded
+    LOG_INFO("rbac", "World::ReloadRBAC()");
+    WorldSessionMgr::SessionMap const& sessionMap = sWorldSessionMgr->GetAllSessions();
+    for (WorldSessionMgr::SessionMap::const_iterator itr = sessionMap.begin(); itr != sessionMap.end(); ++itr)
+        if (WorldSession* session = itr->second)
+            session->InvalidateRBACData();
 }
 
 void World::ResetRandomBG()

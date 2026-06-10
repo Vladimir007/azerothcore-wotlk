@@ -1,28 +1,9 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
+#ifndef WORLD_SESSION_H
+#define WORLD_SESSION_H
 
-/// \addtogroup u2w
-/// @{
-/// \file
-
-#ifndef __WORLDSESSION_H
-#define __WORLDSESSION_H
-
-#include "AccountMgr.h"
+#include <map>
+#include <memory>
+#include <utility>
 #include "AddonMgr.h"
 #include "AuthDefines.h"
 #include "CircularBuffer.h"
@@ -32,9 +13,6 @@
 #include "Packet.h"
 #include "SharedDefines.h"
 #include "World.h"
-#include <map>
-#include <memory>
-#include <utility>
 
 class Creature;
 class GameObject;
@@ -233,7 +211,7 @@ enum AccountDataType
 
 struct AccountData
 {
-    AccountData() :  Data("") {}
+    AccountData() = default;
 
     time_t Time{0};
     std::string Data;
@@ -382,7 +360,7 @@ struct PacketCounter
 class WorldSession
 {
 public:
-    WorldSession(uint32 id, std::string&& name, bool isGameMaster, std::shared_ptr<WorldSocket> sock, uint8 expansion, LocaleConstant locale, uint32 TotalTime);
+    WorldSession(uint32 id, std::string&& name, bool isStaff, bool isSuperuser, const std::shared_ptr<WorldSocket> &sock, uint8 expansion, LocaleConstant locale, uint32 totalTime);
     ~WorldSession();
 
     bool PlayerLoading() const { return m_playerLoading; }
@@ -425,7 +403,8 @@ public:
     void SendAuthResponse(uint8 code, bool shortForm, uint32 queuePos = 0);
     void SendClientCacheVersion(uint32 version);
 
-    bool IsGameMaster() const { return _isGameMaster; }
+    bool IsStaff() const { return _isStaff; }
+    bool IsSuperuser() const { return _isSuperuser; }
     bool CanSkipQueue() const { return _skipQueue; }
     uint32 GetAccountId() const { return _accountId; }
     Player* GetPlayer() const { return _player; }
@@ -673,7 +652,7 @@ public:                                                 // opcodes handlers
     void HandleEmoteOpcode(WorldPackets::Chat::EmoteClient& packet);
     void HandleContactListOpcode(WorldPacket& recvPacket);
     void HandleAddFriendOpcode(WorldPacket& recvPacket);
-    void HandleDelFriendOpcode(WorldPacket& recvPacket);
+    void HandleDelFriendOpcode(WorldPacket& recvPacket) const;
     void HandleAddIgnoreOpcode(WorldPacket& recvPacket);
     void HandleDelIgnoreOpcode(WorldPacket& recvPacket);
     void HandleSetContactNotesOpcode(WorldPacket& recvPacket);
@@ -1132,6 +1111,9 @@ public:                                                 // opcodes handlers
 
     void SetPacketLogging(bool state);
 
+    WorldSession(WorldSession const& right) = delete;
+    WorldSession& operator=(WorldSession const& right) = delete;
+
 private:
     void ProcessQueryCallbacks();
 
@@ -1167,7 +1149,8 @@ private:
     std::shared_ptr<WorldSocket> m_Socket;
     std::string m_Address;
 
-    bool _isGameMaster;
+    bool _isStaff;
+    bool _isSuperuser;
     bool _skipQueue;
     uint32 _accountId;
     std::string _accountName;
@@ -1206,9 +1189,5 @@ private:
     uint32 _timeSyncTimer;
 
     uint32 _orderCounter;
-
-    WorldSession(WorldSession const& right) = delete;
-    WorldSession& operator=(WorldSession const& right) = delete;
 };
 #endif
-/// @}

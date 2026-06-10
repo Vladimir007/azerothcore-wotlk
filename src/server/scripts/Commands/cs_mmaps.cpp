@@ -46,11 +46,11 @@ public:
     {
         static ChatCommandTable mmapCommandTable =
         {
-            { "tiles",       HandleMmapLoadedTilesCommand, SEC_ADMINISTRATOR, Console::No },
-            { "loc",         HandleMmapLocCommand,         SEC_ADMINISTRATOR, Console::No },
-            { "path",        HandleMmapPathCommand,        SEC_ADMINISTRATOR, Console::No },
-            { "stats",       HandleMmapStatsCommand,       SEC_ADMINISTRATOR, Console::No },
-            { "test",        HandleMmapTestArea,           SEC_ADMINISTRATOR, Console::No }
+            { "tiles",       HandleMmapLoadedTilesCommand, SuperuserOnly::Yes },
+            { "loc",         HandleMmapLocCommand,         SuperuserOnly::Yes },
+            { "path",        HandleMmapPathCommand,        SuperuserOnly::Yes },
+            { "stats",       HandleMmapStatsCommand,       SuperuserOnly::Yes },
+            { "test",        HandleMmapTestArea,           SuperuserOnly::Yes }
         };
 
         static ChatCommandTable commandTable =

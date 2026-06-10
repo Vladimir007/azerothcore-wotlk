@@ -38,15 +38,25 @@ Player* ChatHandler::GetPlayer() const
     return m_session ? m_session->GetPlayer() : nullptr;
 }
 
-std::string ChatHandler::GetNcoreString(uint32 entry) const
+std::string ChatHandler::GetNcoreString(const uint32 entry) const
 {
     return m_session->GetNcoreString(entry);
 }
 
-bool ChatHandler::IsAvailable(bool requireGM) const
+bool ChatHandler::IsAvailable(const bool superuserOnly) const
 {
-    // Check security level only for simple  command (without child commands)
-    return IsConsole() ? true : (!requireGM || m_session->IsGameMaster());
+    // Check security level only for simple command (without child commands)
+    return m_session != nullptr && (!superuserOnly || m_session->IsSuperuser());
+}
+
+bool ChatHandler::HasPermissionStaff() const
+{
+    return m_session != nullptr && m_session->IsStaff();
+}
+
+bool ChatHandler::HasPermissionSuperuser() const
+{
+    return m_session != nullptr && m_session->IsSuperuser();
 }
 
 bool ChatHandler::HasLowerSecurity(Player* target, ObjectGuid guid, bool strong)
@@ -76,18 +86,14 @@ bool ChatHandler::HasLowerSecurityAccount(WorldSession* target, uint32 target_ac
     if (!m_session)
         return false;
 
-    // ignore only for non-players for non strong checks (when allow apply command at least to same sec level)
-    if (m_session->IsGameMaster() && !strong && sWorld->getBoolConfig(CONFIG_GM_LOWER_SECURITY))
-        return false;
-
     if (target)
-        target_gm = target->IsGameMaster();
+        target_gm = target->IsStaff();
     else if (target_account)
-        target_gm = AccountMgr::IsGameMaster(target_account);
+        target_gm = AccountMgr::IsStaff(target_account);
     else
         return true; // Caller must report error for (target == nullptr && target_account == 0)
 
-    if ((!m_session->IsGameMaster() && target_gm ) || (strong && (!m_session->IsGameMaster() || target_gm)))
+    if ((!m_session->IsStaff() && target_gm ) || (strong && (!m_session->IsStaff() || target_gm)))
     {
         SendErrorMessage(LANG_YOURS_SECURITY_IS_LOW);
         return true;
@@ -111,7 +117,7 @@ void ChatHandler::SendGMText(std::string_view str)
 {
     std::vector<std::string_view> lines = Acore::Tokenize(str, '\n', true);
     // Session should have permissions to receive global gm messages
-    if (!m_session->IsGameMaster())
+    if (!m_session->IsStaff())
         return;
 
     for (std::string_view line : lines)
@@ -225,7 +231,7 @@ bool ChatHandler::_ParseCommands(std::string_view text)
         return true;
 
     // Pretend commands don't exist for regular players
-    if (m_session && !m_session->IsGameMaster() && !sWorld->getBoolConfig(CONFIG_ALLOW_PLAYER_COMMANDS))
+    if (m_session && !m_session->IsStaff() && !sWorld->getBoolConfig(CONFIG_ALLOW_PLAYER_COMMANDS))
         return false;
 
     // Send error message for GMs

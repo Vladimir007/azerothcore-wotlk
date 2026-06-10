@@ -19,6 +19,7 @@
 #include "CommandScript.h"
 #include "Language.h"
 #include "Player.h"
+#include "WorldSession.h"
 
 using namespace Acore::ChatCommands;
 
@@ -31,14 +32,14 @@ public:
     {
         static ChatCommandTable cheatCommandTable =
         {
-            { "god",       HandleGodModeCheatCommand,   SEC_GAME_MASTER, Console::No },
-            { "casttime",  HandleCasttimeCheatCommand,  SEC_GAME_MASTER, Console::No },
-            { "cooldown",  HandleCoolDownCheatCommand,  SEC_GAME_MASTER, Console::No },
-            { "power",     HandlePowerCheatCommand,     SEC_GAME_MASTER, Console::No },
-            { "waterwalk", HandleWaterWalkCheatCommand, SEC_GAME_MASTER, Console::No },
-            { "status",    HandleCheatStatusCommand,    SEC_GAME_MASTER, Console::No },
-            { "taxi",      HandleTaxiCheatCommand,      SEC_GAME_MASTER, Console::No },
-            { "explore",   HandleExploreCheatCommand,   SEC_GAME_MASTER, Console::No }
+            { "god",       HandleGodModeCheatCommand,   SuperuserOnly::No },
+            { "casttime",  HandleCasttimeCheatCommand,  SuperuserOnly::No },
+            { "cooldown",  HandleCoolDownCheatCommand,  SuperuserOnly::No },
+            { "power",     HandlePowerCheatCommand,     SuperuserOnly::No },
+            { "waterwalk", HandleWaterWalkCheatCommand, SuperuserOnly::No },
+            { "status",    HandleCheatStatusCommand,    SuperuserOnly::No },
+            { "taxi",      HandleTaxiCheatCommand,      SuperuserOnly::No },
+            { "explore",   HandleExploreCheatCommand,   SuperuserOnly::No }
         };
 
         static ChatCommandTable commandTable =

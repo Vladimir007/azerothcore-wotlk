@@ -17,7 +17,6 @@
 
 #include "Chat.h"
 #include "CommandScript.h"
-#include "Common.h"
 #include "WorldState.h"
 
 using namespace Acore::ChatCommands;
@@ -31,20 +30,20 @@ public:
     {
         static ChatCommandTable sunsreachCommandTable =
         {
-            { "status",      HandleSunsReachReclamationStatusCommand,   SEC_ADMINISTRATOR, Console::Yes },
-            { "phase",       HandleSunsReachReclamationPhaseCommand,    SEC_ADMINISTRATOR, Console::Yes },
-            { "subphase",    HandleSunsReachReclamationSubPhaseCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "counter",     HandleSunsReachReclamationCounterCommand,  SEC_ADMINISTRATOR, Console::Yes },
-            { "gate",        HandleSunwellGateCommand,                  SEC_ADMINISTRATOR, Console::Yes },
-            { "gatecounter", HandleSunwellGateCounterCommand,           SEC_ADMINISTRATOR, Console::Yes },
+            { "status",      HandleSunsReachReclamationStatusCommand,   SuperuserOnly::Yes },
+            { "phase",       HandleSunsReachReclamationPhaseCommand,    SuperuserOnly::Yes },
+            { "subphase",    HandleSunsReachReclamationSubPhaseCommand, SuperuserOnly::Yes },
+            { "counter",     HandleSunsReachReclamationCounterCommand,  SuperuserOnly::Yes },
+            { "gate",        HandleSunwellGateCommand,                  SuperuserOnly::Yes },
+            { "gatecounter", HandleSunwellGateCounterCommand,           SuperuserOnly::Yes },
         };
 
         static ChatCommandTable scourgeInvasionCommandTable =
         {
-            { "show",       HandleScourgeInvasionCommand,           SEC_ADMINISTRATOR, Console::Yes },
-            { "state",      HandleScourgeInvasionStateCommand,      SEC_ADMINISTRATOR, Console::Yes },
-            { "battleswon", HandleScourgeInvasionBattlesWonCommand, SEC_ADMINISTRATOR, Console::Yes },
-            { "startzone",  HandleScourgeInvasionStartZone,         SEC_ADMINISTRATOR, Console::Yes },
+            { "show",       HandleScourgeInvasionCommand,           SuperuserOnly::Yes },
+            { "state",      HandleScourgeInvasionStateCommand,      SuperuserOnly::Yes },
+            { "battleswon", HandleScourgeInvasionBattlesWonCommand, SuperuserOnly::Yes },
+            { "startzone",  HandleScourgeInvasionStartZone,         SuperuserOnly::Yes },
         };
 
         static ChatCommandTable worldStateCommandTable =

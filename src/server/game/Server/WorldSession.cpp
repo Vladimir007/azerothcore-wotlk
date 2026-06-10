@@ -1,25 +1,6 @@
-/*
- * This file is part of the AzerothCore Project. See AUTHORS file for Copyright information
- *
- * This program is free software; you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
- * more details.
- *
- * You should have received a copy of the GNU General Public License along
- * with this program. If not, see <http://www.gnu.org/licenses/>.
- */
-
-/** \file
-    \ingroup u2w
-*/
-
 #include "WorldSession.h"
+#include <zlib.h>
+
 #include "AccountMgr.h"
 #include "BattlegroundMgr.h"
 #include "CharacterPackets.h"
@@ -32,7 +13,6 @@
 #include "Hyperlinks.h"
 #include "Log.h"
 #include "MapMgr.h"
-#include "ObjectAccessor.h"
 #include "ObjectMgr.h"
 #include "Opcodes.h"
 #include "OutdoorPvPMgr.h"
@@ -42,14 +22,12 @@
 #include "QueryHolder.h"
 #include "ScriptMgr.h"
 #include "SocialMgr.h"
-#include "Transport.h"
 #include "Tokenize.h"
 #include "Vehicle.h"
 #include "World.h"
 #include "WorldPacket.h"
 #include "WorldSocket.h"
 #include "WorldState.h"
-#include <zlib.h>
 
 namespace
 {
@@ -100,17 +78,20 @@ bool WorldSessionFilter::Process(WorldPacket* packet)
 }
 
 /// WorldSession constructor
-WorldSession::WorldSession(uint32 id, std::string&& name, bool isGameMaster, std::shared_ptr<WorldSocket> sock, uint8 expansion, LocaleConstant locale, uint32 TotalTime) :
+WorldSession::WorldSession(
+        const uint32 id, std::string&& name, const bool isStaff, const bool isSuperuser,
+        const std::shared_ptr<WorldSocket> &sock, const uint8 expansion, const LocaleConstant locale, const uint32 totalTime):
     m_timeOutTime(0),
     m_GUIDLow(0),
     _player(nullptr),
     m_Socket(sock),
-    _isGameMaster(isGameMaster),
-    _skipQueue(isGameMaster),
+    _isStaff(isStaff),
+    _isSuperuser(isSuperuser),
+    _skipQueue(isStaff),
     _accountId(id),
     _accountName(std::move(name)),
     m_expansion(expansion),
-    m_total_time(TotalTime),
+    m_total_time(totalTime),
     _logoutTime(0),
     m_inQueue(false),
     m_playerLoading(false),
@@ -252,7 +233,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
     ///- Before we process anything:
     /// If necessary, kick the player because the client didn't send anything for too long
     /// (or they've been idling in character select)
-    if (sWorld->getBoolConfig(CONFIG_CLOSE_IDLE_CONNECTIONS) && IsConnectionIdle() && m_Socket)
+    if (m_Socket && IsConnectionIdle())
         m_Socket->CloseSocket();
 
     if (updater.ProcessUnsafe())
@@ -262,8 +243,6 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
     /// not process packets if socket already closed
     WorldPacket* packet = nullptr;
 
-    //! Delete packet after processing by default
-    bool deletePacket = true;
     uint32 processedPackets = 0;
     time_t currentTime = GameTime::GetGameTime().count();
 
@@ -388,10 +367,7 @@ bool WorldSession::Update(uint32 diff, PacketFilter& updater)
             }
         }
 
-        if (deletePacket)
-            delete packet;
-
-        deletePacket = true;
+        delete packet;
 
         processedPackets++;
 
@@ -936,7 +912,7 @@ void WorldSession::ReadMovementInfo(WorldPacket& data, MovementInfo* mi)
         e.g. aerial combat.
     */
 
-    REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_FLYING | MOVEMENTFLAG_CAN_FLY) && !IsGameMaster() && !GetPlayer()->m_mover->HasFlyAura() && !GetPlayer()->m_mover->HasIncreaseMountedFlightSpeedAura(),
+    REMOVE_VIOLATING_FLAGS(mi->HasMovementFlag(MOVEMENTFLAG_FLYING | MOVEMENTFLAG_CAN_FLY) && !IsStaff() && !GetPlayer()->m_mover->HasFlyAura() && !GetPlayer()->m_mover->HasIncreaseMountedFlightSpeedAura(),
         MOVEMENTFLAG_FLYING | MOVEMENTFLAG_CAN_FLY);
 
     //! Cannot fly and fall at the same time

@@ -24,6 +24,7 @@
 #include "CommandScript.h"
 #include "Common.h"
 #include "GameGraveyard.h"
+#include "GameObject.h"
 #include "GameTime.h"
 #include "GridNotifiers.h"
 #include "GridTerrainLoader.h"
@@ -39,6 +40,7 @@
 #include "ObjectAccessor.h"
 #include "Pet.h"
 #include "Player.h"
+#include "PoolMgr.h"
 #include "Realm.h"
 #include "ScriptMgr.h"
 #include "SpellAuras.h"
@@ -78,61 +80,65 @@ public:
     {
         static ChatCommandTable auraCommandTable =
         {
-            { "stack",             HandleAuraStacksCommand,        SEC_GAME_MASTER,         Console::No  },
-            { "",                  HandleAuraCommand,              SEC_GAME_MASTER,         Console::No  }
+            { "stack",             HandleAuraStacksCommand,        SuperuserOnly::No  },
+            { "",                  HandleAuraCommand,              SuperuserOnly::No  }
         };
 
         static ChatCommandTable commandTable =
         {
-            { "commentator",       HandleCommentatorCommand,       SEC_MODERATOR,          Console::No  },
-            { "dev",               HandleDevCommand,               SEC_ADMINISTRATOR,      Console::No  },
-            { "gps",               HandleGPSCommand,               SEC_MODERATOR,          Console::No  },
-            { "aura",              auraCommandTable                                                     },
-            { "unaura",            HandleUnAuraCommand,            SEC_GAME_MASTER,         Console::No  },
-            { "appear",            HandleAppearCommand,            SEC_MODERATOR,          Console::No  },
-            { "summon",            HandleSummonCommand,            SEC_GAME_MASTER,         Console::No  },
-            { "groupsummon",       HandleGroupSummonCommand,       SEC_GAME_MASTER,         Console::No  },
-            { "commands",          HandleCommandsCommand,          SEC_PLAYER,             Console::Yes },
-            { "die",               HandleDieCommand,               SEC_GAME_MASTER,         Console::No  },
-            { "revive",            HandleReviveCommand,            SEC_GAME_MASTER,         Console::Yes },
-            { "dismount",          HandleDismountCommand,          SEC_PLAYER,             Console::No  },
-            { "guid",              HandleGUIDCommand,              SEC_GAME_MASTER,         Console::No  },
-            { "help",              HandleHelpCommand,              SEC_PLAYER,             Console::Yes },
-            { "cooldown",          HandleCooldownCommand,          SEC_GAME_MASTER,         Console::No  },
-            { "distance",          HandleGetDistanceCommand,       SEC_ADMINISTRATOR,      Console::No  },
-            { "recall",            HandleRecallCommand,            SEC_GAME_MASTER,         Console::No  },
-            { "save",              HandleSaveCommand,              SEC_PLAYER,             Console::No  },
-            { "saveall",           HandleSaveAllCommand,           SEC_GAME_MASTER,         Console::Yes },
-            { "unstuck",           HandleUnstuckCommand,           SEC_GAME_MASTER,         Console::Yes },
-            { "linkgrave",         HandleLinkGraveCommand,         SEC_ADMINISTRATOR,      Console::No  },
-            { "neargrave",         HandleNearGraveCommand,         SEC_GAME_MASTER,         Console::No  },
-            { "showarea",          HandleShowAreaCommand,          SEC_GAME_MASTER,         Console::No  },
-            { "hidearea",          HandleHideAreaCommand,          SEC_ADMINISTRATOR,      Console::No  },
-            { "additem",           HandleAddItemCommand,           SEC_GAME_MASTER,         Console::Yes },
-            { "additem set",       HandleAddItemSetCommand,        SEC_GAME_MASTER,         Console::No  },
-            { "wchange",           HandleChangeWeather,            SEC_ADMINISTRATOR,      Console::No  },
-            { "maxskill",          HandleMaxSkillCommand,          SEC_GAME_MASTER,         Console::No  },
-            { "setskill",          HandleSetSkillCommand,          SEC_GAME_MASTER,         Console::No  },
-            { "respawn",           HandleRespawnCommand,           SEC_GAME_MASTER,         Console::No  },
-            { "respawn all",       HandleRespawnAllCommand,        SEC_GAME_MASTER,         Console::No  },
-            { "movegens",          HandleMovegensCommand,          SEC_ADMINISTRATOR,      Console::No  },
-            { "cometome",          HandleComeToMeCommand,          SEC_ADMINISTRATOR,      Console::No  },
-            { "damage",            HandleDamageCommand,            SEC_GAME_MASTER,         Console::No  },
-            { "combatstop",        HandleCombatStopCommand,        SEC_GAME_MASTER,         Console::Yes },
-            { "flusharenapoints",  HandleFlushArenaPointsCommand,  SEC_ADMINISTRATOR,      Console::Yes },
-            { "freeze",            HandleFreezeCommand,            SEC_GAME_MASTER,         Console::No  },
-            { "unfreeze",          HandleUnFreezeCommand,          SEC_GAME_MASTER,         Console::No  },
-            { "possess",           HandlePossessCommand,           SEC_GAME_MASTER,         Console::No  },
-            { "unpossess",         HandleUnPossessCommand,         SEC_GAME_MASTER,         Console::No  },
-            { "bindsight",         HandleBindSightCommand,         SEC_ADMINISTRATOR,      Console::No  },
-            { "unbindsight",       HandleUnbindSightCommand,       SEC_ADMINISTRATOR,      Console::No  },
-            { "playall",           HandlePlayAllCommand,           SEC_GAME_MASTER,         Console::No  },
-            { "skirmish",          HandleSkirmishCommand,          SEC_ADMINISTRATOR,      Console::No  },
-            { "mailbox",           HandleMailBoxCommand,           SEC_MODERATOR,          Console::No  },
-            { "string",            HandleStringCommand,            SEC_GAME_MASTER,         Console::No  },
-            { "opendoor",          HandleOpenDoorCommand,          SEC_GAME_MASTER,         Console::No  },
-            { "bm",                HandleBMCommand,                SEC_GAME_MASTER,         Console::No  },
-            { "packetlog",         HandlePacketLog,                SEC_GAME_MASTER,         Console::Yes }
+            { "commentator",       HandleCommentatorCommand,       SuperuserOnly::No  },
+            { "dev",               HandleDevCommand,               SuperuserOnly::Yes  },
+            { "gps",               HandleGPSCommand,               SuperuserOnly::No  },
+            { "aura",              auraCommandTable                                      },
+            { "unaura",            HandleUnAuraCommand,            SuperuserOnly::No  },
+            { "appear",            HandleAppearCommand,            SuperuserOnly::No  },
+            { "summon",            HandleSummonCommand,            SuperuserOnly::No  },
+            { "groupsummon",       HandleGroupSummonCommand,       SuperuserOnly::No  },
+            { "commands",          HandleCommandsCommand,          SuperuserOnly::No },
+            { "die",               HandleDieCommand,               SuperuserOnly::No  },
+            { "revive",            HandleReviveCommand,            SuperuserOnly::No },
+            { "dismount",          HandleDismountCommand,          SuperuserOnly::No  },
+            { "guid",              HandleGUIDCommand,              SuperuserOnly::No  },
+            { "help",              HandleHelpCommand,              SuperuserOnly::No },
+            { "cooldown",          HandleCooldownCommand,          SuperuserOnly::No  },
+            { "distance",          HandleGetDistanceCommand,       SuperuserOnly::Yes  },
+            { "recall",            HandleRecallCommand,            SuperuserOnly::No  },
+            { "save",              HandleSaveCommand,              SuperuserOnly::No  },
+            { "saveall",           HandleSaveAllCommand,           SuperuserOnly::No },
+            { "unstuck",           HandleUnstuckCommand,           SuperuserOnly::No },
+            { "linkgrave",         HandleLinkGraveCommand,         SuperuserOnly::Yes  },
+            { "neargrave",         HandleNearGraveCommand,         SuperuserOnly::No  },
+            { "showarea",          HandleShowAreaCommand,          SuperuserOnly::No  },
+            { "hidearea",          HandleHideAreaCommand,          SuperuserOnly::Yes  },
+            { "additem",           HandleAddItemCommand,           SuperuserOnly::No },
+            { "additem set",       HandleAddItemSetCommand,        SuperuserOnly::No  },
+            { "wchange",           HandleChangeWeather,            SuperuserOnly::Yes  },
+            { "maxskill",          HandleMaxSkillCommand,          SuperuserOnly::No  },
+            { "setskill",          HandleSetSkillCommand,          SuperuserOnly::No  },
+            { "respawn",           HandleRespawnCommand,           SuperuserOnly::No  },
+            { "respawn all",       HandleRespawnAllCommand,        SuperuserOnly::No  },
+            { "respawn creature guid",    HandleRespawnCreatureByGuidCommand,    SuperuserOnly::No },
+            { "respawn gameobject guid",  HandleRespawnGameObjectByGuidCommand,  SuperuserOnly::No },
+            { "respawn creature entry",   HandleRespawnCreatureByEntryCommand,   SuperuserOnly::No },
+            { "respawn gameobject entry", HandleRespawnGameObjectByEntryCommand, SuperuserOnly::No },
+            { "movegens",          HandleMovegensCommand,          SuperuserOnly::Yes  },
+            { "cometome",          HandleComeToMeCommand,          SuperuserOnly::Yes  },
+            { "damage",            HandleDamageCommand,            SuperuserOnly::No  },
+            { "combatstop",        HandleCombatStopCommand,        SuperuserOnly::No },
+            { "flusharenapoints",  HandleFlushArenaPointsCommand,  SuperuserOnly::Yes },
+            { "freeze",            HandleFreezeCommand,            SuperuserOnly::No  },
+            { "unfreeze",          HandleUnFreezeCommand,          SuperuserOnly::No  },
+            { "possess",           HandlePossessCommand,           SuperuserOnly::No  },
+            { "unpossess",         HandleUnPossessCommand,         SuperuserOnly::No  },
+            { "bindsight",         HandleBindSightCommand,         SuperuserOnly::Yes  },
+            { "unbindsight",       HandleUnbindSightCommand,       SuperuserOnly::Yes  },
+            { "playall",           HandlePlayAllCommand,           SuperuserOnly::No  },
+            { "skirmish",          HandleSkirmishCommand,          SuperuserOnly::Yes  },
+            { "mailbox",           HandleMailBoxCommand,           SuperuserOnly::No  },
+            { "string",            HandleStringCommand,            SuperuserOnly::No  },
+            { "opendoor",          HandleOpenDoorCommand,          SuperuserOnly::No  },
+            { "bm",                HandleBMCommand,                SuperuserOnly::No  },
+            { "packetlog",         HandlePacketLog,                SuperuserOnly::No }
         };
 
         return commandTable;
@@ -455,7 +461,7 @@ public:
 
         if (!enableArg)
         {
-            if (session->IsGameMaster() && session->GetPlayer()->IsCommentator())
+            if (session->IsStaff() && session->GetPlayer()->IsCommentator())
             {
                 SetCommentatorMod(true);
             }
@@ -498,7 +504,7 @@ public:
 
         if (!enableArg)
         {
-            if (session->IsGameMaster() && session->GetPlayer()->IsDeveloper())
+            if (session->IsStaff() && session->GetPlayer()->IsDeveloper())
             {
                 SetDevMod(true);
             }
@@ -938,7 +944,7 @@ public:
                 if (!sWorld->getBoolConfig(CONFIG_INSTANCE_GMSUMMON_PLAYER))
                 {
                     // pussywizard: prevent unbinding normal player's perm bind by just summoning him >_>
-                    if (!targetPlayer->GetSession()->IsGameMaster())
+                    if (!targetPlayer->GetSession()->IsStaff())
                     {
                         handler->SendErrorMessage("Only GMs can be summoned to an instance!");
                         return false;
@@ -1166,7 +1172,7 @@ public:
         {
             auto targetPlayer = target->GetConnectedPlayer();
             targetPlayer->RemoveAurasDueToSpell(27827); // Spirit of Redemption
-            targetPlayer->ResurrectPlayer(targetPlayer->GetSession()->IsGameMaster() ? 1.0f : 0.5f);
+            targetPlayer->ResurrectPlayer(targetPlayer->GetSession()->IsStaff() ? 1.0f : 0.5f);
             targetPlayer->SpawnCorpseBones();
             targetPlayer->SaveToDB(false, false);
         }
@@ -1329,7 +1335,8 @@ public:
         Player* player = handler->GetSession()->GetPlayer();
 
         // save GM account without delay and output message
-        if (handler->GetSession()->IsGameMaster())
+
+        if (handler->GetSession()->IsStaff())
         {
             if (Player* target = handler->getSelectedPlayer())
             {
@@ -1365,7 +1372,7 @@ public:
     static bool HandleUnstuckCommand(ChatHandler* handler, Optional<PlayerIdentifier> target, Optional<std::string_view> location)
     {
         // No args required for players
-        if (handler->GetSession() && !handler->GetSession()->IsGameMaster())
+        if (handler->GetSession() && !handler->GetSession()->IsStaff())
         {
             if (Player* player = handler->GetSession()->GetPlayer())
             {
@@ -1662,7 +1669,7 @@ public:
         if (count < 0)
         {
             // Only have scam check on player accounts
-            if (!playerTarget->GetSession()->IsGameMaster())
+            if (!playerTarget->GetSession()->IsStaff())
             {
                 if (!playerTarget->HasItemCount(itemId, 0))
                 {
@@ -1874,6 +1881,265 @@ public:
         return true;
     }
 
+    static bool HandleRespawnCreatureByGuidCommand(ChatHandler* handler, ObjectGuid::LowType spawnId)
+    {
+        CreatureData const* creData = sObjectMgr->GetCreatureData(spawnId);
+        if (!creData)
+        {
+            handler->SendErrorMessage(LANG_RESPAWN_GUID_CREATURE_NOT_FOUND, spawnId);
+            return false;
+        }
+
+        Map* map = nullptr;
+        if (handler->GetSession())
+        {
+            Player* player = handler->GetSession()->GetPlayer();
+            if (player->GetMapId() == creData->mapID)
+                map = player->GetMap();
+        }
+        if (!map)
+            map = sMapMgr->FindMap(creData->mapID, 0);
+
+        if (!map)
+        {
+            handler->PSendSysMessage(LANG_RESPAWN_GUID_MAP_NOT_LOADED, creData->mapID);
+            return true;
+        }
+
+        // First pass: check if any instance is alive
+        bool isAlive = false;
+        auto const creBounds = map->GetCreatureBySpawnIdStore().equal_range(spawnId);
+        for (auto itr = creBounds.first; itr != creBounds.second; ++itr)
+        {
+            if (itr->second->IsAlive())
+            {
+                isAlive = true;
+                break;
+            }
+        }
+
+        if (isAlive)
+        {
+            handler->PSendSysMessage(LANG_RESPAWN_GUID_CREATURE_ALIVE, spawnId, creData->id1);
+            return true;
+        }
+
+        // Second pass: respawn any dead corpses in the world
+        for (auto itr = creBounds.first; itr != creBounds.second; ++itr)
+        {
+            if (itr->second->isDead())
+                itr->second->Respawn(true);
+        }
+        // Also trigger via respawn time queue for fully-removed spawns
+        if (map->GetCreatureRespawnTime(spawnId) > 0)
+        {
+            time_t now = GameTime::GetGameTime().count();
+            map->SaveCreatureRespawnTime(spawnId, now);
+        }
+        handler->PSendSysMessage(LANG_RESPAWN_GUID_CREATURE_QUEUED, spawnId, creData->id1);
+        return true;
+    }
+
+    static bool HandleRespawnGameObjectByGuidCommand(ChatHandler* handler, ObjectGuid::LowType spawnId)
+    {
+        GameObjectData const* goData = sObjectMgr->GetGameObjectData(spawnId);
+        if (!goData)
+        {
+            handler->SendErrorMessage(LANG_RESPAWN_GUID_GAMEOBJECT_NOT_FOUND, spawnId);
+            return false;
+        }
+
+        Map* map = nullptr;
+        if (handler->GetSession())
+        {
+            Player* player = handler->GetSession()->GetPlayer();
+            if (player->GetMapId() == goData->mapID)
+                map = player->GetMap();
+        }
+        if (!map)
+            map = sMapMgr->FindMap(goData->mapID, 0);
+
+        if (!map)
+        {
+            handler->PSendSysMessage(LANG_RESPAWN_GUID_MAP_NOT_LOADED, goData->mapID);
+            return true;
+        }
+
+        // First pass: check if any instance is already active
+        bool isActive = false;
+        auto const goBounds = map->GetGameObjectBySpawnIdStore().equal_range(spawnId);
+        for (auto itr = goBounds.first; itr != goBounds.second; ++itr)
+        {
+            if (itr->second->isSpawned())
+            {
+                isActive = true;
+                break;
+            }
+        }
+
+        if (isActive)
+        {
+            handler->PSendSysMessage(LANG_RESPAWN_GUID_GAMEOBJECT_ACTIVE, spawnId, goData->id);
+            return true;
+        }
+
+        // Second pass: respawn inactive objects in the world
+        for (auto itr = goBounds.first; itr != goBounds.second; ++itr)
+            itr->second->Respawn();
+        // Also trigger via respawn time queue for fully-removed spawns
+        if (map->GetGORespawnTime(spawnId) > 0)
+        {
+            time_t now = GameTime::GetGameTime().count();
+            map->SaveGORespawnTime(spawnId, now);
+        }
+        handler->PSendSysMessage(LANG_RESPAWN_GUID_GAMEOBJECT_QUEUED, spawnId, goData->id);
+        return true;
+    }
+
+    static bool HandleRespawnCreatureByEntryCommand(ChatHandler* handler, uint32 entry, Optional<uint32> mapIdArg, Optional<uint32> instanceIdArg)
+    {
+        if (!sObjectMgr->GetCreatureTemplate(entry))
+        {
+            handler->SendErrorMessage(LANG_RESPAWN_ENTRY_CREATURE_NOT_FOUND, entry);
+            return false;
+        }
+
+        Map* map = nullptr;
+        if (handler->GetSession())
+        {
+            // In-game: always use the player's current map
+            map = handler->GetSession()->GetPlayer()->GetMap();
+        }
+        else
+        {
+            // Console: mapId required, instanceId optional
+            if (!mapIdArg)
+            {
+                handler->SendSysMessage(LANG_LIST_RESPAWNS_NO_MAP);
+                return false;
+            }
+            map = sMapMgr->FindMap(*mapIdArg, instanceIdArg.value_or(0));
+        }
+
+        if (!map)
+        {
+            handler->PSendSysMessage(LANG_RESPAWN_GUID_MAP_NOT_LOADED, mapIdArg.value_or(0));
+            return false;
+        }
+
+        time_t now = GameTime::GetGameTime().count();
+        uint32 count = 0;
+
+        // Phase 1: respawn dead corpses that are still tracked in the spawn-id store.
+        // Collect first to avoid iterator invalidation caused by Respawn().
+        std::vector<Creature*> deadCreatures;
+        for (auto const& [spawnId, creature] : map->GetCreatureBySpawnIdStore())
+        {
+            CreatureData const* data = sObjectMgr->GetCreatureData(spawnId);
+            if (!data || data->id1 != entry)
+                continue;
+            if (creature->isDead())
+                deadCreatures.push_back(creature);
+        }
+        for (Creature* creature : deadCreatures)
+        {
+            creature->Respawn(true);
+            ++count;
+        }
+
+        // Phase 2: set respawn time to now for fully-removed spawns, skipping pools
+        std::vector<ObjectGuid::LowType> toRespawn;
+        for (auto const& [spawnId, respawnTime] : map->GetCreatureRespawnTimes())
+        {
+            CreatureData const* data = sObjectMgr->GetCreatureData(spawnId);
+            if (!data || data->id1 != entry)
+                continue;
+            if (sPoolMgr->IsPartOfAPool<Creature>(spawnId))
+                continue;
+            toRespawn.push_back(spawnId);
+        }
+        for (ObjectGuid::LowType spawnId : toRespawn)
+        {
+            map->SaveCreatureRespawnTime(spawnId, now);
+            ++count;
+        }
+
+        handler->PSendSysMessage(LANG_RESPAWN_ENTRY_CREATURE_QUEUED, count, entry);
+        return true;
+    }
+
+    static bool HandleRespawnGameObjectByEntryCommand(ChatHandler* handler, uint32 entry, Optional<uint32> mapIdArg, Optional<uint32> instanceIdArg)
+    {
+        if (!sObjectMgr->GetGameObjectTemplate(entry))
+        {
+            handler->SendErrorMessage(LANG_RESPAWN_ENTRY_GAMEOBJECT_NOT_FOUND, entry);
+            return false;
+        }
+
+        Map* map = nullptr;
+        if (handler->GetSession())
+        {
+            // In-game: always use the player's current map
+            map = handler->GetSession()->GetPlayer()->GetMap();
+        }
+        else
+        {
+            // Console: mapId required, instanceId optional
+            if (!mapIdArg)
+            {
+                handler->SendSysMessage(LANG_LIST_RESPAWNS_NO_MAP);
+                return false;
+            }
+            map = sMapMgr->FindMap(*mapIdArg, instanceIdArg.value_or(0));
+        }
+
+        if (!map)
+        {
+            handler->PSendSysMessage(LANG_RESPAWN_GUID_MAP_NOT_LOADED, mapIdArg.value_or(0));
+            return false;
+        }
+
+        time_t now = GameTime::GetGameTime().count();
+        uint32 count = 0;
+
+        // Phase 1: respawn inactive objects that are still tracked in the spawn-id store.
+        // Collect first to avoid iterator invalidation caused by Respawn().
+        std::vector<GameObject*> inactiveGOs;
+        for (auto const& [spawnId, go] : map->GetGameObjectBySpawnIdStore())
+        {
+            GameObjectData const* data = sObjectMgr->GetGameObjectData(spawnId);
+            if (!data || data->id != entry)
+                continue;
+            if (!go->isSpawned())
+                inactiveGOs.push_back(go);
+        }
+        for (GameObject* go : inactiveGOs)
+        {
+            go->Respawn();
+            ++count;
+        }
+
+        // Phase 2: set respawn time to now for fully-removed spawns, skipping pools
+        std::vector<ObjectGuid::LowType> toRespawn;
+        for (auto const& [spawnId, respawnTime] : map->GetGORespawnTimes())
+        {
+            GameObjectData const* data = sObjectMgr->GetGameObjectData(spawnId);
+            if (!data || data->id != entry)
+                continue;
+            if (sPoolMgr->IsPartOfAPool<GameObject>(spawnId))
+                continue;
+            toRespawn.push_back(spawnId);
+        }
+        for (ObjectGuid::LowType spawnId : toRespawn)
+        {
+            map->SaveGORespawnTime(spawnId, now);
+            ++count;
+        }
+
+        handler->PSendSysMessage(LANG_RESPAWN_ENTRY_GAMEOBJECT_QUEUED, count, entry);
+        return true;
+    }
+
     static bool HandleRespawnCommand(ChatHandler* handler)
     {
         Player* player = handler->GetSession()->GetPlayer();
@@ -1902,9 +2168,51 @@ public:
     {
         Player* player = handler->GetSession()->GetPlayer();
 
+        // Phase 1: respawn creatures/GOs that still have corpses in the grid
         Acore::RespawnDo u_do;
         Acore::WorldObjectWorker<Acore::RespawnDo> worker(player, u_do);
         Cell::VisitObjects(player, worker, player->GetGridActivationRange());
+
+        // Phase 2: force-respawn creatures/GOs that were fully removed (non-compat mode)
+        // by setting their respawn times to now so ProcessRespawns() picks them up
+        Map* map = player->GetMap();
+        uint32 gridId = Acore::ComputeGridCoord(player->GetPositionX(), player->GetPositionY()).GetId();
+        time_t now = GameTime::GetGameTime().count();
+
+        std::vector<ObjectGuid::LowType> creaturesToRespawn;
+        for (auto const& pair : map->GetCreatureRespawnTimes())
+        {
+            CreatureData const* data = sObjectMgr->GetCreatureData(pair.first);
+            if (!data || Acore::ComputeGridCoord(data->posX, data->posY).GetId() != gridId)
+                continue;
+
+            // Skip pooled spawns — Phase 1 already triggered pool rotation via
+            // Creature::Respawn() -> PoolMgr::UpdatePool(). Forcing a respawn time
+            // here would cause ProcessRespawns() to call UpdatePool() again,
+            // spawning duplicates beyond the pool's max_limit.
+            if (sPoolMgr->IsPartOfAPool<Creature>(pair.first))
+                continue;
+
+            creaturesToRespawn.push_back(pair.first);
+        }
+        for (ObjectGuid::LowType spawnId : creaturesToRespawn)
+            map->SaveCreatureRespawnTime(spawnId, now);
+
+        std::vector<ObjectGuid::LowType> goesToRespawn;
+        for (auto const& pair : map->GetGORespawnTimes())
+        {
+            GameObjectData const* data = sObjectMgr->GetGameObjectData(pair.first);
+            if (!data || Acore::ComputeGridCoord(data->posX, data->posY).GetId() != gridId)
+                continue;
+
+            // Skip pooled spawns — same reason as creatures above.
+            if (sPoolMgr->IsPartOfAPool<GameObject>(pair.first))
+                continue;
+
+            goesToRespawn.push_back(pair.first);
+        }
+        for (ObjectGuid::LowType spawnId : goesToRespawn)
+            map->SaveGORespawnTime(spawnId, now);
 
         return true;
     }
@@ -2317,7 +2625,7 @@ public:
 
         if (!enableArg)
         {
-            if (session->IsGameMaster() && session->GetPlayer()->IsDeveloper())
+            if (session->IsStaff() && session->GetPlayer()->IsDeveloper())
                 SetBMMod(true);
             else
                 SetBMMod(false);

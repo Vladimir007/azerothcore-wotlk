@@ -8,6 +8,8 @@
 #include <boost/asio/ip/tcp.hpp>
 #include <functional>
 
+#include "IoContext.h"
+
 using boost::asio::ip::tcp;
 
 constexpr auto NCORE_MAX_LISTEN_CONNECTIONS = boost::asio::socket_base::max_listen_connections;

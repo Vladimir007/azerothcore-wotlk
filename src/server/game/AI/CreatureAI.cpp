@@ -60,9 +60,9 @@ AISpellInfoType* GetAISpellInfo(uint32 i) { return &CreatureAI::AISpellInfo[i]; 
 /**
  * @brief Causes the creature to talk/say the text assigned to their entry in the `creature_text` database table.
  *
- * @param uint8 id Text ID from `creature_text`.
- * @param WorldObject target The target of the speech, in case it has elements such as $n, where the target's name will be referrenced.
- * @param Milliseconds delay Delay until the creature says the text line. Creatures will talk immediately by default.
+ * @param id Text ID from `creature_text`.
+ * @param target The target of the speech, in case it has elements such as $n, where the target's name will be referrenced.
+ * @param delay Delay until the creature says the text line. Creatures will talk immediately by default.
  */
 void CreatureAI::Talk(uint8 id, WorldObject const* target /*= nullptr*/, Milliseconds delay /*= 0ms*/)
 {
@@ -309,12 +309,9 @@ void CreatureAI::EngagementOver()
 
 void CreatureAI::JustExitedCombat()
 {
-    EngagementOver();
-
-    // If creature is alive, in world, and not already evading, trigger evade to return home
-    // Check IsInWorld to avoid evade during server shutdown/cleanup
-    if (me->IsAlive() && me->IsInWorld() && !me->IsInEvadeMode())
-        EnterEvadeMode(EVADE_REASON_NO_HOSTILES);
+    // No-op: synchronous EnterEvadeMode cascades via MemberEvaded and frees
+    // refs held by upstream iterators (StopAttackFaction crash). EngagementOver
+    // here also resets scripted fights on brief combat gaps (Valithria).
 }
 
 /*void CreatureAI::AttackedBy(Unit* attacker)
@@ -360,6 +357,10 @@ bool CreatureAI::UpdateVictim()
         EngagementOver();
         return false;
     }
+
+    // Charmed creatures: the charmer controls target selection, don't interfere
+    if (me->IsCharmed())
+        return me->GetVictim() != nullptr;
 
     if (!me->HasReactState(REACT_PASSIVE))
     {

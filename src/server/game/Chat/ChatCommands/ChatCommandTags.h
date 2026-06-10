@@ -143,22 +143,26 @@ namespace Acore::ChatCommands
         AC_GAME_API ChatCommandResult TryConsume(ChatHandler const* handler, std::string_view args);
     };
 
-    struct AC_GAME_API AccountIdentifier : Acore::Impl::ChatCommands::ContainerTag
+    inline std::string_view format_as(QuotedString const& qs)
+    {
+        return std::string_view(qs);
+    }
+
+    struct AccountIdentifier : Acore::Impl::ChatCommands::ContainerTag
     {
         using value_type = uint32;
 
         operator uint32() const { return _id; }
         operator std::string const& () const { return _name; }
-        operator std::string_view() const { return { _name }; }
+        operator std::string_view() const { return _name; }
 
         uint32 GetID() const { return _id; }
         std::string const& GetName() const { return _name; }
 
         ChatCommandResult TryConsume(ChatHandler const* handler, std::string_view args);
 
-        private:
-            uint32 _id;
-            std::string _name;
+        uint32 _id;
+        std::string _name;
     };
 
     struct AC_GAME_API PlayerIdentifier : Acore::Impl::ChatCommands::ContainerTag

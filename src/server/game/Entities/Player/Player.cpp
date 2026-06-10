@@ -175,7 +175,7 @@ Player::Player(WorldSession* session): Unit(), m_mover(this), _cinematicMgr(*thi
     //m_pad = 0;
 
     // players always accept
-    if (!GetSession()->IsGameMaster())
+    if (!GetSession()->IsStaff())
         SetAcceptWhispers(true);
 
     m_usedTalentCount = 0;
@@ -809,7 +809,7 @@ int32 Player::getMaxTimer(MirrorTimerType timer)
             return MINUTE * IN_MILLISECONDS;
         case BREATH_TIMER:
             {
-                if (!IsAlive() || HasWaterBreathingAura() || GetSession()->IsGameMaster())
+                if (!IsAlive() || HasWaterBreathingAura() || GetSession()->IsStaff())
                     return DISABLED_MIRROR_TIMER;
                 int32 UnderWaterTime = sWorld->getIntConfig(CONFIG_WATER_BREATH_TIMER);
                 UnderWaterTime *= GetTotalAuraMultiplier(SPELL_AURA_MOD_WATER_BREATHING);
@@ -1284,7 +1284,7 @@ void Player::ToggleAFK()
     ToggleFlag(PLAYER_FLAGS, PLAYER_FLAGS_AFK);
 
     // afk player not allowed in battleground
-    if (!IsGameMaster() && isAFK() && InBattleground())
+    if (!IsGameMaster() && isAFK() && InBattleground() && !InArena())
         LeaveBattleground();
 }
 
@@ -1330,7 +1330,7 @@ bool Player::TeleportTo(uint32 mapid, float x, float y, float z, float orientati
         return false;
     }
 
-    if (!GetSession()->IsGameMaster() && sDisableMgr->IsDisabledFor(DISABLE_TYPE_MAP, mapid, this))
+    if (!GetSession()->IsStaff() && sDisableMgr->IsDisabledFor(DISABLE_TYPE_MAP, mapid, this))
     {
         LOG_ERROR("entities.player", "Player ({}, name: {}) tried to enter a forbidden map {}", GetGUID().ToString(), GetName(), mapid);
         SendTransferAborted(mapid, TRANSFER_ABORT_MAP_NOT_ALLOWED);
@@ -2154,19 +2154,24 @@ bool Player::IsInAreaTriggerRadius(AreaTrigger const* trigger, float delta) cons
     return true;
 }
 
+bool Player::CanBeGameMaster() const
+{
+    return GetSession()->IsStaff();
+}
+
 void Player::SetGameMaster(bool on)
 {
     if (on)
     {
         m_ExtraFlags |= PLAYER_EXTRA_GM_ON;
-        if (GetSession()->IsGameMaster())
+        if (GetSession()->IsStaff())
             SetFaction(FACTION_FRIENDLY);
         SetPlayerFlag(PLAYER_FLAGS_GM);
         SetUnitFlag2(UNIT_FLAG2_ALLOW_CHEAT_SPELLS);
 
         if (Pet* pet = GetPet())
         {
-            if (GetSession()->IsGameMaster())
+            if (GetSession()->IsStaff())
                 pet->SetFaction(FACTION_FRIENDLY);
         }
         if (HasByteFlag(UNIT_FIELD_BYTES_2, 1, UNIT_BYTE2_FLAG_FFA_PVP))
@@ -2179,7 +2184,7 @@ void Player::SetGameMaster(bool on)
         CombatStopWithPets();
 
         SetPhaseMask(uint32(PHASEMASK_ANYWHERE), false);    // see and visible in all phases
-        auto secLevel = GetSession()->IsGameMaster() ? SEC_GAME_MASTER : SEC_PLAYER;
+        auto secLevel = GetSession()->IsStaff() ? SEC_GAME_MASTER : SEC_PLAYER;
         SetServerSideVisibilityDetect(SERVERSIDE_VISIBILITY_GM, secLevel);
     }
     else
@@ -2224,7 +2229,7 @@ void Player::SetGMVisible(bool on)
     {
         AddAura(VISUAL_AURA, this);
         m_ExtraFlags |= PLAYER_EXTRA_GM_INVISIBLE;
-        auto secLevel = GetSession()->IsGameMaster() ? SEC_GAME_MASTER : SEC_PLAYER;
+        auto secLevel = GetSession()->IsStaff() ? SEC_GAME_MASTER : SEC_PLAYER;
         SetServerSideVisibility(SERVERSIDE_VISIBILITY_GM, secLevel);
     }
 }
@@ -2328,6 +2333,7 @@ void Player::GiveXP(uint32 xp, Unit* victim, float group_rate, bool isLFGReward)
     }
 
     uint8 level = GetLevel();
+    sScriptMgr->OnPlayerBeforeGetLevelForXPGain(this, level);
 
     // Favored experience increase START
     uint32 zone = GetZoneId();
@@ -2480,10 +2486,15 @@ void Player::InitTalentForLevel()
 {
     uint32 talentPointsForLevel = CalculateTalentsPoints();
 
-    // xinef: more talent points that we have are used, reset
+    // if used more than have then reset
     if (m_usedTalentCount > talentPointsForLevel)
-        resetTalents(true);
-    // xinef: else, recalculate free talent points count
+    {
+        if (!GetSession()->IsStaff())
+            resetTalents(true);
+        else
+            SetFreeTalentPoints(0);
+    }
+    // else update amount of free points
     else
         SetFreeTalentPoints(talentPointsForLevel - m_usedTalentCount);
 
@@ -5296,6 +5307,7 @@ void Player::SetSkill(uint16 id, uint16 step, uint16 newVal, uint16 maxVal)
                 RemoveAurasDueToSpell(pAbility->Spell);
             }
         }
+        sScriptMgr->OnPlayerSetSkill(this, id, currVal, maxVal, step, newVal);
     }
     else if (newVal)                                        //add
     {
@@ -5341,6 +5353,7 @@ void Player::SetSkill(uint16 id, uint16 step, uint16 newVal, uint16 maxVal)
                 learnSkillRewardedSpells(id, newVal);
                 UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_REACH_SKILL_LEVEL, id);
                 UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_LEARN_SKILL_LEVEL, id);
+                sScriptMgr->OnPlayerSetSkill(this, id, currVal, maxVal, step, newVal);
                 return;
             }
     }
@@ -5707,17 +5720,20 @@ void Player::CheckAreaExploreAndOutdoor()
 
         if (areaEntry->AreaLevel > 0)
         {
-            if (GetLevel() >= sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL))
+            uint8 playerLevel = GetLevel();
+            sScriptMgr->OnPlayerBeforeGetLevelForXPGain(this, playerLevel);
+
+            if (playerLevel >= sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL))
             {
                 SendExplorationExperience(areaId, 0);
             }
             else
             {
-                int32 diff = int32(GetLevel()) - areaEntry->AreaLevel;
+                int32 diff = int32(playerLevel) - areaEntry->AreaLevel;
                 uint32 XP = 0;
                 if (diff < -5)
                 {
-                    XP = uint32(sObjectMgr->GetBaseXP(GetLevel() + 5) * sWorld->getRate(RATE_XP_EXPLORE));
+                    XP = uint32(sObjectMgr->GetBaseXP(playerLevel + 5) * sWorld->getRate(RATE_XP_EXPLORE));
                 }
                 else if (diff > 5)
                 {
@@ -9295,6 +9311,12 @@ void Player::Say(std::string_view text, Language language, WorldObject const* /*
     if (!sScriptMgr->OnPlayerCanUseChat(this, CHAT_MSG_SAY, language, _text))
         return;
 
+    if (sWorld->getBoolConfig(CONFIG_CHAT_FILTER_SAY) && IsChatFiltered(text))
+    {
+        ChatHandler(GetSession()).SendSysMessage(LANG_CHATFILTER_SAY);
+        return;
+    }
+
     WorldPacket data;
     ChatHandler::BuildChatPacket(data, CHAT_MSG_SAY, language, this, this, _text);
 
@@ -9316,6 +9338,12 @@ void Player::Yell(std::string_view text, Language language, WorldObject const* /
 
     if (!sScriptMgr->OnPlayerCanUseChat(this, CHAT_MSG_YELL, language, _text))
         return;
+
+    if (sWorld->getBoolConfig(CONFIG_CHAT_FILTER_YELL) && IsChatFiltered(text))
+    {
+        ChatHandler(GetSession()).SendSysMessage(LANG_CHATFILTER_YELL);
+        return;
+    }
 
     WorldPacket data;
     ChatHandler::BuildChatPacket(data, CHAT_MSG_YELL, language, this, this, _text);
@@ -9339,13 +9367,19 @@ void Player::TextEmote(std::string_view text, WorldObject const* /*= nullptr*/, 
     if (!sScriptMgr->OnPlayerCanUseChat(this, CHAT_MSG_EMOTE, LANG_UNIVERSAL, _text))
         return;
 
+    if (sWorld->getBoolConfig(CONFIG_CHAT_FILTER_EMOTE) && IsChatFiltered(text))
+    {
+        ChatHandler(GetSession()).SendSysMessage(LANG_CHATFILTER_EMOTE);
+        return;
+    }
+
     WorldPacket data;
     ChatHandler::BuildChatPacket(data, CHAT_MSG_EMOTE, LANG_UNIVERSAL, this, this, _text);
 
     SendDirectMessage(&data);
 
     // Special handling for messages, do not use visibility map for stealthed units
-    Acore::MessageDistDeliverer notifier(this, &data, sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE), !sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_EMOTE), nullptr, true);
+    Acore::MessageDistDeliverer notifier(this, &data, sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE), !GetSession()->IsStaff(), nullptr, true);
     Cell::VisitObjects(this, notifier, sWorld->getFloatConfig(CONFIG_LISTEN_RANGE_TEXTEMOTE));
 }
 
@@ -9368,15 +9402,24 @@ void Player::Whisper(std::string_view text, Language language, Player* target, b
     if (!sScriptMgr->OnPlayerCanUseChat(this, CHAT_MSG_WHISPER, language, _text, target))
         return;
 
+    bool isFiltered = sWorld->getBoolConfig(CONFIG_CHAT_FILTER_WHISPER) && IsChatFiltered(text);
+
     WorldPacket data;
-    ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER, language, this, this, _text);
-    target->SendDirectMessage(&data);
+    if (!isFiltered || isAddonMessage)
+    {
+        ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER, language, this, this, _text);
+        target->SendDirectMessage(&data);
+    }
 
     // rest stuff shouldn't happen in case of addon message
     if (isAddonMessage)
         return;
 
-    ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER_INFORM, Language(language), target, target, _text);
+    ChatMsg msgType = CHAT_MSG_WHISPER_INFORM;
+    if (isFiltered)
+        msgType = CHAT_MSG_FILTERED;
+
+    ChatHandler::BuildChatPacket(data, msgType, Language(language), target, target, _text);
     SendDirectMessage(&data);
 
     if (!isAcceptWhispers() && !IsGameMaster() && !target->IsGameMaster())
@@ -9415,6 +9458,11 @@ void Player::Whisper(uint32 textId, Player* target, bool isBossWhisper)
     else
         ChatHandler::BuildChatPacket(data, CHAT_MSG_WHISPER, LANG_UNIVERSAL, this, target, bct->GetText(getGender()));
     target->SendDirectMessage(&data);
+}
+
+bool Player::IsChatFiltered(std::string_view text)
+{
+    return sObjectMgr->IsChatFiltered(text);
 }
 
 void Player::PetSpellInitialize()
@@ -10305,24 +10353,39 @@ void Player::ContinueTaxiFlight()
 
     TaxiPathNodeList const& nodeList = sTaxiPathNodesByPath[path];
 
-    float bestDist = SIZE_OF_GRIDS * SIZE_OF_GRIDS; // xinef: large value
-    float currDist = 0.0f;
+    // Use triangle inequality to find the segment the player is on.
+    // When distPrev + distNext < distNodes, the player projects between
+    // the two nodes of the segment. Resume from the end node (i).
+    float distPrev;
+    float distNext =
+        (nodeList[0]->X - GetPositionX()) * (nodeList[0]->X - GetPositionX()) +
+        (nodeList[0]->Y - GetPositionY()) * (nodeList[0]->Y - GetPositionY()) +
+        (nodeList[0]->Z - GetPositionZ()) * (nodeList[0]->Z - GetPositionZ());
 
-    // xinef: changed to -1, we dont want to catch last node
-    for (uint32 i = 0; i < nodeList.size() - 1; ++i)
+    for (uint32 i = 1; i < nodeList.size(); ++i)
     {
         TaxiPathNodeEntry const* node = nodeList[i];
-        TaxiPathNodeEntry const* nextNode = nodeList[i + 1];
+        TaxiPathNodeEntry const* prevNode = nodeList[i - 1];
 
-        // xinef: skip nodes at another map, get last valid node on current map
-        if (nextNode->MapID != GetMapId() || node->MapID != GetMapId())
+        // skip nodes at another map
+        if (node->MapID != GetMapId())
             continue;
 
-        currDist = (node->X - GetPositionX()) * (node->X - GetPositionX()) + (node->Y - GetPositionY()) * (node->Y - GetPositionY()) + (node->Z - GetPositionZ()) * (node->Z - GetPositionZ());
-        if (currDist < bestDist)
+        distPrev = distNext;
+        distNext =
+            (node->X - GetPositionX()) * (node->X - GetPositionX()) +
+            (node->Y - GetPositionY()) * (node->Y - GetPositionY()) +
+            (node->Z - GetPositionZ()) * (node->Z - GetPositionZ());
+
+        float distNodes =
+            (node->X - prevNode->X) * (node->X - prevNode->X) +
+            (node->Y - prevNode->Y) * (node->Y - prevNode->Y) +
+            (node->Z - prevNode->Z) * (node->Z - prevNode->Z);
+
+        if (distPrev + distNext < distNodes)
         {
             startNode = i;
-            bestDist = currDist;
+            break;
         }
     }
 
@@ -11190,12 +11253,11 @@ void Player::LeaveBattleground(Battleground* bg)
     TeleportToEntryPoint();
 }
 
-bool Player::CanJoinToBattleground() const
+bool Player::CanJoinToBattleground(Battleground const* bg) const
 {
-    // check Deserter debuff
+    // Check Deserter debuff
     if (HasAura(26013))
         return false;
-
     return true;
 }
 
@@ -11322,7 +11384,7 @@ bool Player::IsVisibleGloballyFor(Player const* u) const
         return true;
 
     // GMs are visible for higher gms (or players are visible for gms)
-    if (u->GetSession()->IsGameMaster())
+    if (u->GetSession()->IsStaff())
         return true;
 
     if (!sScriptMgr->OnPlayerNotVisibleGloballyFor(const_cast<Player*>(this), u))
@@ -12448,8 +12510,7 @@ bool Player::HasItemFitToSpellRequirements(SpellInfo const* spellInfo, Item cons
                             return true;
 
                     // Keep active non-passive auras (e.g. Shield Wall) when disarmed
-                    Item* offhand = GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND);
-                    if (!spellInfo->IsPassive() && offhand && offhand != ignoreItem)
+                    if (!spellInfo->IsPassive() && HasAuraType(SPELL_AURA_MOD_DISARM_OFFHAND) && GetItemByPos(INVENTORY_SLOT_BAG_0, EQUIPMENT_SLOT_OFFHAND))
                     {
                         for (uint8 i = 0; i < MAX_SPELL_EFFECTS; ++i)
                             if (spellInfo->Effects[i].IsAura())
@@ -12610,7 +12671,9 @@ void Player::RewardPlayerAndGroupAtEvent(uint32 creature_id, WorldObject* pRewar
     if (!pRewardSource)
         return;
 
-    ObjectGuid creature_guid = (pRewardSource->IsCreature()) ? pRewardSource->GetGUID() : ObjectGuid::Empty;
+    ObjectGuid creature_guid;
+    if (pRewardSource->IsCreature() && pRewardSource->GetEntry() == creature_id)
+        creature_guid = pRewardSource->GetGUID();
 
     // prepare data for near group iteration
     if (Group* group = GetGroup())
@@ -12932,6 +12995,11 @@ PartyResult Player::CanUninviteFromGroup(ObjectGuid targetPlayerGUID) const
 
         if (InBattleground())
             return ERR_INVITE_RESTRICTED;
+
+        // BF raids are owned by the Battlefield system; leaders/assistants must not
+        // be able to kick members (would drop their team assignment mid-battle).
+        if (grp->isBFGroup())
+            return ERR_NOT_LEADER;
     }
 
     return ERR_PARTY_RESULT_OK;
@@ -13138,7 +13206,7 @@ uint32 Player::GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 n
     uint8 facialhair = GetByteValue(PLAYER_BYTES_2, 0);
     uint8 skincolor = GetByteValue(PLAYER_BYTES, 0);
 
-    if ((hairstyle == newhairstyle) && (haircolor == newhaircolor) && (facialhair == newfacialhair) && (!newSkin || (newSkin->hair_id == skincolor)))
+    if ((hairstyle == newhairstyle) && (haircolor == newhaircolor) && (facialhair == newfacialhair) && (!newSkin || (newSkin->HairID == skincolor)))
         return 0;
 
     GtBarberShopCostBaseEntry const* bsc = sGtBarberShopCostBaseStore.LookupEntry(level);
@@ -13157,7 +13225,7 @@ uint32 Player::GetBarberShopCost(uint8 newhairstyle, uint8 newhaircolor, uint8 n
     if (facialhair != newfacialhair)
         cost += bsc->Cost * 0.75f;                          // +3/4 of price
 
-    if (newSkin && skincolor != newSkin->hair_id)
+    if (newSkin && skincolor != newSkin->HairID)
         cost += bsc->Cost * 0.75f;                          // +5/6 of price
 
     return uint32(cost);
@@ -13729,29 +13797,33 @@ InventoryResult Player::CanEquipUniqueItem(ItemTemplate const* itemProto, uint8 
     return EQUIP_ERR_OK;
 }
 
+static constexpr float   FALL_DMG_EQU_SLOPE         = 0.018f;
+static constexpr float   FALL_DMG_EQU_INTERCEPT     = -0.2426f;
+static constexpr float   MIN_FALL_DMG_DIST          = 13.48f;       // Minimum fall distance that deals damage
+// 13.48 can be calculated by resolving damageperc to 0 in the fall damage equation below, and assuming safe_fall reduction = 0
+
+static constexpr uint32  SPELL_GUST_OF_WIND         = 43621;
+static constexpr uint32  SPELL_DIVINE_PROTECTION    = 498;
+
 void Player::HandleFall(MovementInfo const& movementInfo)
 {
     // calculate total z distance of the fall
     float z_diff = m_lastFallZ - movementInfo.pos.GetPositionZ();
 
     //Players with low fall distance, Feather Fall or physical immunity (charges used) are ignored
-    // 14.57 can be calculated by resolving damageperc formula below to 0
-    if (z_diff >= 14.57f && !isDead() && !IsGameMaster() && !GetCommandStatus(CHEAT_GOD) &&
+    if (z_diff >= MIN_FALL_DMG_DIST && !isDead() && !IsGameMaster() && !GetCommandStatus(CHEAT_GOD) &&
             !HasHoverAura() && !HasFeatherFallAura() &&
             !HasFlyAura())
     {
         //Safe fall, fall height reduction
         int32 safe_fall = GetTotalAuraModifier(SPELL_AURA_SAFE_FALL);
 
-        float damageperc = 0.018f * (z_diff - safe_fall) - 0.2426f;
+        float damageperc = FALL_DMG_EQU_SLOPE * (z_diff - safe_fall) + FALL_DMG_EQU_INTERCEPT;
         uint32 original_health = GetHealth(), final_damage = 0;
 
         if (damageperc > 0 && !IsImmunedToDamageOrSchool(SPELL_SCHOOL_MASK_NORMAL))
         {
             uint32 damage = (uint32)(damageperc * GetMaxHealth() * sWorld->getRate(RATE_DAMAGE_FALL));
-
-            //float height = movementInfo.pos.m_positionZ;
-            //UpdateGroundPositionZ(movementInfo.pos.m_positionX, movementInfo.pos.m_positionY, height);
 
             if (damage > 0)
             {
@@ -13759,15 +13831,11 @@ void Player::HandleFall(MovementInfo const& movementInfo)
                 if (damage > GetMaxHealth())
                     damage = GetMaxHealth();
 
-                // Gust of Wind
-                if (HasAura(43621))
+                if (HasAura(SPELL_GUST_OF_WIND))
                     damage = GetMaxHealth() / 2;
 
-                // Divine Protection
-                if (HasAura(498))
-                {
+                if (HasAura(SPELL_DIVINE_PROTECTION))
                     damage /= 2;
-                }
 
                 final_damage = EnvironmentalDamage(DAMAGE_FALL, damage);
             }
@@ -14167,7 +14235,7 @@ bool Player::CanSeeSpellClickOn(Creature const* c) const
 
     SpellClickInfoMapBounds clickPair = sObjectMgr->GetSpellClickInfoMapBounds(c->GetEntry());
     if (clickPair.first == clickPair.second)
-        return true;
+        return false;
 
     for (SpellClickInfoContainer::const_iterator itr = clickPair.first; itr != clickPair.second; ++itr)
     {
@@ -14181,6 +14249,16 @@ bool Player::CanSeeSpellClickOn(Creature const* c) const
     }
 
     return false;
+}
+
+bool Player::CanSeeObjectByVisibilityConditions(WorldObject const* object) const
+{
+    if (IsGameMaster())
+        return true;
+
+    ConditionList conds = sConditionMgr->GetConditionsForObjectVisibility(object);
+    ConditionSourceInfo info = ConditionSourceInfo(const_cast<Player*>(this), const_cast<WorldObject*>(object));
+    return sConditionMgr->IsObjectMeetToConditions(info, conds);
 }
 
 /**
@@ -15230,6 +15308,15 @@ void Player::ActivateSpec(uint8 spec)
         }
         else
             ++iter;
+    }
+
+    // Recheck shapeshift bonus auras: drop and re-apply form-tied passives
+    // so buffs from talents missing in the new spec (e.g. Master Shapeshifter) go away
+    Unit::AuraEffectList const& shapeshiftAuras = GetAuraEffectsByType(SPELL_AURA_MOD_SHAPESHIFT);
+    for (AuraEffect* aurEff : shapeshiftAuras)
+    {
+        aurEff->HandleShapeshiftBoosts(this, false);
+        aurEff->HandleShapeshiftBoosts(this, true);
     }
 
     sScriptMgr->OnPlayerAfterSpecSlotChanged(this, GetActiveSpec());

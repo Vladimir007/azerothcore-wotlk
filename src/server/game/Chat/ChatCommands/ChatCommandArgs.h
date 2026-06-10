@@ -25,6 +25,7 @@
 #include "StringFormat.h"
 #include "Util.h"
 #include <map>
+#include <math.h>
 #include <string>
 #include <string_view>
 
@@ -243,7 +244,7 @@ namespace Acore::Impl::ChatCommands
         {
             ChatCommandResult next = args;
             for (T& t : val)
-                if (!(next = ArgInfo<T>::TryConsume(t, handler, *next)))
+                if (!((next = ArgInfo<T>::TryConsume(t, handler, *next))))
                     break;
             return next;
         }
@@ -264,18 +265,15 @@ namespace Acore::Impl::ChatCommands
                 ChatCommandResult thisResult = ArgInfo<std::variant_alternative_t<I, V>>::TryConsume(val.template emplace<I>(), handler, args);
                 if (thisResult)
                     return thisResult;
-                else
-                {
-                    ChatCommandResult nestedResult = TryAtIndex<I + 1>(val, handler, args);
-                    if (nestedResult || !thisResult.HasErrorMessage())
-                        return nestedResult;
-                    if (!nestedResult.HasErrorMessage())
-                        return thisResult;
-                    if (StringStartsWith(nestedResult.GetErrorMessage(), "\""))
-                        return Acore::StringFormat("\"{}\"\n{} {}", thisResult.GetErrorMessage(), GetNcoreString(handler, LANG_CMDPARSER_OR), nestedResult.GetErrorMessage());
-                    else
-                        return Acore::StringFormat("\"{}\"\n{} \"{}\"", thisResult.GetErrorMessage(), GetNcoreString(handler, LANG_CMDPARSER_OR), nestedResult.GetErrorMessage());
-                }
+
+                ChatCommandResult nestedResult = TryAtIndex<I + 1>(val, handler, args);
+                if (nestedResult || !thisResult.HasErrorMessage())
+                    return nestedResult;
+                if (!nestedResult.HasErrorMessage())
+                    return thisResult;
+                if (StringStartsWith(nestedResult.GetErrorMessage(), "\""))
+                    return Acore::StringFormat("\"{}\"\n{} {}", thisResult.GetErrorMessage(), GetNcoreString(handler, LANG_CMDPARSER_OR), nestedResult.GetErrorMessage());
+                return Acore::StringFormat("\"{}\"\n{} \"{}\"", thisResult.GetErrorMessage(), GetNcoreString(handler, LANG_CMDPARSER_OR), nestedResult.GetErrorMessage());
             }
             else
                 return std::nullopt;

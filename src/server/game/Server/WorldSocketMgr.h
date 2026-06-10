@@ -34,12 +34,12 @@ public:
         return instance;
     }
 
-    bool StartNetwork(Acore::Asio::IoContext& ioContext, std::string const& bindIp, uint16 port) override
+    bool StartNetwork(Acore::Asio::IoContext& ioContext, const std::string& bindIp, const uint16 port) override
     {
         if (!BaseSocketMgr::StartNetwork(ioContext, bindIp, port))
             return false;
         _acceptor->AsyncAcceptWithCallback<&WorldSocketMgr::OnSocketAccept>();
-        sScriptMgr->OnNetworkStart();
+        sScriptMgr->OnNetworkStart(ioContext);
         return true;
     }
 

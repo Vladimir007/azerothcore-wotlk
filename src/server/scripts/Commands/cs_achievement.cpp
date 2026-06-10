@@ -32,8 +32,8 @@ public:
     {
         static ChatCommandTable achievementCommandTable =
         {
-            { "add",      HandleAchievementAddCommand,      SEC_GAME_MASTER,    Console::Yes },
-            { "checkall", HandleAchievementCheckAllCommand, SEC_ADMINISTRATOR, Console::Yes }
+            { "add",      HandleAchievementAddCommand,     SuperuserOnly::No },
+            { "checkall", HandleAchievementCheckAllCommand, SuperuserOnly::Yes }
         };
         static ChatCommandTable commandTable =
         {
@@ -88,7 +88,7 @@ public:
         else
         {
             auto* stmt = CharacterDatabase.GetPreparedStatement(CHAR_UPD_ADD_AT_LOGIN_FLAG);
-            stmt->SetData(0, uint16(AT_LOGIN_CHECK_ACHIEVS));
+            stmt->SetData(0, static_cast<uint16>(AT_LOGIN_CHECK_ACHIEVS));
             stmt->SetData(1, player->GetGUID().GetCounter());
             CharacterDatabase.Execute(stmt);
         }

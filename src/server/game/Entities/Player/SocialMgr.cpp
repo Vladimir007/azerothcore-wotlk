@@ -220,7 +220,7 @@ void SocialMgr::GetFriendInfo(Player* player, ObjectGuid const& friendGUID, Frie
     friendInfo.Class = 0;
 
     Player* pFriend = ObjectAccessor::FindConnectedPlayer(friendGUID);
-    if (!pFriend || pFriend->GetSession()->IsGameMaster())
+    if (!pFriend || pFriend->GetSession()->IsStaff())
         return;
 
     auto const& itr = player->GetSocial()->m_playerSocialMap.find(friendGUID);

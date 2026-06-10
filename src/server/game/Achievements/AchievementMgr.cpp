@@ -1,4 +1,7 @@
 #include "AchievementMgr.h"
+
+#include <ranges>
+
 #include "ArenaTeam.h"
 #include "ArenaTeamMgr.h"
 #include "Battleground.h"
@@ -471,23 +474,21 @@ AchievementMgr::AchievementMgr(Player* player)
     _offlineUpdatesDelayTimer = 0;
 }
 
-AchievementMgr::~AchievementMgr()
-{
-}
+AchievementMgr::~AchievementMgr() = default;
 
 void AchievementMgr::Reset()
 {
-    for (CompletedAchievementMap::const_iterator iter = _completedAchievements.begin(); iter != _completedAchievements.end(); ++iter)
+    for (const auto &achievementID: _completedAchievements | std::views::keys)
     {
         WorldPacket data(SMSG_ACHIEVEMENT_DELETED, 4);
-        data << iter->first;
+        data << achievementID;
         _player->SendDirectMessage(&data);
     }
 
-    for (CriteriaProgressMap::const_iterator iter = _criteriaProgress.begin(); iter != _criteriaProgress.end(); ++iter)
+    for (const auto &progressID: _criteriaProgress | std::views::keys)
     {
         WorldPacket data(SMSG_CRITERIA_DELETED, 4);
-        data << iter->first;
+        data << progressID;
         _player->SendDirectMessage(&data);
     }
 
@@ -2280,7 +2281,7 @@ void AchievementMgr::CompletedAchievement(const AchievementEntry* entry)
                     }
     }
 
-    if (entry->Flags & (ACHIEVEMENT_FLAG_REALM_FIRST_REACH | ACHIEVEMENT_FLAG_REALM_FIRST_KILL) && !_player->GetSession()->IsGameMaster())
+    if (entry->Flags & (ACHIEVEMENT_FLAG_REALM_FIRST_REACH | ACHIEVEMENT_FLAG_REALM_FIRST_KILL) && !_player->GetSession()->IsStaff())
         sAchievementMgr->SetRealmCompleted(entry);
 
     UpdateAchievementCriteria(ACHIEVEMENT_CRITERIA_TYPE_COMPLETE_ACHIEVEMENT, entry->ID);
@@ -2487,8 +2488,6 @@ bool AchievementGlobalMgr::IsStatisticAchievement(const AchievementEntry* achiev
         {
             case ACHIEVEMENT_CATEGORY_STATISTICS:
                 return true;
-            case ACHIEVEMENT_CATEGORY_GENERAL:
-                return false;
             default:
                 cat = sAchievementCategoryStore.LookupEntry(cat->ParentCategory);
                 break;

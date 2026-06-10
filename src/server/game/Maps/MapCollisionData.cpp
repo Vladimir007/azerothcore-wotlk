@@ -18,7 +18,6 @@
 #include "DBCStores.h"
 #include "DetourNavMeshQuery.h"
 #include "DisableMgr.h"
-#include "MapDefinitions.h"
 #include "MapCollisionData.h"
 #include "MapTree.h"
 #include "ModelInstance.h"

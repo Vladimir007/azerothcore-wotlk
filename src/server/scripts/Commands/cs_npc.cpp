@@ -143,63 +143,65 @@ public:
     {
         static ChatCommandTable npcAddCommandTable =
         {
-            { "formation",      HandleNpcAddFormationCommand,      SEC_ADMINISTRATOR, Console::No },
-            { "item",           HandleNpcAddVendorItemCommand,     SEC_ADMINISTRATOR, Console::No },
-            { "move",           HandleNpcAddMoveCommand,           SEC_ADMINISTRATOR, Console::No },
-            { "temp",           HandleNpcAddTempSpawnCommand,      SEC_ADMINISTRATOR, Console::No },
-            { "",               HandleNpcAddCommand,               SEC_ADMINISTRATOR, Console::No }
+            { "formation",      HandleNpcAddFormationCommand,      SuperuserOnly::Yes },
+            { "item",           HandleNpcAddVendorItemCommand,     SuperuserOnly::Yes },
+            { "move",           HandleNpcAddMoveCommand,           SuperuserOnly::Yes },
+            { "temp",           HandleNpcAddTempSpawnCommand,      SuperuserOnly::Yes },
+            { "",               HandleNpcAddCommand,               SuperuserOnly::Yes }
         };
         static ChatCommandTable npcDeleteCommandTable =
         {
-            { "item",           HandleNpcDeleteVendorItemCommand,  SEC_ADMINISTRATOR, Console::No },
-            { "",               HandleNpcDeleteCommand,            SEC_ADMINISTRATOR, Console::No }
+            { "item",           HandleNpcDeleteVendorItemCommand,  SuperuserOnly::Yes },
+            { "",               HandleNpcDeleteCommand,            SuperuserOnly::Yes }
         };
         static ChatCommandTable npcFollowCommandTable =
         {
-            { "stop",           HandleNpcUnFollowCommand,          SEC_GAME_MASTER, Console::No },
-            { "",               HandleNpcFollowCommand,            SEC_GAME_MASTER, Console::No }
+            { "stop",           HandleNpcUnFollowCommand,          SuperuserOnly::No },
+            { "",               HandleNpcFollowCommand,            SuperuserOnly::No }
         };
 
         static ChatCommandTable npcFactionCommandTable =
         {
-            { "permanent",      HandleNpcSetFactionIdCommand,      SEC_ADMINISTRATOR, Console::No },
-            { "temp",           HandleNpcSetFactionTempIdCommand,  SEC_ADMINISTRATOR, Console::No },
-            { "original",       HandleNpcSetOriginalFaction,       SEC_ADMINISTRATOR, Console::No }
+            { "permanent",      HandleNpcSetFactionIdCommand,      SuperuserOnly::Yes },
+            { "temp",           HandleNpcSetFactionTempIdCommand,  SuperuserOnly::Yes },
+            { "original",       HandleNpcSetOriginalFaction,       SuperuserOnly::Yes }
         };
 
         static ChatCommandTable npcSetCommandTable =
         {
-            { "allowmove",      HandleNpcSetAllowMovementCommand,  SEC_ADMINISTRATOR, Console::No },
-            { "entry",          HandleNpcSetEntryCommand,          SEC_ADMINISTRATOR, Console::No },
+            { "allowmove",      HandleNpcSetAllowMovementCommand,  SuperuserOnly::Yes },
+            { "entry",          HandleNpcSetEntryCommand,          SuperuserOnly::Yes },
             { "faction",        npcFactionCommandTable},
-            { "flag",           HandleNpcSetFlagCommand,           SEC_ADMINISTRATOR, Console::No },
-            { "level",          HandleNpcSetLevelCommand,          SEC_ADMINISTRATOR, Console::No },
-            { "link",           HandleNpcSetLinkCommand,           SEC_ADMINISTRATOR, Console::No },
-            { "model",          HandleNpcSetModelCommand,          SEC_ADMINISTRATOR, Console::No },
-            { "movetype",       HandleNpcSetMoveTypeCommand,       SEC_ADMINISTRATOR, Console::No },
-            { "phase",          HandleNpcSetPhaseCommand,          SEC_ADMINISTRATOR, Console::No },
-            { "wanderdistance", HandleNpcSetWanderDistanceCommand, SEC_ADMINISTRATOR, Console::No },
-            { "spawntime",      HandleNpcSetSpawnTimeCommand,      SEC_ADMINISTRATOR, Console::No },
-            { "data",           HandleNpcSetDataCommand,           SEC_ADMINISTRATOR, Console::No }
+            { "flag",           HandleNpcSetFlagCommand,           SuperuserOnly::Yes },
+            { "level",          HandleNpcSetLevelCommand,          SuperuserOnly::Yes },
+            { "link",           HandleNpcSetLinkCommand,           SuperuserOnly::Yes },
+            { "model",          HandleNpcSetModelCommand,          SuperuserOnly::Yes },
+            { "movetype",       HandleNpcSetMoveTypeCommand,       SuperuserOnly::Yes },
+            { "phase",          HandleNpcSetPhaseCommand,          SuperuserOnly::Yes },
+            { "wanderdistance", HandleNpcSetWanderDistanceCommand, SuperuserOnly::Yes },
+            { "spawntime",      HandleNpcSetSpawnTimeCommand,      SuperuserOnly::Yes },
+            { "data",           HandleNpcSetDataCommand,           SuperuserOnly::Yes }
         };
         static ChatCommandTable npcCommandTable =
         {
-            { "info",           HandleNpcInfoCommand,              SEC_GAME_MASTER, Console::No },
-            { "guid",           HandleNpcGuidCommand,              SEC_GAME_MASTER, Console::No },
-            { "near",           HandleNpcNearCommand,              SEC_GAME_MASTER, Console::No },
-            { "move",           HandleNpcMoveCommand,              SEC_GAME_MASTER, Console::No },
-            { "playemote",      HandleNpcPlayEmoteCommand,         SEC_GAME_MASTER, Console::No },
-            { "say",            HandleNpcSayCommand,               SEC_GAME_MASTER, Console::No },
-            { "textemote",      HandleNpcTextEmoteCommand,         SEC_GAME_MASTER, Console::No },
-            { "whisper",        HandleNpcWhisperCommand,           SEC_GAME_MASTER, Console::No },
-            { "yell",           HandleNpcYellCommand,              SEC_GAME_MASTER, Console::No },
-            { "tame",           HandleNpcTameCommand,              SEC_GAME_MASTER, Console::No },
-            { "do",             HandleNpcDoActionCommand,          SEC_GAME_MASTER, Console::No },
+            { "info",           HandleNpcInfoCommand,              SuperuserOnly::No },
+            { "guid",           HandleNpcGuidCommand,              SuperuserOnly::No },
+            { "near",           HandleNpcNearCommand,              SuperuserOnly::No },
+            { "move",           HandleNpcMoveCommand,              SuperuserOnly::No },
+            { "playemote",      HandleNpcPlayEmoteCommand,         SuperuserOnly::No },
+            { "say",            HandleNpcSayCommand,               SuperuserOnly::No },
+            { "textemote",      HandleNpcTextEmoteCommand,         SuperuserOnly::No },
+            { "whisper",        HandleNpcWhisperCommand,           SuperuserOnly::No },
+            { "yell",           HandleNpcYellCommand,              SuperuserOnly::No },
+            { "tame",           HandleNpcTameCommand,              SuperuserOnly::No },
+            { "do",             HandleNpcDoActionCommand,          SuperuserOnly::No },
             { "add",            npcAddCommandTable },
             { "delete",         npcDeleteCommandTable },
             { "follow",         npcFollowCommandTable },
-            { "load",           HandleNpcLoadCommand,              SEC_ADMINISTRATOR, Console::Yes },
-            { "set",            npcSetCommandTable }
+            { "load",           HandleNpcLoadCommand,              SuperuserOnly::Yes },
+            { "set",            npcSetCommandTable },
+            { "spawngroup",     HandleNpcSpawnGroupCommand,        SuperuserOnly::Yes },
+            { "despawngroup",   HandleNpcDespawnGroupCommand,      SuperuserOnly::Yes }
         };
         static ChatCommandTable commandTable =
         {
@@ -233,11 +235,11 @@ public:
                 data.posZ = chr->GetTransOffsetZ();
                 data.orientation = chr->GetTransOffsetO();
 
-                Creature* creature = trans->CreateNPCPassenger(guid, &data);
-
-                creature->SaveToDB(trans->GetGOInfo()->MOTransport.mapID, 1 << map->GetSpawnMode(), chr->GetPhaseMaskForSpawn());
-
-                sObjectMgr->AddCreatureToGrid(guid, &data);
+                if (Creature* creature = trans->CreateNPCPassenger(guid, &data))
+                {
+                    creature->SaveToDB(trans->GetGOInfo()->MOTransport.mapID, 1 << map->GetSpawnMode(), chr->GetPhaseMaskForSpawn());
+                    sObjectMgr->AddCreatureToGrid(guid, &data);
+                }
                 return true;
             }
 
@@ -705,7 +707,7 @@ public:
 
         handler->PSendSysMessage(LANG_NPCINFO_MECHANIC_IMMUNE, Acore::StringFormat("0x{:X}", mechanicImmuneMask).c_str());
         for (uint8 i = 1; i < MAX_MECHANIC; ++i)
-            if (mechanicImmuneMask & (UI64LIT(1) << i))
+            if (mechanicImmuneMask & (1ULL << i))
                 handler->PSendSysMessage(mechanicImmunes[i].text, mechanicImmunes[i].flag);
 
         handler->PSendSysMessage(LANG_NPCINFO_SPELL_SCHOOL_IMMUNE, spellSchoolImmuneMask);
@@ -1430,6 +1432,60 @@ public:
         }
 
         handler->PSendSysMessage("LinkGUID '{}' added to creature with DBTableGUID: '{}'", linkguid, creature->GetSpawnId());
+        return true;
+    }
+
+    static bool HandleNpcSpawnGroupCommand(ChatHandler* handler, uint32 groupId)
+    {
+        Player* player = handler->GetSession()->GetPlayer();
+        if (!player)
+            return false;
+
+        SpawnGroupTemplateData const* groupData = sObjectMgr->GetSpawnGroupData(groupId);
+        if (!groupData)
+        {
+            handler->SendErrorMessage(LANG_SPAWNGROUP_NOT_FOUND, groupId);
+            return false;
+        }
+
+        if (groupData->flags & SPAWNGROUP_FLAG_SYSTEM)
+        {
+            handler->SendErrorMessage(LANG_SPAWNGROUP_SPAWN_SYSTEM_ERROR, groupId, groupData->name);
+            return false;
+        }
+
+        if (player->GetMap()->SpawnGroupSpawn(groupId, true, true))
+            handler->PSendSysMessage(LANG_SPAWNGROUP_SPAWN_SUCCESS, groupId, groupData->name);
+        else
+            handler->SendErrorMessage(LANG_SPAWNGROUP_SPAWN_FAILED, groupId, groupData->name);
+
+        return true;
+    }
+
+    static bool HandleNpcDespawnGroupCommand(ChatHandler* handler, uint32 groupId)
+    {
+        Player* player = handler->GetSession()->GetPlayer();
+        if (!player)
+            return false;
+
+        SpawnGroupTemplateData const* groupData = sObjectMgr->GetSpawnGroupData(groupId);
+        if (!groupData)
+        {
+            handler->SendErrorMessage(LANG_SPAWNGROUP_NOT_FOUND, groupId);
+            return false;
+        }
+
+        if (groupData->flags & SPAWNGROUP_FLAG_SYSTEM)
+        {
+            handler->SendErrorMessage(LANG_SPAWNGROUP_DESPAWN_SYSTEM_ERROR, groupId, groupData->name);
+            return false;
+        }
+
+        if (player->GetMap()->SpawnGroupDespawn(groupId, true))
+            handler->PSendSysMessage(LANG_SPAWNGROUP_DESPAWN_SUCCESS, groupId, groupData->name);
+        else
+            handler->SendErrorMessage(LANG_SPAWNGROUP_DESPAWN_FAILED, groupId, groupData->name);
+
         return true;
     }
 };

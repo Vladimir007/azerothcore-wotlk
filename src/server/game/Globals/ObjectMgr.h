@@ -2,7 +2,10 @@
 #define OBJECT_MGR_H
 
 #include <map>
+#include <memory>
 #include <string>
+
+#include "AhoCorasick.h"
 #include "Bag.h"
 #include "ConditionMgr.h"
 #include "Creature.h"
@@ -445,6 +448,7 @@ typedef std::map<ObjectGuid, ObjectGuid> LinkedRespawnContainer;
 typedef std::unordered_map<ObjectGuid::LowType, CreatureData> CreatureDataContainer;
 typedef std::unordered_map<ObjectGuid::LowType, GameObjectData> GameObjectDataContainer;
 typedef std::unordered_map<uint32, SpawnGroupTemplateData> SpawnGroupDataContainer;
+typedef std::multimap<uint32, const SpawnData*> SpawnGroupLinkContainer;
 typedef std::map<TempSummonGroupKey, std::vector<TempSummonData> > TempSummonDataContainer;
 typedef std::map<TempSummonGroupKey, std::vector<GameObjectSummonData> > GameObjectSummonDataContainer;
 typedef std::unordered_map<uint32, std::string> NcoreStringContainer;
@@ -934,6 +938,8 @@ public:
     void LoadCreatureQuestItems();
     void LoadTempSummons();
     void LoadGameObjectSummons();
+    void LoadSpawnGroupTemplates();
+    void LoadSpawnGroups();
     void LoadCreatures();
     void LoadCreatureSparring();
     void LoadLinkedRespawn();
@@ -1153,6 +1159,13 @@ public:
         return itr != _spawnGroupDataStore.end() ? &itr->second : nullptr;
     }
     [[nodiscard]] const QuestGreeting* GetQuestGreeting(TypeID type, uint32 id) const;
+    [[nodiscard]] SpawnGroupTemplateData const* GetDefaultSpawnGroup() const { return &_spawnGroupDataStore.at(0); }
+    [[nodiscard]] SpawnGroupTemplateData const* GetLegacySpawnGroup() const { return &_spawnGroupDataStore.at(1); }
+    std::pair<SpawnGroupLinkContainer::const_iterator, SpawnGroupLinkContainer::const_iterator> GetSpawnDataForGroup(uint32 groupId) const
+    {
+        return _spawnGroupMapStore.equal_range(groupId);
+    }
+    void OnDeleteSpawnData(SpawnData const* data);
 
     GameObjectData& NewGOData(const ObjectGuid::LowType guid) { return _gameObjectDataStore[guid]; }
     /**
@@ -1201,6 +1214,10 @@ public:
     void LoadProfanityNamesFromDBC();
     [[nodiscard]] bool IsProfanityName(std::string_view name) const;
     void AddProfanityPlayerName(const std::string& name);
+
+    // chat filter (substring chat content filter)
+    void LoadChatFilter();
+    [[nodiscard]] bool IsChatFiltered(std::string_view text) const;
 
     // name with valid structure and symbols
     static uint8 CheckPlayerName(std::string_view name, bool create = false);
@@ -1356,6 +1373,9 @@ private:
     typedef std::set<std::wstring> ProfanityNamesContainer;
     ProfanityNamesContainer _profanityNamesStore;
 
+    //chat filter (Aho-Corasick automaton; matches any banned word as substring of input)
+    std::unique_ptr<Acore::AhoCorasick<wchar_t>> _chatFilterAutomaton;
+
     GameTeleContainer _gameTeleStore;
     ScriptNameContainer _scriptNamesStore;
     SpellClickInfoContainer _spellClickInfoStore;
@@ -1437,6 +1457,7 @@ private:
     LinkedRespawnContainer _linkedRespawnStore;
     GameObjectDataContainer _gameObjectDataStore;
     SpawnGroupDataContainer _spawnGroupDataStore;
+    SpawnGroupLinkContainer _spawnGroupMapStore;
     GameObjectTemplateContainer _gameObjectTemplateStore;
     GameObjectTemplateAddonContainer _gameObjectTemplateAddonStore;
     /// Stores temp summon data grouped by summoner's entry, summoner's type and group id

@@ -318,7 +318,8 @@ struct AccountInfo
     SessionKey SessionKey;
     LocaleConstant Locale;
     bool IsActive;
-    bool IsGameMaster;
+    bool IsStaff;
+    bool IsSuperuser;
     uint32 TotalTime;
 
     explicit AccountInfo(const Field* fields)
@@ -326,8 +327,9 @@ struct AccountInfo
         Id = fields[0].Get<uint32>();
         SessionKey = fields[1].Get<Binary, SESSION_KEY_LENGTH>();
         IsActive = fields[2].Get<bool>();
-        IsGameMaster = fields[3].Get<bool>();
-        Locale = static_cast<LocaleConstant>(fields[4].Get<uint8>());
+        IsStaff = fields[3].Get<bool>();
+        IsSuperuser = fields[4].Get<bool>();
+        Locale = static_cast<LocaleConstant>(fields[5].Get<uint8>());
         if (Locale >= TOTAL_LOCALES)
             Locale = LOCALE_enUS;
         TotalTime = fields[6].Get<uint32>();
@@ -547,7 +549,7 @@ void WorldSocket::HandleAuthSessionCallback(std::shared_ptr<ClientAuthSession> a
     _authed = true;
 
     _worldSession = new WorldSession(
-        account.Id, std::move(authSession->Account), account.IsGameMaster, shared_from_this(),
+        account.Id, std::move(authSession->Account), account.IsStaff, account.IsSuperuser, shared_from_this(),
         EXPANSION_WRATH_OF_THE_LICH_KING, account.Locale, account.TotalTime);
 
     _worldSession->ReadAddonsInfo(authSession->AddonInfo);
@@ -557,11 +559,10 @@ void WorldSocket::HandleAuthSessionCallback(std::shared_ptr<ClientAuthSession> a
     AsyncRead();
 }
 
-void WorldSocket::SendAuthResponseError(uint8 code)
+void WorldSocket::SendAuthResponseError(const uint8 code)
 {
     WorldPacket packet(SMSG_AUTH_RESPONSE, 1);
-    packet << uint8(code);
-
+    packet << code;
     SendPacketAndLogOpcode(packet);
 }
 
@@ -597,7 +598,7 @@ bool WorldSocket::HandlePing(WorldPacket& recvPacket)
             {
                 std::unique_lock<std::mutex> sessionGuard(_worldSessionLock);
 
-                if (_worldSession && !_worldSession->IsGameMaster())
+                if (_worldSession && !_worldSession->IsStaff())
                 {
                     LOG_ERROR("network", "WorldSocket::HandlePing: {} kicked for over-speed pings (address: {})",
                         _worldSession->GetPlayerInfo(), GetRemoteIpAddress().to_string());

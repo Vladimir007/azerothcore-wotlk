@@ -40,8 +40,8 @@ public:
     {
         static ChatCommandTable mailCommandTable =
         {
-            { "list",   HandleMailListCommand,   SEC_GAME_MASTER, Console::Yes },
-            { "return", HandleMailReturnCommand,  SEC_GAME_MASTER, Console::Yes }
+            { "list",   HandleMailListCommand,   SuperuserOnly::No },
+            { "return", HandleMailReturnCommand,  SuperuserOnly::No }
         };
 
         static ChatCommandTable commandTable =

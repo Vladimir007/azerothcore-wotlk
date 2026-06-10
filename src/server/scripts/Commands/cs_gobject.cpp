@@ -45,19 +45,21 @@ public:
     {
         static ChatCommandTable gobjectCommandTable =
         {
-            { "activate",  HandleGameObjectActivateCommand, SEC_GAME_MASTER,    Console::No },
-            { "delete",    HandleGameObjectDeleteCommand,   SEC_ADMINISTRATOR, Console::No },
-            { "info",      HandleGameObjectInfoCommand,     SEC_MODERATOR,     Console::No },
-            { "move",      HandleGameObjectMoveCommand,     SEC_ADMINISTRATOR, Console::No },
-            { "near",      HandleGameObjectNearCommand,     SEC_MODERATOR,     Console::No },
-            { "target",    HandleGameObjectTargetCommand,   SEC_MODERATOR,     Console::No },
-            { "turn",      HandleGameObjectTurnCommand,     SEC_ADMINISTRATOR, Console::No },
-            { "add temp",  HandleGameObjectAddTempCommand,  SEC_GAME_MASTER,    Console::No },
-            { "add",       HandleGameObjectAddCommand,      SEC_ADMINISTRATOR, Console::No },
-            { "load",      HandleGameObjectLoadCommand,     SEC_ADMINISTRATOR, Console::Yes },
-            { "set phase", HandleGameObjectSetPhaseCommand, SEC_ADMINISTRATOR, Console::No },
-            { "set state", HandleGameObjectSetStateCommand, SEC_ADMINISTRATOR, Console::No },
-            { "respawn",   HandleGameObjectRespawn,         SEC_GAME_MASTER,    Console::No }
+            { "activate",  HandleGameObjectActivateCommand, SuperuserOnly::No },
+            { "delete",    HandleGameObjectDeleteCommand,   SuperuserOnly::Yes },
+            { "info",      HandleGameObjectInfoCommand,     SuperuserOnly::No },
+            { "move",      HandleGameObjectMoveCommand,     SuperuserOnly::Yes },
+            { "near",      HandleGameObjectNearCommand,     SuperuserOnly::No },
+            { "target",    HandleGameObjectTargetCommand,   SuperuserOnly::No },
+            { "turn",      HandleGameObjectTurnCommand,     SuperuserOnly::Yes },
+            { "add temp",  HandleGameObjectAddTempCommand,  SuperuserOnly::No },
+            { "add",       HandleGameObjectAddCommand,      SuperuserOnly::Yes },
+            { "load",      HandleGameObjectLoadCommand,     SuperuserOnly::Yes },
+            { "set phase", HandleGameObjectSetPhaseCommand, SuperuserOnly::Yes },
+            { "set state", HandleGameObjectSetStateCommand, SuperuserOnly::Yes },
+            { "respawn",   HandleGameObjectRespawn,         SuperuserOnly::No },
+            { "spawngroup",   HandleGameObjectSpawnGroupCommand,   SuperuserOnly::No },
+            { "despawngroup", HandleGameObjectDespawnGroupCommand, SuperuserOnly::No }
         };
         static ChatCommandTable commandTable =
         {
@@ -682,6 +684,60 @@ public:
 
         object->Respawn();
         handler->PSendSysMessage(LANG_CMD_GO_RESPAWN, object->GetName(), object->GetEntry(), object->GetSpawnId());
+        return true;
+    }
+
+    static bool HandleGameObjectSpawnGroupCommand(ChatHandler* handler, uint32 groupId)
+    {
+        Player* player = handler->GetSession()->GetPlayer();
+        if (!player)
+            return false;
+
+        SpawnGroupTemplateData const* groupData = sObjectMgr->GetSpawnGroupData(groupId);
+        if (!groupData)
+        {
+            handler->SendErrorMessage(LANG_SPAWNGROUP_NOT_FOUND, groupId);
+            return false;
+        }
+
+        if (groupData->flags & SPAWNGROUP_FLAG_SYSTEM)
+        {
+            handler->SendErrorMessage(LANG_SPAWNGROUP_SPAWN_SYSTEM_ERROR, groupId, groupData->name);
+            return false;
+        }
+
+        if (player->GetMap()->SpawnGroupSpawn(groupId, true, true))
+            handler->PSendSysMessage(LANG_SPAWNGROUP_SPAWN_SUCCESS, groupId, groupData->name);
+        else
+            handler->SendErrorMessage(LANG_SPAWNGROUP_SPAWN_FAILED, groupId, groupData->name);
+
+        return true;
+    }
+
+    static bool HandleGameObjectDespawnGroupCommand(ChatHandler* handler, uint32 groupId)
+    {
+        Player* player = handler->GetSession()->GetPlayer();
+        if (!player)
+            return false;
+
+        SpawnGroupTemplateData const* groupData = sObjectMgr->GetSpawnGroupData(groupId);
+        if (!groupData)
+        {
+            handler->SendErrorMessage(LANG_SPAWNGROUP_NOT_FOUND, groupId);
+            return false;
+        }
+
+        if (groupData->flags & SPAWNGROUP_FLAG_SYSTEM)
+        {
+            handler->SendErrorMessage(LANG_SPAWNGROUP_DESPAWN_SYSTEM_ERROR, groupId, groupData->name);
+            return false;
+        }
+
+        if (player->GetMap()->SpawnGroupDespawn(groupId, true))
+            handler->PSendSysMessage(LANG_SPAWNGROUP_DESPAWN_SUCCESS, groupId, groupData->name);
+        else
+            handler->SendErrorMessage(LANG_SPAWNGROUP_DESPAWN_FAILED, groupId, groupData->name);
+
         return true;
     }
 };

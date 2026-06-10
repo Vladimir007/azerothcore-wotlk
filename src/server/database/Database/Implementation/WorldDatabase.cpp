@@ -71,7 +71,7 @@ void WorldDatabaseConnection::DoPrepareStatements()
     PrepareStatement(WORLD_UPD_CREATURE_ADDON_PATH, "UPDATE world_creature_addon SET path=$1 WHERE guid=$2", CONNECTION_ASYNC);
     PrepareStatement(WORLD_DEL_CREATURE_ADDON, "DELETE FROM world_creature_addon WHERE guid=$1", CONNECTION_ASYNC);
     PrepareStatement(WORLD_SEL_CREATURE_ADDON_BY_GUID, "SELECT guid FROM world_creature_addon WHERE guid=$1", CONNECTION_SYNCH);
-    PrepareStatement(WORLD_SEL_COMMANDS, "SELECT name, gm_only, help FROM world_command", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_SEL_COMMANDS, "SELECT name, superuser_only, help FROM world_command", CONNECTION_SYNCH);
 
     PrepareStatement(WORLD_SEL_CREATURE_TEMPLATE,
         "SELECT id, difficulty, kill_credit, name, title, icon_name, gossip_menu, min_level, max_level, expansion, "
@@ -130,6 +130,7 @@ void WorldDatabaseConnection::DoPrepareStatements()
     PrepareStatement(WORLD_INS_GAMEOBJECT_ADDON,
         "INSERT INTO world_game_object_addon (guid, invisibility_type, invisibility_value, parent_rotation) VALUES ($1, 0, 0, ARRAY[0, 0, 0, 1])", CONNECTION_ASYNC);
     PrepareStatement(WORLD_SEL_REQ_XP, "SELECT experience FROM world_player_xp_for_level WHERE level=$1", CONNECTION_SYNCH);
+    PrepareStatement(WORLD_DEL_SPAWNGROUP_MEMBER, "DELETE FROM spawn_group WHERE type=$1 AND spawn=$2", CONNECTION_ASYNC);
 }
 
 WorldDatabaseConnection::WorldDatabaseConnection(const std::string& connectionStr) : PSQLConnection(connectionStr) { }
@@ -137,4 +138,4 @@ WorldDatabaseConnection::WorldDatabaseConnection(const std::string& connectionSt
 WorldDatabaseConnection::WorldDatabaseConnection(ProducerConsumerQueue<SQLOperation*>* queue, const std::string& connectionStr):
     PSQLConnection(queue, connectionStr) { }
 
-WorldDatabaseConnection::~WorldDatabaseConnection() { }
+WorldDatabaseConnection::~WorldDatabaseConnection() = default;

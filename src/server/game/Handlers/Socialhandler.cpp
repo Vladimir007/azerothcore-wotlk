@@ -53,38 +53,34 @@ void WorldSession::HandleAddFriendOpcode(WorldPacket& recv_data)
     if (!playerData)
         return;
 
-    FriendsResult friendResult = FRIEND_NOT_FOUND;
+    FriendsResult friendResult;
 
-    if (friendGuid)
+    if (friendGuid == GetPlayer()->GetGUID())
+        friendResult = FRIEND_SELF;
+    else if (GetPlayer()->GetSocial()->HasFriend(friendGuid))
+        friendResult = FRIEND_ALREADY;
+    else
     {
-        if (friendGuid == GetPlayer()->GetGUID())
-            friendResult = FRIEND_SELF;
-        else if (GetPlayer()->GetSocial()->HasFriend(friendGuid))
-            friendResult = FRIEND_ALREADY;
+        Player* pFriend = ObjectAccessor::FindConnectedPlayer(friendGuid);
+        if (pFriend && pFriend->IsVisibleGloballyFor(GetPlayer()) && !pFriend->GetSession()->IsStaff())
+            friendResult = FRIEND_ADDED_ONLINE;
         else
-        {
-            Player* pFriend = ObjectAccessor::FindConnectedPlayer(friendGuid);
-            if (pFriend && pFriend->IsVisibleGloballyFor(GetPlayer()) && !pFriend->GetSession()->IsGameMaster())
-                friendResult = FRIEND_ADDED_ONLINE;
-            else
-                friendResult = FRIEND_ADDED_OFFLINE;
-            if (GetPlayer()->GetSocial()->AddToSocialList(friendGuid, SOCIAL_FLAG_FRIEND))
-                GetPlayer()->GetSocial()->SetFriendNote(friendGuid, friendNote);
-            else
-            friendResult = FRIEND_LIST_FULL;
-        }
-        GetPlayer()->GetSocial()->SetFriendNote(friendGuid, friendNote);
+            friendResult = FRIEND_ADDED_OFFLINE;
+        if (GetPlayer()->GetSocial()->AddToSocialList(friendGuid, SOCIAL_FLAG_FRIEND))
+            GetPlayer()->GetSocial()->SetFriendNote(friendGuid, friendNote);
+        else
+        friendResult = FRIEND_LIST_FULL;
     }
+    GetPlayer()->GetSocial()->SetFriendNote(friendGuid, friendNote);
 
     sSocialMgr->SendFriendStatus(GetPlayer(), friendResult, friendGuid, false);
 
     LOG_DEBUG("network", "WORLD: Sent (SMSG_FRIEND_STATUS)");
 }
 
-void WorldSession::HandleDelFriendOpcode(WorldPacket& recv_data)
-{
+void WorldSession::HandleDelFriendOpcode(WorldPacket& recvPacket) const {
     ObjectGuid FriendGUID;
-    recv_data >> FriendGUID;
+    recvPacket >> FriendGUID;
 
     _player->GetSocial()->RemoveFromSocialList(FriendGUID, SOCIAL_FLAG_FRIEND);
 

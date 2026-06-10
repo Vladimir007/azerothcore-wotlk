@@ -38,14 +38,14 @@ public:
     {
         static ChatCommandTable gmCommandTable =
         {
-            { "chat",      HandleGMChatCommand,       SEC_GAME_MASTER,     Console::No  },
-            { "fly",       HandleGMFlyCommand,        SEC_GAME_MASTER,     Console::No  },
-            { "ingame",    HandleGMListIngameCommand, SEC_PLAYER,         Console::Yes },
-            { "list",      HandleGMListFullCommand,   SEC_ADMINISTRATOR,  Console::Yes },
-            { "visible",   HandleGMVisibleCommand,    SEC_GAME_MASTER,     Console::No  },
-            { "on",        HandleGMOnCommand,         SEC_MODERATOR,      Console::No  },
-            { "off",       HandleGMOffCommand,        SEC_MODERATOR,      Console::No  },
-            { "spectator", HandleGMSpectatorCommand,  SEC_GAME_MASTER,     Console::No  },
+            { "chat",      HandleGMChatCommand,       SuperuserOnly::No  },
+            { "fly",       HandleGMFlyCommand,        SuperuserOnly::No  },
+            { "ingame",    HandleGMListIngameCommand, SuperuserOnly::No },
+            { "list",      HandleGMListFullCommand,   SuperuserOnly::Yes },
+            { "visible",   HandleGMVisibleCommand,    SuperuserOnly::No  },
+            { "on",        HandleGMOnCommand,         SuperuserOnly::No  },
+            { "off",       HandleGMOffCommand,        SuperuserOnly::No  },
+            { "spectator", HandleGMSpectatorCommand,  SuperuserOnly::No  },
         };
         static ChatCommandTable commandTable =
         {
@@ -61,7 +61,7 @@ public:
         {
             if (!enableArg)
             {
-                if (session->IsGameMaster() && session->GetPlayer()->isGMChat())
+                if (session->IsStaff() && session->GetPlayer()->isGMChat())
                     handler->SendNotification(LANG_GM_CHAT_ON);
                 else
                     handler->SendNotification(LANG_GM_CHAT_OFF);
@@ -116,7 +116,7 @@ public:
         std::shared_lock lock(*HashMapHolder<Player>::GetLock());
         for (auto const& [playerGuid, player] : ObjectAccessor::GetPlayers())
         {
-            bool isGM = player->GetSession()->IsGameMaster();
+            bool isGM = player->GetSession()->IsStaff();
             if ((player->IsGameMaster() || isGM) &&
                 (!handler->GetSession() || player->IsVisibleGloballyFor(handler->GetSession()->GetPlayer())))
             {

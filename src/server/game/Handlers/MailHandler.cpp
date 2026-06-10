@@ -38,9 +38,9 @@ bool WorldSession::CanOpenMailBox(ObjectGuid guid)
 {
     if (guid == _player->GetGUID())
     {
-        if (!_player->GetSession()->IsGameMaster())
+        if (!_player->GetSession()->IsStaff())
         {
-            LOG_ERROR("network.opcode", "{} attempt open mailbox in cheating way.", _player->GetName());
+            LOG_WARN("cheat", "{} attempted to open mailbox by using a cheat.", _player->GetName());
             return false;
         }
     }
@@ -213,7 +213,7 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
 
     uint32 rc_account = receive ? receive->GetSession()->GetAccountId() : sCharacterCache->GetCharacterAccountIdByGuid(receiverGuid);
 
-    if (/*!accountBound*/ GetAccountId() != rc_account && !sWorld->getBoolConfig(CONFIG_ALLOW_TWO_SIDE_INTERACTION_MAIL) && player->GetTeamId() != rc_teamId && !IsGameMaster())
+    if (/*!accountBound*/ GetAccountId() != rc_account && !IsStaff() && player->GetTeamId() != rc_teamId)
     {
         player->SendMailResult(0, MAIL_SEND, MAIL_ERR_NOT_YOUR_TEAM);
         return;
@@ -295,12 +295,16 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
 
     CharacterDatabaseTransaction trans = CharacterDatabase.BeginTransaction();
 
+    std::string itemLogStr = "";
     if (items_count > 0 || money > 0)
     {
         if (items_count > 0)
         {
             for (uint8 i = 0; i < items_count; ++i)
             {
+                // log item
+                itemLogStr += Acore::StringFormat("{} (Entry: {}) x{}, ", items[i]->GetTemplate()->Name1, items[i]->GetEntry(), items[i]->GetCount());
+
                 Item* item = items[i];
 
                 item->SetNotRefundable(GetPlayer()); // makes the item no longer refundable
@@ -341,6 +345,10 @@ void WorldSession::HandleSendMail(WorldPacket& recvData)
 
     player->SaveInventoryAndGoldToDB(trans);
     CharacterDatabase.CommitTransaction(trans);
+
+    LOG_INFO("entities.player.mail", "Mail: Account: {} (IP: {}), Player [{}] ({}) sent mail to Player [{}] ({}): subject='{}', body='{}', {} copper, {} COD copper, sent item(s) [{}]",
+        GetAccountId(), GetRemoteAddress(), player->GetName(), player->GetGUID().GetCounter(),
+        receiver, receiverGuid.GetCounter(), subject, body, money, COD, itemLogStr);
 }
 
 //called when mail is read

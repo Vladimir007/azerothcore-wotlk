@@ -35,10 +35,10 @@ public:
     {
         static ChatCommandTable eventCommandTable =
         {
-            { "activelist", HandleEventActiveListCommand, SEC_GAME_MASTER, Console::Yes },
-            { "start",      HandleEventStartCommand,      SEC_GAME_MASTER, Console::Yes },
-            { "stop",       HandleEventStopCommand,       SEC_GAME_MASTER, Console::Yes },
-            { "info",       HandleEventInfoCommand,       SEC_GAME_MASTER, Console::Yes }
+            { "activelist", HandleEventActiveListCommand, SuperuserOnly::No },
+            { "start",      HandleEventStartCommand,      SuperuserOnly::No },
+            { "stop",       HandleEventStopCommand,       SuperuserOnly::No },
+            { "info",       HandleEventInfoCommand,       SuperuserOnly::No }
         };
         static ChatCommandTable commandTable =
         {

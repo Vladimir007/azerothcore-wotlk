@@ -70,7 +70,7 @@ public:
     {
         static ChatCommandTable inventoryCommandTable =
         {
-            { "count",      HandleInventoryCountCommand,   SEC_MODERATOR, Console::No }
+            { "count",      HandleInventoryCountCommand,   SuperuserOnly::No }
         };
 
         static ChatCommandTable commandTable =

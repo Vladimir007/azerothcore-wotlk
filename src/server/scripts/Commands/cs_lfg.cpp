@@ -47,12 +47,12 @@ public:
     {
         static ChatCommandTable lfgCommandTable =
         {
-            { "player",   HandleLfgPlayerInfoCommand,       SEC_MODERATOR,     Console::No },
-            { "group",    HandleLfgGroupInfoCommand,        SEC_MODERATOR,     Console::No },
-            { "queue",    HandleLfgQueueInfoCommand,        SEC_MODERATOR,     Console::Yes },
-            { "clean",    HandleLfgCleanCommand,            SEC_ADMINISTRATOR, Console::Yes },
-            { "options",  HandleLfgOptionsCommand,          SEC_GAME_MASTER,    Console::Yes },
-            { "cooldown", HandleLfgCooldownClearCommand,    SEC_ADMINISTRATOR, Console::Yes },
+            { "player",   HandleLfgPlayerInfoCommand,       SuperuserOnly::No },
+            { "group",    HandleLfgGroupInfoCommand,        SuperuserOnly::No },
+            { "queue",    HandleLfgQueueInfoCommand,        SuperuserOnly::No },
+            { "clean",    HandleLfgCleanCommand,            SuperuserOnly::Yes },
+            { "options",  HandleLfgOptionsCommand,          SuperuserOnly::No },
+            { "cooldown", HandleLfgCooldownClearCommand,    SuperuserOnly::Yes },
         };
 
         static ChatCommandTable commandTable =

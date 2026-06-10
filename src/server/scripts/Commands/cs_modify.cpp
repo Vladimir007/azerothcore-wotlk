@@ -35,43 +35,43 @@ public:
     {
         static ChatCommandTable modifyspeedCommandTable =
         {
-            { "fly",            HandleModifyFlyCommand,           SEC_GAME_MASTER,       Console::No },
-            { "all",            HandleModifyASpeedCommand,        SEC_GAME_MASTER,       Console::No },
-            { "walk",           HandleModifySpeedCommand,         SEC_GAME_MASTER,       Console::No },
-            { "backwalk",       HandleModifyBWalkCommand,         SEC_GAME_MASTER,       Console::No },
-            { "swim",           HandleModifySwimCommand,          SEC_GAME_MASTER,       Console::No },
-            { "",               HandleModifyASpeedCommand,        SEC_GAME_MASTER,       Console::No }
+            { "fly",            HandleModifyFlyCommand,           SuperuserOnly::No },
+            { "all",            HandleModifyASpeedCommand,        SuperuserOnly::No },
+            { "walk",           HandleModifySpeedCommand,         SuperuserOnly::No },
+            { "backwalk",       HandleModifyBWalkCommand,         SuperuserOnly::No },
+            { "swim",           HandleModifySwimCommand,          SuperuserOnly::No },
+            { "",               HandleModifyASpeedCommand,        SuperuserOnly::No }
         };
 
         static ChatCommandTable modifyCommandTable =
         {
-            { "hp",             HandleModifyHPCommand,            SEC_GAME_MASTER,       Console::No },
-            { "mana",           HandleModifyManaCommand,          SEC_GAME_MASTER,       Console::No },
-            { "rage",           HandleModifyRageCommand,          SEC_GAME_MASTER,       Console::No },
-            { "runicpower",     HandleModifyRunicPowerCommand,    SEC_GAME_MASTER,       Console::No },
-            { "energy",         HandleModifyEnergyCommand,        SEC_GAME_MASTER,       Console::No },
-            { "money",          HandleModifyMoneyCommand,         SEC_GAME_MASTER,       Console::No },
-            { "scale",          HandleModifyScaleCommand,         SEC_GAME_MASTER,       Console::No },
-            { "bit",            HandleModifyBitCommand,           SEC_GAME_MASTER,       Console::No },
-            { "faction",        HandleModifyFactionCommand,       SEC_ADMINISTRATOR,    Console::No },
-            { "spell",          HandleModifySpellCommand,         SEC_CONSOLE,          Console::No },
-            { "talentpoints",   HandleModifyTalentCommand,        SEC_GAME_MASTER,       Console::No },
-            { "mount",          HandleModifyMountCommand,         SEC_GAME_MASTER,       Console::No },
-            { "honor",          HandleModifyHonorCommand,         SEC_GAME_MASTER,       Console::No },
-            { "reputation",     HandleModifyRepCommand,           SEC_GAME_MASTER,       Console::No },
-            { "arenapoints",    HandleModifyArenaCommand,         SEC_GAME_MASTER,       Console::No },
-            { "drunk",          HandleModifyDrunkCommand,         SEC_GAME_MASTER,       Console::No },
-            { "standstate",     HandleModifyStandStateCommand,    SEC_GAME_MASTER,       Console::No },
-            { "phase",          HandleModifyPhaseCommand,         SEC_GAME_MASTER,       Console::No },
-            { "gender",         HandleModifyGenderCommand,        SEC_GAME_MASTER,       Console::No },
+            { "hp",             HandleModifyHPCommand,            SuperuserOnly::No },
+            { "mana",           HandleModifyManaCommand,          SuperuserOnly::No },
+            { "rage",           HandleModifyRageCommand,          SuperuserOnly::No },
+            { "runicpower",     HandleModifyRunicPowerCommand,    SuperuserOnly::No },
+            { "energy",         HandleModifyEnergyCommand,        SuperuserOnly::No },
+            { "money",          HandleModifyMoneyCommand,         SuperuserOnly::No },
+            { "scale",          HandleModifyScaleCommand,         SuperuserOnly::No },
+            { "bit",            HandleModifyBitCommand,           SuperuserOnly::No },
+            { "faction",        HandleModifyFactionCommand,       SuperuserOnly::Yes },
+            { "spell",          HandleModifySpellCommand,         SuperuserOnly::Yes },
+            { "talentpoints",   HandleModifyTalentCommand,        SuperuserOnly::No },
+            { "mount",          HandleModifyMountCommand,         SuperuserOnly::No },
+            { "honor",          HandleModifyHonorCommand,         SuperuserOnly::No },
+            { "reputation",     HandleModifyRepCommand,           SuperuserOnly::No },
+            { "arenapoints",    HandleModifyArenaCommand,         SuperuserOnly::No },
+            { "drunk",          HandleModifyDrunkCommand,         SuperuserOnly::No },
+            { "standstate",     HandleModifyStandStateCommand,    SuperuserOnly::No },
+            { "phase",          HandleModifyPhaseCommand,         SuperuserOnly::No },
+            { "gender",         HandleModifyGenderCommand,        SuperuserOnly::No },
             { "speed",          modifyspeedCommandTable }
         };
 
         static ChatCommandTable morphCommandTable =
         {
-            { "reset",          HandleMorphResetCommand,          SEC_MODERATOR,        Console::No },
-            { "target",         HandleMorphTargetCommand,         SEC_MODERATOR,        Console::No },
-            { "mount",          HandleMorphMountCommand,          SEC_MODERATOR,        Console::No }
+            { "reset",          HandleMorphResetCommand,          SuperuserOnly::No },
+            { "target",         HandleMorphTargetCommand,         SuperuserOnly::No },
+            { "mount",          HandleMorphMountCommand,          SuperuserOnly::No }
         };
 
         static ChatCommandTable commandTable =

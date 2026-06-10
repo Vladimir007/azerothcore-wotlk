@@ -31,13 +31,13 @@ public:
     {
         static ChatCommandTable titlesSetCommandTable =
         {
-            { "mask", HandleTitlesSetMaskCommand, SEC_GAME_MASTER, Console::No },
+            { "mask", HandleTitlesSetMaskCommand, SuperuserOnly::No },
         };
         static ChatCommandTable titlesCommandTable =
         {
-            { "add",     HandleTitlesAddCommand,     SEC_GAME_MASTER, Console::No },
-            { "current", HandleTitlesCurrentCommand, SEC_GAME_MASTER, Console::No },
-            { "remove",  HandleTitlesRemoveCommand,  SEC_GAME_MASTER, Console::No },
+            { "add",     HandleTitlesAddCommand,     SuperuserOnly::No },
+            { "current", HandleTitlesCurrentCommand, SuperuserOnly::No },
+            { "remove",  HandleTitlesRemoveCommand,  SuperuserOnly::No },
             { "set",     titlesSetCommandTable },
         };
         static ChatCommandTable commandTable =

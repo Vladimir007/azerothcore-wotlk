@@ -35,33 +35,33 @@ public:
     {
         static ChatCommandTable learnAllMyCommandTable =
         {
-            { "class",      HandleLearnAllMyClassCommand,      SEC_GAME_MASTER, Console::No },
-            { "pettalents", HandleLearnAllMyPetTalentsCommand, SEC_GAME_MASTER, Console::No },
-            { "trainer",    HandleLearnAllMyTrainerSpellsCommand, SEC_GAME_MASTER, Console::No },
-            { "talents",    HandleLearnAllMyTalentsCommand,    SEC_GAME_MASTER, Console::No },
-            { "quest",      HandleLearnAllMyQuestSpells,       SEC_GAME_MASTER, Console::No }
+            { "class",      HandleLearnAllMyClassCommand,      SuperuserOnly::No },
+            { "pettalents", HandleLearnAllMyPetTalentsCommand, SuperuserOnly::No },
+            { "trainer",    HandleLearnAllMyTrainerSpellsCommand, SuperuserOnly::No },
+            { "talents",    HandleLearnAllMyTalentsCommand,    SuperuserOnly::No },
+            { "quest",      HandleLearnAllMyQuestSpells,       SuperuserOnly::No }
         };
 
         static ChatCommandTable learnAllCommandTable =
         {
             { "my",        learnAllMyCommandTable },
-            { "gm",        HandleLearnAllGMCommand,            SEC_GAME_MASTER, Console::No },
-            { "crafts",    HandleLearnAllCraftsCommand,        SEC_GAME_MASTER, Console::No },
-            { "default",   HandleLearnAllDefaultCommand,       SEC_GAME_MASTER, Console::No },
-            { "lang",      HandleLearnAllLangCommand,          SEC_GAME_MASTER, Console::No },
-            { "recipes",   HandleLearnAllRecipesCommand,       SEC_GAME_MASTER, Console::No },
+            { "gm",        HandleLearnAllGMCommand,            SuperuserOnly::No },
+            { "crafts",    HandleLearnAllCraftsCommand,        SuperuserOnly::No },
+            { "default",   HandleLearnAllDefaultCommand,       SuperuserOnly::No },
+            { "lang",      HandleLearnAllLangCommand,          SuperuserOnly::No },
+            { "recipes",   HandleLearnAllRecipesCommand,       SuperuserOnly::No },
         };
 
         static ChatCommandTable learnCommandTable =
         {
             { "all",  learnAllCommandTable },
-            { "",     HandleLearnCommand,                      SEC_GAME_MASTER, Console::No }
+            { "",     HandleLearnCommand,                      SuperuserOnly::No }
         };
 
         static ChatCommandTable commandTable =
         {
             { "learn",   learnCommandTable },
-            { "unlearn", HandleUnLearnCommand,             SEC_GAME_MASTER, Console::No }
+            { "unlearn", HandleUnLearnCommand,             SuperuserOnly::No }
         };
         return commandTable;
     }

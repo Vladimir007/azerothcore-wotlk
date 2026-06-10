@@ -34,30 +34,30 @@ public:
     {
         static ChatCommandTable ticketResponseCommandTable =
         {
-            { "append",         HandleGMTicketResponseAppendCommand,    SEC_GAME_MASTER,     Console::Yes },
-            { "appendln",       HandleGMTicketResponseAppendLnCommand,  SEC_GAME_MASTER,     Console::Yes },
-            { "delete",         HandleGMTicketResponseDeleteCommand,    SEC_GAME_MASTER,     Console::Yes },
-            { "show",           HandleGMTicketResponseShowCommand,      SEC_GAME_MASTER,     Console::Yes }
+            { "append",         HandleGMTicketResponseAppendCommand,    SuperuserOnly::No },
+            { "appendln",       HandleGMTicketResponseAppendLnCommand,  SuperuserOnly::No },
+            { "delete",         HandleGMTicketResponseDeleteCommand,    SuperuserOnly::No },
+            { "show",           HandleGMTicketResponseShowCommand,      SuperuserOnly::No }
         };
         static ChatCommandTable ticketCommandTable =
         {
-            { "assign",         HandleGMTicketAssignToCommand,          SEC_GAME_MASTER,     Console::Yes },
-            { "close",          HandleGMTicketCloseByIdCommand,         SEC_GAME_MASTER,     Console::Yes },
-            { "closedlist",     HandleGMTicketListClosedCommand,        SEC_GAME_MASTER,     Console::Yes },
-            { "comment",        HandleGMTicketCommentCommand,           SEC_GAME_MASTER,     Console::Yes },
-            { "complete",       HandleGMTicketCompleteCommand,          SEC_GAME_MASTER,     Console::Yes },
-            { "delete",         HandleGMTicketDeleteByIdCommand,        SEC_ADMINISTRATOR,  Console::Yes },
-            { "escalate",       HandleGMTicketEscalateCommand,          SEC_GAME_MASTER,     Console::Yes },
-            { "escalatedlist",  HandleGMTicketListEscalatedCommand,     SEC_GAME_MASTER,     Console::Yes },
-            { "list",           HandleGMTicketListCommand,              SEC_GAME_MASTER,     Console::Yes },
-            { "onlinelist",     HandleGMTicketListOnlineCommand,        SEC_GAME_MASTER,     Console::Yes },
-            { "reset",          HandleGMTicketResetCommand,             SEC_CONSOLE,        Console::Yes },
+            { "assign",         HandleGMTicketAssignToCommand,          SuperuserOnly::No },
+            { "close",          HandleGMTicketCloseByIdCommand,         SuperuserOnly::No },
+            { "closedlist",     HandleGMTicketListClosedCommand,        SuperuserOnly::No },
+            { "comment",        HandleGMTicketCommentCommand,           SuperuserOnly::No },
+            { "complete",       HandleGMTicketCompleteCommand,          SuperuserOnly::No },
+            { "delete",         HandleGMTicketDeleteByIdCommand,        SuperuserOnly::Yes },
+            { "escalate",       HandleGMTicketEscalateCommand,          SuperuserOnly::No },
+            { "escalatedlist",  HandleGMTicketListEscalatedCommand,     SuperuserOnly::No },
+            { "list",           HandleGMTicketListCommand,              SuperuserOnly::No },
+            { "onlinelist",     HandleGMTicketListOnlineCommand,        SuperuserOnly::No },
+            { "reset",          HandleGMTicketResetCommand,             SuperuserOnly::Yes },
 
             { "response",       ticketResponseCommandTable },
-            { "togglesystem",   HandleToggleGMTicketSystem,             SEC_ADMINISTRATOR,  Console::Yes },
-            { "unassign",       HandleGMTicketUnAssignCommand,          SEC_GAME_MASTER,     Console::Yes },
-            { "viewid",         HandleGMTicketGetByIdCommand,           SEC_GAME_MASTER,     Console::Yes },
-            { "viewname",       HandleGMTicketGetByNameCommand,         SEC_GAME_MASTER,     Console::Yes }
+            { "togglesystem",   HandleToggleGMTicketSystem,             SuperuserOnly::Yes },
+            { "unassign",       HandleGMTicketUnAssignCommand,          SuperuserOnly::No },
+            { "viewid",         HandleGMTicketGetByIdCommand,           SuperuserOnly::No },
+            { "viewname",       HandleGMTicketGetByNameCommand,         SuperuserOnly::No }
         };
         static ChatCommandTable commandTable =
         {
@@ -81,7 +81,7 @@ public:
         // Get target information
         ObjectGuid targetGuid = sCharacterCache->GetCharacterGuidByName(target);
         uint32 targetAccountId = sCharacterCache->GetCharacterAccountIdByGuid(targetGuid);
-        bool targetGm = AccountMgr::IsGameMaster(targetAccountId);
+        bool targetGm = AccountMgr::IsStaff(targetAccountId);
 
         // Target must exist and have administrative rights
         if (!targetGuid || !targetGm)
@@ -344,16 +344,16 @@ public:
         uint32 isGM = false;
         Player* assignedPlayer = ticket->GetAssignedPlayer();
         if (assignedPlayer)
-            isGM = assignedPlayer->GetSession()->IsGameMaster();
+            isGM = assignedPlayer->GetSession()->IsStaff();
         else
         {
             const ObjectGuid guid = ticket->GetAssignedToGUID();
             const uint32 accountId = sCharacterCache->GetCharacterAccountIdByGuid(guid);
-            isGM = AccountMgr::IsGameMaster(accountId);
+            isGM = AccountMgr::IsStaff(accountId);
         }
 
         // Check security
-        if (isGM && handler->GetSession() && handler->GetSession()->IsGameMaster())
+        if (isGM && handler->GetSession() && handler->GetSession()->IsStaff())
         {
             handler->SendSysMessage(LANG_COMMAND_TICKETUNASSIGNSECURITY);
             return true;

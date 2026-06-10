@@ -15,6 +15,8 @@
  * with this program. If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <ranges>
+
 #include "CharacterCache.h"
 #include "Chat.h"
 #include "CommandScript.h"
@@ -38,22 +40,22 @@ public:
     {
         static ChatCommandTable lookupCommandTable =
         {
-            { "area",     HandleLookupAreaCommand,         SEC_MODERATOR, Console::Yes  },
-            { "creature", HandleLookupCreatureCommand,     SEC_MODERATOR, Console::Yes  },
-            { "event",    HandleLookupEventCommand,        SEC_MODERATOR, Console::Yes  },
-            { "faction",  HandleLookupFactionCommand,      SEC_MODERATOR, Console::Yes  },
-            { "item",     HandleLookupItemCommand,         SEC_MODERATOR, Console::Yes  },
-            { "item set", HandleLookupItemSetCommand,      SEC_MODERATOR, Console::Yes  },
-            { "map",      HandleLookupMapCommand,          SEC_MODERATOR, Console::Yes  },
-            { "object",   HandleLookupObjectCommand,       SEC_MODERATOR, Console::Yes  },
-            { "gobject",  HandleLookupObjectCommand,       SEC_MODERATOR, Console::Yes  },
-            { "quest",    HandleLookupQuestCommand,        SEC_MODERATOR, Console::Yes  },
-            { "skill",    HandleLookupSkillCommand,        SEC_MODERATOR, Console::Yes  },
-            { "taxinode", HandleLookupTaxiNodeCommand,     SEC_MODERATOR, Console::Yes  },
-            { "teleport", HandleLookupTeleCommand,         SEC_MODERATOR, Console::Yes  },
-            { "title",    HandleLookupTitleCommand,        SEC_MODERATOR, Console::Yes  },
-            { "spell",    HandleLookupSpellCommand,        SEC_MODERATOR, Console::Yes  },
-            { "spell id", HandleLookupSpellIdCommand,      SEC_MODERATOR, Console::Yes  },
+            { "area",     HandleLookupAreaCommand,         SuperuserOnly::No  },
+            { "creature", HandleLookupCreatureCommand,     SuperuserOnly::No  },
+            { "event",    HandleLookupEventCommand,        SuperuserOnly::No  },
+            { "faction",  HandleLookupFactionCommand,      SuperuserOnly::No  },
+            { "item",     HandleLookupItemCommand,         SuperuserOnly::No  },
+            { "item set", HandleLookupItemSetCommand,      SuperuserOnly::No  },
+            { "map",      HandleLookupMapCommand,          SuperuserOnly::No  },
+            { "object",   HandleLookupObjectCommand,       SuperuserOnly::No  },
+            { "gobject",  HandleLookupObjectCommand,       SuperuserOnly::No  },
+            { "quest",    HandleLookupQuestCommand,        SuperuserOnly::No  },
+            { "skill",    HandleLookupSkillCommand,        SuperuserOnly::No  },
+            { "taxinode", HandleLookupTaxiNodeCommand,     SuperuserOnly::No  },
+            { "teleport", HandleLookupTeleCommand,         SuperuserOnly::No  },
+            { "title",    HandleLookupTitleCommand,        SuperuserOnly::No  },
+            { "spell",    HandleLookupSpellCommand,        SuperuserOnly::No  },
+            { "spell id", HandleLookupSpellIdCommand,      SuperuserOnly::No  },
         };
 
         static ChatCommandTable commandTable =
